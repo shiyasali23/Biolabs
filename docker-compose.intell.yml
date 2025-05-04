@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  intelligence:
+    build:
+      context: ./intelligence
+      dockerfile: Dockerfile
+    container_name: intelligence_service
+    ports:
+      - "8003:8003"
+    restart: unless-stopped
+    environment:
+      AWS_ACCESS_KEY_ID: AKIAQLSIVXKT626IVTKH
+      AWS_SECRET_ACCESS_KEY: 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
+      AWS_REGION: eu-central-1
+      BUCKET_NAME: biolabs-bio-intelligence
+      MODEL_PREFIX: bio_integence_llama_1B_01
+      TOKENIZER_PREFIX: bio_integence_llama_1B_01_tokenizer
+    networks:
+      - intelligence-net
+
+  nginx-intelligence:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: nginx-intelligence
+    volumes:
+      - ./nginx/nginx.intelligence.conf:/etc/nginx/nginx.conf
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    ports:
+      # Use different ports for local development to avoid conflicts
+      - "8443:443"  # Map HTTPS to 8443
+      - "8080:80"   # Map HTTP to 8080
+    networks:
+      - intelligence-net
+    depends_on:
+      - intelligence
+
+networks:
+  intelligence-net:
+    driver: bridge
+
+volumes:
+  intelligence_data_volume:
