@@ -1,0 +1,35 @@
+# Django
+*.sqlite3
+*.log
+__pycache__/
+migrations/
+staticfiles/
+media/
+
+# Environments
+.env
+.venv/
+env/
+venv/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Build
+Dockerfile
+docker-compose*
+.dockerignore
+
+# Test
+.coverage
+htmlcov/
+.pytest_cache/
+
+# System
+.DS_Store
+Thumbs.db
+

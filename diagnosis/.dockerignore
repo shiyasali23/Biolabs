@@ -1,0 +1,35 @@
+# Python
+__pycache__
+*.py[cod]
+*.pyo
+*.pyd
+venv
+.env
+.env.*
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Local files
+.DS_Store
+Thumbs.db
+
+# Logs and databases
+*.log
+*.sqlite
+
+# Test and coverage
+htmlcov
+.coverage
+.pytest_cache
+
+# Build files
+Dockerfile
+docker-compose*
+
+# Models (if you have temporary files)
+*.tmp
+*.bak

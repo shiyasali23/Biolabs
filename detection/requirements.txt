@@ -1,0 +1,11 @@
+fastapi==0.115.11
+uvicorn==0.34.0
+numpy==1.26.4
+joblib==1.4.2
+httpx==0.28.1
+python-dotenv==1.0.1
+scikit-learn==1.5.2
+pydantic==2.10.6
+python-multipart==0.0.20
+opencv-python-headless==4.8.1.78
+tensorflow-cpu==2.16.2
