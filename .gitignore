@@ -1,0 +1,89 @@
+# Node.js / Next.js (Frontend)
+frontend/node_modules/
+frontend/.next/
+frontend/.venv.local
+frontend/.env
+frontend/.env.local
+frontend/.venv.development.local
+frontend/.venv.production.local
+frontend/.venv.test.local
+frontend/.env.development.local
+frontend/.env.production.local
+frontend/.env.test.local
+frontend/yarn.lock
+frontend/.vscode/
+
+# Python
+# Fast-Api
+# Dignosis
+diagnosis/venv/
+diagnosis/__pycache__/
+diagnosis/*.pyc
+diagnosis/.venv
+diagnosis/.venv.*.local
+diagnosis/.vscode/
+diagnosis/ENV/
+diagnosis/env/
+diagnosis/.env
+diagnosis/.env.*
+
+# Detection
+detection/venv/
+detection/__pycache__/
+detection/*.pyc
+detection/.venv
+detection/.venv.*.local
+detection/.vscode/
+detection/ENV/
+detection/env/
+detection/.env
+detection/.env.*
+
+# intelligence
+intelligence/venv/
+intelligence/__pycache__/
+intelligence/*.pyc
+intelligence/*.modal
+intelligence/.modal
+intelligence/modal/
+intelligence/modal
+intelligence/.venv
+intelligence/.venv.*.local
+intelligence/.vscode/
+intelligence/ENV/
+intelligence/env/
+intelligence/.env
+intelligence/.env.*
+
+# Django
+# Backend
+backend/venv/
+backend/__pycache__/
+backend/*.pyc
+backend/.venv
+backend/.venv.*.local
+backend/.vscode/
+backend/ENV/
+backend/env/
+backend/.env
+backend/.env.*
+
+
+<<<<<<< HEAD
+=======
+
+>>>>>>> f22e66c (jenkins file added)
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# IDE-specific files
+.idea/
+.vscode/
+
+#Aws-conf-files
+aws/
