@@ -35,13 +35,12 @@ pipeline {
                         // Set the correct permissions for the SSH key
                         sh "chmod 600 \"${TEMP_SSH_KEY}\""
                         // Start the SSH agent
-                        sh 'eval $(ssh-agent -s)'
-                        // Add the SSH key to the agent
-                        sh "ssh-add \"${TEMP_SSH_KEY}\""
-                        // List the identities in the SSH agent
-                        sh 'ssh-add -l'
-
-                        // Debug SSH connection to EC2 instance
+                        sh '''
+                            eval $(ssh-agent -s)
+                            ssh-add "${TEMP_SSH_KEY}"
+                            ssh-add -l
+                        '''
+                        // Test SSH connection to EC2 instance
                         sh "ssh -v -i \"${TEMP_SSH_KEY}\" -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_IP} 'echo SSH connection successful'"
                     }
                 }
@@ -64,7 +63,10 @@ pipeline {
                                 echo "Copying files to EC2..."
                                 scp -v -i "${TEMP_SSH_KEY}" -o StrictHostKeyChecking=no -r \\
                                     ./intelligence \\
-                                    
+                                    .dockerignore \\
+                                    docker-compose.dev.yml \\
+                                    docker-compose.prod.yml \\
+                                    nginx \\
                                     ${EC2_USER}@${EC2_IP}:/home/${EC2_USER}/${REPO_NAME}/
                             else
                                 echo "Dry run mode: Skipping file copy."
