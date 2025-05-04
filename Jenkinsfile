@@ -5,7 +5,7 @@ pipeline {
         EC2_USER = 'ec2-user'
         EC2_IP = '3.68.187.140'
         REPO_NAME = 'Biolabs'
-        SSH_KEY_CREDENTIALS = 'aws-biolabs-key'
+        SSH_KEY_FILE = 'aws-biolabs-key-file'  // Use the file credential
         GIT_CREDENTIALS = 'github-credentials'
     }
 
@@ -22,35 +22,44 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                script {
-                    git credentialsId: "${GIT_CREDENTIALS}", url: 'https://github.com/shiyasali23/Biolabs.git', branch: 'master'
-                }
+                git credentialsId: "${GIT_CREDENTIALS}", 
+                    url: 'https://github.com/shiyasali23/Biolabs.git', 
+                    branch: 'master'
             }
         }
 
-        stage('Deploy to EC2') {
+        stage('Test SSH Connection') {
             steps {
-                script {
-                    // Use sshagent instead of manual ssh-agent setup
-                    sshagent(['aws-biolabs-key']) {
-                        // Test SSH connection to EC2 instance
-                        sh "ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_IP} 'echo SSH connection successful'"
-
-                        if (params.DRY_RUN != true) {
-                            echo "Copying files to EC2..."
-                            sh """
-                                scp -o StrictHostKeyChecking=no -r \\
-                                    ./intelligence \\
-                                    .dockerignore \\
-                                    docker-compose.dev.yml \\
-                                    docker-compose.prod.yml \\
-                                    nginx \\
-                                    ${EC2_USER}@${EC2_IP}:/home/${EC2_USER}/${REPO_NAME}/
-                            """
-                        } else {
-                            echo "Dry run mode: Skipping file copy."
-                        }
-                    }
+                withCredentials([file(credentialsId: "${SSH_KEY_FILE}", variable: 'SSH_KEY')]) {
+                    sh """
+                        # Set key permissions
+                        chmod 600 "${SSH_KEY}"
+                        
+                        # Test connection with verbose output for debugging
+                        ssh -v -i "${SSH_KEY}" -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_IP} 'echo SSH connection successful'
+                    """
+                }
+            }
+        }
+        
+        stage('Deploy to EC2') {
+            when {
+                expression { return params.DRY_RUN == false }
+            }
+            steps {
+                withCredentials([file(credentialsId: "${SSH_KEY_FILE}", variable: 'SSH_KEY')]) {
+                    sh """
+                        chmod 600 "${SSH_KEY}"
+                        
+                        echo "Copying files to EC2..."
+                        scp -i "${SSH_KEY}" -o StrictHostKeyChecking=no -r \\
+                            ./intelligence \\
+                            .dockerignore \\
+                            docker-compose.dev.yml \\
+                            docker-compose.prod.yml \\
+                            nginx \\
+                            ${EC2_USER}@${EC2_IP}:/home/${EC2_USER}/${REPO_NAME}/
+                    """
                 }
             }
         }
