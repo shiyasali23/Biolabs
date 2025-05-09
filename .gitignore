@@ -40,20 +40,27 @@ detection/.env
 detection/.env.*
 
 # intelligence
+# Intelligence module - ignore sensitive and generated folders
 intelligence/venv/
+intelligence/env/
+intelligence/ENV/
 intelligence/__pycache__/
 intelligence/*.pyc
-intelligence/*.modal
-intelligence/.modal
-intelligence/modal/
-intelligence/modal
-intelligence/.venv
-intelligence/.venv.*.local
-intelligence/.vscode/
-intelligence/ENV/
-intelligence/env/
 intelligence/.env
 intelligence/.env.*
+intelligence/.vscode/
+intelligence/.idea/
+intelligence/*.modal
+intelligence/.modal/
+intelligence/modal/
+intelligence/model/
+intelligence/database/
+intelligence/vectors/
+intelligence/embedding_model/
+intelligence/dataset/
+intelligence/*.log
+intelligence/.DS_Store
+
 
 # Django
 # Backend

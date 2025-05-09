@@ -1,7 +1,7 @@
 from fastapi.responses import JSONResponse
 from log_handler import LogHandler
 
-log_handler = LogHandler()
+log = LogHandler()
 
 class ResponseHandler:
     MESSAGES = {
@@ -17,7 +17,10 @@ class ResponseHandler:
         "TOKEN_EXPIRED": "Authentication token has expired.",
         "RATE_LIMIT_EXCEEDED": "Rate limit has been exceeded.",
         "CONTENT_POLICY_VIOLATION": "Content violates usage policies.",
-        "CONTEXT_LENGTH_EXCEEDED": "Input context length exceeds model limits."
+        "CONTEXT_LENGTH_EXCEEDED": "Input context length exceeds model limits.",
+        "NOT_RELEVANT": "Query is not relevant.",
+                   
+        
     }
 
     def handle_response(self, status_code=200, message=None, error=None, response=None) -> JSONResponse:
@@ -38,5 +41,5 @@ class ResponseHandler:
         message = message or self.MESSAGES.get("UNEXPECTED_ERROR")
         error = error or self.MESSAGES.get("INTERNAL_SERVER_ERROR")
         if exception:
-            log_handler.log_error(f"Exception: {exception}")
+            log.error(f"{exception}")
         return self.handle_response(status_code=status_code, error=error, message=message)

@@ -1,16 +1,13 @@
-from fastapi import FastAPI, Depends, HTTPException, Header
+import os
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import Optional
 from app_handler import AppHandler
-from log_handler import LogHandler
-import os
-from dotenv import load_dotenv
+from log_handler import LogHandler  # Fixed import statement
 
-# Load environment variables
-load_dotenv()
 
 # Initialize logger first
-log_handler = LogHandler()
+log = LogHandler()
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -25,47 +22,25 @@ app_handler = AppHandler()
 # Request models
 class GenerateTextRequest(BaseModel):
     query: str
-    max_tokens: Optional[int] = 100
+    token: Optional[str]
 
-# Auth dependency
-async def verify_token(authorization: Optional[str] = Header(None)):
-    if not authorization:
-        raise HTTPException(status_code=401, detail="Unauthorized: Missing token")
-    
-    token = authorization.replace("Bearer ", "") if authorization.startswith("Bearer ") else authorization
-    is_valid = await app_handler.validate_token(token)
-    
-    if not is_valid:
-        raise HTTPException(status_code=401, detail="Unauthorized: Invalid token")
-    
-    return token
+# Wrapper model for the "data" field
+class InferenceRequest(BaseModel):
+    data: GenerateTextRequest
 
-# Routes
-@app.get("/")
-async def root():
-    return {"message": "Bio Intelligence API is running"}
 
-@app.post("/generate")
-async def generate_text(request: GenerateTextRequest, token: str = Depends(verify_token)):
+@app.post("/intelligence/inference")
+async def generate_text(request: InferenceRequest):
     """Generate text based on the provided query"""
-    if not request.query:
+    if not request.data.query:
         raise HTTPException(status_code=400, detail="Query cannot be empty")
     
-    return await app_handler.generate_text(request.query)
+    return await app_handler.generate_text(request.data.query)
 
-# Startup event
-@app.on_event("startup")
-async def startup_event():
-    log_handler.log_info("Starting Bio Intelligence API")
-
-# Shutdown event
-@app.on_event("shutdown")
-async def shutdown_event():
-    log_handler.log_info("Shutting down Bio Intelligence API")
 
 # Run server
 if __name__ == "__main__":
     import uvicorn
-    port = int(os.getenv("PORT", 8000))
+    port = int(os.getenv("PORT", 8003))
     host = os.getenv("HOST", "0.0.0.0")
     uvicorn.run("main:app", host=host, port=port, reload=True)

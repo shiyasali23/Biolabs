@@ -41,4 +41,4 @@ networks:
     driver: bridge
 
 volumes:
-  intelligence_data_volume:
+  intelligence_data_volume: 
