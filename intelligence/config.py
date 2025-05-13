@@ -4,9 +4,22 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
-DB_CONFIG ={
+MODEL_CONFIG = {
+    "MAX_NEW_TOKENS": int(os.getenv("MAX_NEW_TOKENS", 100)),
+    "MODEL_DIR": os.getenv("MODEL_DIR", "./model"),
+    "MODEL": {
+        "LOCAL_PREFIX": os.getenv("MODEL_PREFIX"),
+        "BUCKET_PREFIX": os.getenv("MODEL_BUCKET_PREFIX")
+    },
+    "TOKENIZER": {
+        "LOCAL_PREFIX": os.getenv("TOKENIZER_PREFIX"),
+        "BUCKET_PREFIX": os.getenv("TOKENIZER_BUCKET_PREFIX")
+    },
+}
+
+DB_CONFIG = {
     "TARGET_COLUMN": os.getenv("TARGET_COLUMN", "answer"),
-    "TOP_K": os.getenv("TOP_K", 3)
+    "TOP_K": int(os.getenv("TOP_K", 3))
 }
 
 # AWS Configuration
@@ -21,16 +34,13 @@ AWS_CONFIG = {
 DIRECTORIES = {
     "DATABASE_DIR": os.getenv("DATABASE_DIR", "./database"),
     "VECTORS_DIR": os.getenv("VECTORS_DIR", "./vectors"),
-    "EMBEDDING_MODEL_DIR": os.getenv("EMBEDDING_MODEL_DIR", "./embeding_model"),
-    "DATASET_DIR": os.getenv("DATASET_DIR", "./dataset")
+    "EMBEDDING_MODEL_DIR": os.getenv("EMBEDDING_MODEL_DIR", "./embedding_model"),
+    "DATASET_DIR": os.getenv("DATASET_DIR", "./dataset"),
+    "MODEL_DIR": os.getenv("MODEL_DIR", "./model"),
 }
 
-# File Prefixes
-FILE_PREFIXES = {
-    "FAISS_INDEX": {
-        "LOCAL_PREFIX": os.getenv("FAISS_INDEX_PREFIX"),
-        "BUCKET_PREFIX": os.getenv("FAISS_INDEX_BUCKET_PREFIX")
-    },
+EMBEDDING_MODEL_CONFIG = {
+    "MAX_NEW_TOKENS": int(os.getenv("MAX_NEW_TOKENS", 100)),
     "EMBEDDINGS": {
         "LOCAL_PREFIX": os.getenv("EMBEDDINGS_PREFIX"),
         "BUCKET_PREFIX": os.getenv("EMBEDDINGS_BUCKET_PREFIX")
@@ -42,7 +52,31 @@ FILE_PREFIXES = {
     "DATASET": {
         "LOCAL_PREFIX": os.getenv("DATASET_PREFIX"),
         "BUCKET_PREFIX": os.getenv("DATASET_BUCKET_PREFIX")
-    }
+    },
+}
+
+# File Prefixes
+FILE_PREFIXES = {
+    "EMBEDDINGS": {
+        "LOCAL_PREFIX": os.getenv("EMBEDDINGS_PREFIX"),
+        "BUCKET_PREFIX": os.getenv("EMBEDDINGS_BUCKET_PREFIX")
+    },
+    "EMBEDDING_MODEL": {
+        "LOCAL_PREFIX": os.getenv("EMBEDDING_MODEL_PREFIX"),
+        "BUCKET_PREFIX": os.getenv("EMBEDDING_MODEL_BUCKET_PREFIX")
+    },
+    "DATASET": {
+        "LOCAL_PREFIX": os.getenv("DATASET_PREFIX"),
+        "BUCKET_PREFIX": os.getenv("DATASET_BUCKET_PREFIX")
+    },
+    "MODEL": {
+        "LOCAL_PREFIX": os.getenv("MODEL_PREFIX"),
+        "BUCKET_PREFIX": os.getenv("MODEL_BUCKET_PREFIX")
+    },
+    "TOKENIZER": {
+        "LOCAL_PREFIX": os.getenv("TOKENIZER_PREFIX"),
+        "BUCKET_PREFIX": os.getenv("TOKENIZER_BUCKET_PREFIX")
+    },
 }
 
 # Logging Configuration
@@ -51,8 +85,3 @@ LOG_CONFIG = {
     "LOG_FILE": os.getenv("LOG_FILE", "app.log")
 }
 
-
-
-# Create necessary directories if they don't exist
-for directory in DIRECTORIES.values():
-    os.makedirs(directory, exist_ok=True)

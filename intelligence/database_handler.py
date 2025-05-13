@@ -1,6 +1,7 @@
 from log_handler import LogHandler
-from bucket_handler import BucketHandler
 from responses_handler import ResponseHandler
+from bucket_handler import BucketHandler
+from modal_handler import ModalHandler
 
 import os
 import numpy as np
@@ -31,7 +32,7 @@ class DatabaseHandler:
         self.dataset_dir = DIRECTORIES["DATASET_DIR"]
 
         self.target_column = DB_CONFIG["TARGET_COLUMN"]
-        self.top_k = DB_CONFIG["TOP_K"]
+        self.top_k = int(DB_CONFIG["TOP_K"])
 
         for directory in [self.database_dir, self.vectors_dir, self.embedding_model_dir, self.dataset_dir]:
             os.makedirs(directory, exist_ok=True)
@@ -42,55 +43,19 @@ class DatabaseHandler:
         self.embedding_tokenizer = None
         self.database_client = None
         self.database_collection = None
-
+        
+        message = "in Database handler"
         if torch.cuda.is_available():
             self.device = torch.device("cuda")
-            log.info(f"Using GPU acceleration: {torch.cuda.get_device_name(0)}")
+            log.info(f"Using GPU{message} : {torch.cuda.get_device_name(0)}")
         else:
             self.device = torch.device("cpu")
             import multiprocessing
             cpu_count = multiprocessing.cpu_count()
-            log.info(f"Using CPU with {cpu_count} cores")
-
-    def _validate_path(self, local_dir, local_prefix, bucket_prefix, is_directory=False):
-        local_path = os.path.join(local_dir, local_prefix)
-
-        if is_directory:
-            if os.path.isdir(local_path) and os.listdir(local_path):
-                log.info(f"Found locally: {local_path}")
-                return local_path
-
-            log.info(f"Directory missing or empty: {local_path}")
-            os.makedirs(local_path, exist_ok=True)
-
-            if not bucket_prefix.endswith('/'):
-                bucket_prefix += '/'
-
-            bucket_handler = BucketHandler()
-            if not bucket_handler.get_object(prefix=bucket_prefix, local_dir=local_path):
-                log.error(f"Failed to retrieve directory from S3: {bucket_prefix}")
-                return None
-
-            log.info(f"Directory downloaded to: {local_path}")
-            return local_path
-        else:
-            if os.path.exists(local_path):
-                log.info(f"Found locally: {local_path}")
-                return local_path
-
-            log.info(f"Not found locally: {local_path}, attempting S3 download")
-            bucket_handler = BucketHandler()
-            stored_path = bucket_handler.get_object(
-                prefix=bucket_prefix,
-                local_dir=local_dir
-            )
-
-            if not stored_path:
-                log.error(f"Failed to retrieve {bucket_prefix} from S3")
-                return None
-
-            log.info(f"Downloaded from S3 to: {stored_path}")
-            return stored_path
+            log.info(f"Using CPU with {cpu_count} cores {message}")
+            
+        self.modal_handler = ModalHandler()
+        
 
     def _init_embeddings_model(self):
         log.info("Initializing embedding model")
@@ -98,11 +63,15 @@ class DatabaseHandler:
         model_folder = FILE_PREFIXES["EMBEDDING_MODEL"]["LOCAL_PREFIX"]
         model_bucket_prefix = FILE_PREFIXES["EMBEDDING_MODEL"]["BUCKET_PREFIX"]
 
-        local_model_dir = self._validate_path(
+        # Check if model folder and bucket prefix are valid
+        if not model_folder or not model_bucket_prefix:
+            log.error("Missing embedding model configuration")
+            return
+
+        local_model_dir = self.modal_handler.validate_path(
             local_dir=self.embedding_model_dir,
             local_prefix=model_folder,
             bucket_prefix=model_bucket_prefix,
-            is_directory=True
         )
 
         if not local_model_dir:
@@ -110,9 +79,11 @@ class DatabaseHandler:
             return
 
         try:
-            model = AutoModel.from_pretrained(local_model_dir)
-            self.embedding_model = model.bert.to(self.device) if hasattr(model, "bert") else model.base_model.to(self.device)
+            model = AutoModel.from_pretrained(local_model_dir)                
             self.embedding_tokenizer = AutoTokenizer.from_pretrained(local_model_dir)
+            
+            self.embedding_model = model.to(self.device)
+            self.embedding_model.eval()  # Set to evaluation mode for inference
             log.info(f"Embedding model loaded from: {local_model_dir}")
         except Exception as e:
             log.error(f"Failed to load embedding model: {e}")
@@ -120,36 +91,48 @@ class DatabaseHandler:
     def _init_database(self):
         try:
             self.database_client = chromadb.PersistentClient(path=self.database_dir)
+            
+            # Ensure embeddings file prefix exists
+            if not FILE_PREFIXES["EMBEDDINGS"]["LOCAL_PREFIX"]:
+                raise ValueError("Missing embeddings configuration in FILE_PREFIXES")
+                
             name = os.path.splitext(FILE_PREFIXES["EMBEDDINGS"]["LOCAL_PREFIX"])[0]
             self.database_collection = self.database_client.get_or_create_collection(name=name)
             log.info(f"ChromaDB collection '{name}' initialized at: {self.database_dir}")
 
-            emb_path = self._validate_path(
+            # Get embeddings file
+            emb_path = self.modal_handler.validate_path(
                 local_dir=self.vectors_dir,
                 local_prefix=FILE_PREFIXES["EMBEDDINGS"]["LOCAL_PREFIX"],
                 bucket_prefix=FILE_PREFIXES["EMBEDDINGS"]["BUCKET_PREFIX"],
                 is_directory=False
             )
+            
             if not emb_path:
                 raise FileNotFoundError("Embeddings file not found")
+                
             self.embeddings = np.load(emb_path)
             self.embeddings = self.embeddings / np.linalg.norm(self.embeddings, axis=1, keepdims=True)
             log.info(f"Loaded and normalized embeddings from: {emb_path} (shape: {self.embeddings.shape})")
 
+            # If database is empty, populate it
             if self.database_collection.count() == 0:
-                data_path = self._validate_path(
+                data_path = self.modal_handler.validate_path(
                     local_dir=self.dataset_dir,
                     local_prefix=FILE_PREFIXES["DATASET"]["LOCAL_PREFIX"],
                     bucket_prefix=FILE_PREFIXES["DATASET"]["BUCKET_PREFIX"],
                     is_directory=False
                 )
+                
                 if not data_path:
                     raise FileNotFoundError("Dataset file not found")
+                    
                 self.dataset = pd.read_csv(data_path)
                 log.info(f"Loaded dataset from: {data_path} (rows: {len(self.dataset)})")
 
                 if self.target_column not in self.dataset.columns:
                     raise ValueError(f"Missing target column '{self.target_column}' in dataset")
+                    
                 log.info("Populating ChromaDB collection from local data")
                 total = min(len(self.dataset), len(self.embeddings))
                 ids = [f"doc_{i}" for i in range(total)]
@@ -168,7 +151,7 @@ class DatabaseHandler:
                             ids=ids[start_idx:end_idx],
                             metadatas=metadatas[start_idx:end_idx]
                         )
-                        log.info(f"Batch {start_idx // batch_size + 1} - {end_idx - start_idx} successfully.")
+                        log.info(f"Batch {start_idx // batch_size + 1} - {end_idx - start_idx} documents added successfully.")
                     except ValueError as e:
                         log.error(f"Error adding batch {start_idx // batch_size + 1}: {e}")
                         break  
@@ -179,12 +162,17 @@ class DatabaseHandler:
         except Exception as e:
             log.error(f"Error initializing database: {e}")
             raise
-
-    async def is_relevant(self, query, base_threshold=0.75, max_threshold=0.9, min_threshold=0.6):
+        
+    
+        
+    def _validate_system(self):
         if not self.embedding_model:
             self._init_embeddings_model()
         if not self.database_collection:
             self._init_database()
+
+    async def is_relevant(self, query, base_threshold=0.75, max_threshold=0.9, min_threshold=0.6):
+        self._validate_system()
 
         if not all([self.embedding_model, self.embedding_tokenizer, self.database_collection]):
             log.error("Cannot perform relevance check: components not initialized")
@@ -206,7 +194,10 @@ class DatabaseHandler:
 
             if not results['ids'] or not results['ids'][0]:
                 log.warning("No match found in ChromaDB")
-                return False
+                return response_handler.handle_response(
+                   error=response_handler.MESSAGES["NOT_RELEVANT"],
+                   message=response_handler.MESSAGES["NOT_RELEVANT"]
+                )
 
             top_idx = int(results['ids'][0][0].split("_")[-1])
             closest_embedding = self.embeddings[top_idx].reshape(1, -1)
@@ -224,13 +215,88 @@ class DatabaseHandler:
             if not similarity >= threshold:
                 return response_handler.handle_response(
                    error=response_handler.MESSAGES["NOT_RELEVANT"],
-                   message=response_handler.MESSAGES["NOT_RELEVANT"], 
+                   message=response_handler.MESSAGES["NOT_RELEVANT"]
                 )
 
-            return response_handler.handle_response(
-                response=bool(similarity >= threshold)
+            return await self.retrieve(
+                query=query,
+                batch_size=None,
+                use_gpu=None,  # Use default GPU setting
+                top_k=None,    # Use default top_k 
+                normalize_embeddings=True,
+                filter_results=None
             )
 
         except Exception as e:
-            log.error(f"Relevance check error: {e}")
-            return False
+            return response_handler.handle_exception(
+                exception=f"Error checking relevance: {e}"
+            )
+        
+    async def retrieve(self, query, batch_size=None, use_gpu=None, top_k=None, normalize_embeddings=True, filter_results=None):
+        """
+        Retrieve relevant documents based on query.
+        
+        Args:
+            query (str): The search query text
+            batch_size (int, optional): Batch size for tokenization and inference
+            use_gpu (bool, optional): Override GPU usage for this specific query
+            top_k (int, optional): Number of results to return, overrides self.top_k
+            normalize_embeddings (bool, optional): Whether to normalize embeddings
+            filter_results (dict, optional): Filter criteria for ChromaDB query
+            
+        Returns:
+            Response from response_handler containing matching documents
+        """
+        self._validate_system()
+
+        if not all([self.embedding_model, self.embedding_tokenizer, self.database_collection]):
+            return response_handler.handle_exception(
+                exception="Retrieval components not properly initialized"
+            )
+
+        # Use provided parameters or fall back to defaults
+        results_count = top_k if top_k is not None else self.top_k
+        device = torch.device("cuda") if (use_gpu or (use_gpu is None and self.device == torch.device("cuda"))) else torch.device("cpu")
+        
+        try:
+            # Tokenize with efficient settings
+            tokens = self.embedding_tokenizer(
+                query, 
+                return_tensors="pt", 
+                truncation=True, 
+                padding=True,
+                max_length=512  # Limit token length for efficiency
+            )
+            tokens = {k: v.to(device) for k, v in tokens.items()}
+
+            # Configure inference optimizations
+            with torch.no_grad():
+                # Get embeddings
+                out = self.embedding_model(**tokens)
+                query_emb = out.last_hidden_state.mean(dim=1).cpu().numpy()
+                
+                # Normalize if specified
+                if normalize_embeddings:
+                    query_emb = query_emb / np.linalg.norm(query_emb, axis=1, keepdims=True)
+
+            # Configure ChromaDB query
+            query_params = {
+                "query_embeddings": query_emb.tolist(),
+                "n_results": results_count
+            }
+            
+            # Add filters if provided
+            if filter_results:
+                query_params["where"] = filter_results
+                
+            results = self.database_collection.query(**query_params)
+
+            # Return formatted results
+            return self.modal_handler.generate(
+                query=query,
+                documents=results['documents'][0]
+            )
+        except Exception as e:
+            return response_handler.handle_exception(
+                exception=f"Error during retrieval: {e}"
+            )
