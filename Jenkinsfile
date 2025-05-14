@@ -3,9 +3,10 @@ pipeline {
 
     environment {
         EC2_IP = '3.79.96.57'
+        EC2_USER = 'ec2-user'  // <-- add this since you use ${EC2_USER} in ssh
         REPO_NAME = 'Biolabs'
         GIT_CREDENTIALS = 'github-credentials'
-        SSH_CREDENTIALS = 'aws-biolabs-key-file'  // SSH Username with private key credential id
+        SSH_SECRET_FILE = 'aws-biolabs-key-file'  // secret file credential ID
     }
 
     parameters {
@@ -29,10 +30,12 @@ pipeline {
 
         stage('Test SSH Connection') {
             steps {
-                sshagent(credentials: ["${SSH_CREDENTIALS}"]) {
-                    sh """
-                        ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_IP} 'echo SSH connection successful'
-                    """
+                // Use 'withCredentials' to expose the secret file as a temporary file
+                withCredentials([file(credentialsId: "${SSH_SECRET_FILE}", variable: 'SSH_KEY')]) {
+                    sh '''
+                        chmod 600 $SSH_KEY
+                        ssh -o StrictHostKeyChecking=no -i $SSH_KEY ${EC2_USER}@${EC2_IP} 'echo SSH connection successful'
+                    '''
                 }
             }
         }
@@ -42,15 +45,16 @@ pipeline {
                 expression { return params.DRY_RUN == false }
             }
             steps {
-                sshagent(credentials: ["${SSH_CREDENTIALS}"]) {
-                    sh """
+                withCredentials([file(credentialsId: "${SSH_SECRET_FILE}", variable: 'SSH_KEY')]) {
+                    sh '''
+                        chmod 600 $SSH_KEY
                         echo "Copying files to EC2..."
-                        scp -o StrictHostKeyChecking=no -r \\
+                        scp -o StrictHostKeyChecking=no -i $SSH_KEY -r \\
                             ./intelligence \\
                             docker-compose.intell.yml \\
                             nginx \\
                             ${EC2_USER}@${EC2_IP}:/home/${EC2_USER}/${REPO_NAME}/
-                    """
+                    '''
                 }
             }
         }
