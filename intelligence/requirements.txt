@@ -1,0 +1,39 @@
+# Web framework & server
+fastapi==0.110.2
+uvicorn[standard]==0.29.0
+
+# Core Python dependencies
+python-dotenv==1.0.1
+pydantic==2.7.1
+numpy==1.26.4
+pandas==2.2.2
+torch==2.2.2
+
+# Transformers & tokenization
+transformers==4.39.3
+tokenizers==0.19.1
+
+# AWS interaction
+boto3==1.34.106
+botocore==1.34.106
+
+# Chroma DB
+chromadb==1.0.8
+
+# Similarity metrics
+scikit-learn==1.4.2
+scipy==1.13.0
+
+# Logging & monitoring
+coloredlogs==15.0.1
+humanfriendly==10.0
+
+# CORS support
+httpx==0.28.1
+starlette==0.37.2  # FastAPI dependency
+aiofiles==23.2.1   # Optional file handling for FastAPI
+
+# Misc
+python-dateutil==2.9.0.post0
+requests==2.31.0
+PyYAML==6.0.1

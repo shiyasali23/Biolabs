@@ -1,24 +1,58 @@
-**/.git
-**/.gitignore
-**/__pycache__
-**/*.pyc
-**/*.pyo
-**/*.pyd
-**/.Python
-**/env
-**/venv
-**/ENV
-**/env.bak
-**/venv.bak
-**/.env
-**/.venv
-**/node_modules
-**/npm-debug.log
-**/.DS_Store
-**/.idea
-**/.vscode
-**/*.swp
-**/*.swo
-**/dist
-**/build
-**/*.egg-info
+# Git
+.git
+.gitignore
+
+# Python cache and compiled files
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.Python
+.venv
+.env
+
+# Node and npm
+node_modules/
+npm-debug.log
+
+# macOS system files
+.DS_Store
+
+# IDE/editor config
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Build and distribution artifacts
+dist/
+build/
+*.egg-info
+
+# Project-specific exclusions
+intelligence/venv/
+intelligence/env/
+intelligence/ENV/
+intelligence/__pycache__/
+intelligence/*.pyc
+intelligence/.env
+intelligence/.env.*
+intelligence/.vscode/
+intelligence/.idea/
+intelligence/*.modal
+intelligence/.modal/
+intelligence/modal/
+intelligence/model/
+intelligence/database/
+intelligence/vectors/
+intelligence/embedding_model/
+intelligence/dataset/
+intelligence/*.log
+intelligence/.DS_Store

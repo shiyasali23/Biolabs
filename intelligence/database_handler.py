@@ -50,9 +50,7 @@ class DatabaseHandler:
             log.info(f"Using GPU{message} : {torch.cuda.get_device_name(0)}")
         else:
             self.device = torch.device("cpu")
-            import multiprocessing
-            cpu_count = multiprocessing.cpu_count()
-            log.info(f"Using CPU with {cpu_count} cores {message}")
+            log.info(f"Using CPU with  cores {message}")
             
         self.modal_handler = ModalHandler()
         
@@ -210,6 +208,8 @@ class DatabaseHandler:
                 threshold = min_threshold
             else:
                 threshold = base_threshold
+            
+           
 
             log.info(f"Cosine similarity={similarity:.4f}, threshold={threshold:.4f}, relevant={similarity >= threshold}")
             if not similarity >= threshold:
@@ -292,9 +292,9 @@ class DatabaseHandler:
             results = self.database_collection.query(**query_params)
 
             # Return formatted results
-            return self.modal_handler.generate(
+            return await self.modal_handler.generate(
                 query=query,
-                documents=results['documents'][0]
+                document=results['documents'][0]
             )
         except Exception as e:
             return response_handler.handle_exception(

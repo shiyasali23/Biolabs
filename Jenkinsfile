@@ -2,11 +2,10 @@ pipeline {
     agent any
 
     environment {
-        EC2_USER = 'ec2-user'
-        EC2_IP = '3.68.187.140'
+        EC2_IP = '3.79.96.57'
         REPO_NAME = 'Biolabs'
-        SSH_KEY_FILE = 'aws-biolabs-key-file'  // Use the file credential
         GIT_CREDENTIALS = 'github-credentials'
+        SSH_CREDENTIALS = 'aws-biolabs-key-file'  // SSH Username with private key credential id
     }
 
     parameters {
@@ -30,13 +29,9 @@ pipeline {
 
         stage('Test SSH Connection') {
             steps {
-                withCredentials([file(credentialsId: "${SSH_KEY_FILE}", variable: 'SSH_KEY')]) {
+                sshagent(credentials: ["${SSH_CREDENTIALS}"]) {
                     sh """
-                        # Set key permissions
-                        chmod 600 "${SSH_KEY}"
-                        
-                        # Test connection with verbose output for debugging
-                        ssh -v -i "${SSH_KEY}" -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_IP} 'echo SSH connection successful'
+                        ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_IP} 'echo SSH connection successful'
                     """
                 }
             }
@@ -47,16 +42,12 @@ pipeline {
                 expression { return params.DRY_RUN == false }
             }
             steps {
-                withCredentials([file(credentialsId: "${SSH_KEY_FILE}", variable: 'SSH_KEY')]) {
+                sshagent(credentials: ["${SSH_CREDENTIALS}"]) {
                     sh """
-                        chmod 600 "${SSH_KEY}"
-                        
                         echo "Copying files to EC2..."
-                        scp -i "${SSH_KEY}" -o StrictHostKeyChecking=no -r \\
+                        scp -o StrictHostKeyChecking=no -r \\
                             ./intelligence \\
-                            .dockerignore \\
-                            docker-compose.dev.yml \\
-                            docker-compose.prod.yml \\
+                            docker-compose.intell.yml \\
                             nginx \\
                             ${EC2_USER}@${EC2_IP}:/home/${EC2_USER}/${REPO_NAME}/
                     """
