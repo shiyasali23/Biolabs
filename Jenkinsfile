@@ -2,11 +2,11 @@ pipeline {
     agent any
 
     environment {
-        EC2_IP = '18.196.88.96 '
-        EC2_USER = 'ec2-user'               // add your EC2 username here
+        EC2_IP = '18.196.88.96'          // Removed trailing space here
+        EC2_USER = 'ec2-user'            // EC2 username
         REPO_NAME = 'Biolabs'
         GIT_CREDENTIALS = 'github-credentials'
-        SSH_SECRET_FILE = 'aws-biolabs-key-file'  // This must be a Secret File credential in Jenkins
+        SSH_SECRET_FILE = 'aws-biolabs-key-file'  // Jenkins Secret File credential
     }
 
     parameters {
@@ -47,6 +47,9 @@ pipeline {
                 withCredentials([file(credentialsId: "${SSH_SECRET_FILE}", variable: 'SSH_KEY')]) {
                     sh '''
                         chmod 600 "$SSH_KEY"
+                        echo "Ensuring target directory exists on EC2..."
+                        ssh -o StrictHostKeyChecking=no -i "$SSH_KEY" ${EC2_USER}@${EC2_IP} "mkdir -p /home/${EC2_USER}/${REPO_NAME}"
+                        
                         echo "Copying files to EC2..."
                         scp -o StrictHostKeyChecking=no -i "$SSH_KEY" -r \\
                             ./intelligence \\
