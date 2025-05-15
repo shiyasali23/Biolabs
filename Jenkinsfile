@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        EC2_IP = '3.71.165.114'
+        EC2_IP = '18.196.88.96 '
         EC2_USER = 'ec2-user'               // add your EC2 username here
         REPO_NAME = 'Biolabs'
         GIT_CREDENTIALS = 'github-credentials'
