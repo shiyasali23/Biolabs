@@ -34,9 +34,7 @@ class ModalHandler:
             log.info(f"Using GPU{message} : {torch.cuda.get_device_name(0)}")
         else:
             self.device = torch.device("cpu")
-            import multiprocessing
-            cpu_count = multiprocessing.cpu_count()
-            log.info(f"Using CPU with {cpu_count} cores {message}")
+            log.info(f"Using CPU with  cores {message}")
 
         # Initialize model and tokenizer as None
         self.model = None

@@ -12,10 +12,12 @@ services:
     environment:
       AWS_ACCESS_KEY_ID: AKIAQLSIVXKT626IVTKH
       AWS_SECRET_ACCESS_KEY: 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
-      AWS_REGION: eu-central-1
-      BUCKET_NAME: biolabs-bio-intelligence
-      MODEL_PREFIX: bio_integence_llama_1B_01
-      TOKENIZER_PREFIX: bio_integence_llama_1B_01_tokenizer
+    volumes:
+      - ./intelligence/database:/app/database
+      - ./intelligence/vectors:/app/vectors
+      - ./intelligence/embedding_model:/app/embedding_model
+      - ./intelligence/dataset:/app/dataset
+      - ./intelligence/model:/app/model
     networks:
       - intelligence-net
 
@@ -28,9 +30,8 @@ services:
       - ./nginx/nginx.intelligence.conf:/etc/nginx/nginx.conf
       - /etc/letsencrypt:/etc/letsencrypt:ro
     ports:
-      # Use different ports for local development to avoid conflicts
-      - "8443:443"  # Map HTTPS to 8443
-      - "8080:80"   # Map HTTP to 8080
+      - "443:443"
+      - "80:80"
     networks:
       - intelligence-net
     depends_on:
