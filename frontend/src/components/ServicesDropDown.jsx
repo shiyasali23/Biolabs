@@ -24,6 +24,7 @@ const ServicesDropDown = ({ isLogined, logOutUser }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   const buttonRef = useRef(null);
+  const [noDataFoundRoute, setNoDataFoundRoute] = useState("analytics");
 
   const handleServiceClick = (index) => {
     // Always close the dropdown first
@@ -48,6 +49,7 @@ const ServicesDropDown = ({ isLogined, logOutUser }) => {
       if (isLogined) {
         router.push("/vault");
       } else {
+        setNoDataFoundRoute("vault");
         setNoDataFoundModalOpen(true);
       }
     } 
@@ -159,7 +161,7 @@ const ServicesDropDown = ({ isLogined, logOutUser }) => {
           onClose={() => setNoDataFoundModalOpen(false)}
           isModal={true}
           handleButtonClick={() => router.push("/info")}
-          route={"analytics"}
+          route={noDataFoundRoute}
         />
       )}
 

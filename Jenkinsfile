@@ -2,11 +2,11 @@ pipeline {
     agent any
 
     environment {
-        EC2_IP = '18.196.88.96'          // Removed trailing space here
-        EC2_USER = 'ec2-user'            // EC2 username
+        EC2_IP = '18.196.88.96'
+        EC2_USER = 'ec2-user'
         REPO_NAME = 'Biolabs'
         GIT_CREDENTIALS = 'github-credentials'
-        SSH_SECRET_FILE = 'aws-biolabs-key-file'  // Jenkins Secret File credential
+        SSH_SECRET_FILE = 'aws-biolabs-key-file'
     }
 
     parameters {
@@ -47,15 +47,15 @@ pipeline {
                 withCredentials([file(credentialsId: "${SSH_SECRET_FILE}", variable: 'SSH_KEY')]) {
                     sh '''
                         chmod 600 "$SSH_KEY"
-                        echo "Ensuring target directory exists on EC2..."
-                        ssh -o StrictHostKeyChecking=no -i "$SSH_KEY" ${EC2_USER}@${EC2_IP} "mkdir -p /home/${EC2_USER}/${REPO_NAME}"
-                        
-                        echo "Copying files to EC2..."
+                        echo "Creating target directory on EC2 with sudo..."
+                        ssh -o StrictHostKeyChecking=no -i "$SSH_KEY" ${EC2_USER}@${EC2_IP} "sudo mkdir -p /opt/${REPO_NAME} && sudo chown -R ${EC2_USER}:${EC2_USER} /opt/${REPO_NAME}"
+
+                        echo "Copying files to /opt/${REPO_NAME} on EC2..."
                         scp -o StrictHostKeyChecking=no -i "$SSH_KEY" -r \\
                             ./intelligence \\
                             docker-compose.intell.yml \\
                             nginx \\
-                            ${EC2_USER}@${EC2_IP}:/home/${EC2_USER}/${REPO_NAME}/
+                            ${EC2_USER}@${EC2_IP}:/opt/${REPO_NAME}/
                     '''
                 }
             }

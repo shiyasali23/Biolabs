@@ -168,7 +168,7 @@ const HealthInputPanel = ({
   
 
   return (
-    <div className="w-full flex flex-col items-center justify-center gap-2 border relative">
+    <div className="w-full  flex flex-col items-center justify-center gap-2 border border-red-500 relative">
       <Textarea
         placeholder="What's your health concern?"
         className="h-[25vh] w-full border-none rounded-none shadow-none focus:ring-0 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
