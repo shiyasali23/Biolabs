@@ -1,16 +1,16 @@
-from log_handler import LogHandler
-from responses_handler import ResponseHandler
-from bucket_handler import BucketHandler
-
+# modal_handler.py
 import os
 import torch
+from typing import List, Optional, Dict
 from transformers import AutoModelForCausalLM, AutoTokenizer
-from config import DIRECTORIES, MODEL_CONFIG
 
+from log_handler import LogHandler
+from bucket_handler import BucketHandler
+from responses_handler import ResponseHandler
+from config import DIRECTORIES, MODEL_CONFIG
 
 log = LogHandler()
 responses_handler = ResponseHandler()
-
 
 class ModalHandler:
     _instance = None
@@ -22,134 +22,113 @@ class ModalHandler:
         return cls._instance
 
     def _init_once(self):
-        # Paths & config
+        
+        self.error = "Error in ModalHandler:"
+        
         self.model_dir = DIRECTORIES["MODEL_DIR"]
+        self.model_local_prefix = MODEL_CONFIG["MODEL"]["LOCAL_PREFIX"]
+        self.model_bucket_prefix = MODEL_CONFIG["MODEL"]["BUCKET_PREFIX"]
+        self.min_tokens = MODEL_CONFIG["MODEL"]["MIN_TOKENS"]
+        self.max_tokens = MODEL_CONFIG["MODEL"]["MAX_TOKENS"]
+        self.modal_temperature = MODEL_CONFIG["MODEL"].get("MODAL_TEMPERATURE", 0.7)
 
-        # Create directories if they don't exist
         os.makedirs(self.model_dir, exist_ok=True)
-
-        message = "in Modal handler"
         if torch.cuda.is_available():
             self.device = torch.device("cuda")
-            log.info(f"Using GPU{message} : {torch.cuda.get_device_name(0)}")
+            log.info(f"Using GPU in ModalHandler: {torch.cuda.get_device_name(0)}")
         else:
             self.device = torch.device("cpu")
-            log.info(f"Using CPU with  cores {message}")
+            log.info("Using CPU in ModalHandler")
 
-        # Initialize model and tokenizer as None
         self.model = None
         self.tokenizer = None
         self.bucket_handler = BucketHandler()
 
-    def validate_path(self, local_dir, local_prefix, bucket_prefix, is_directory=True):
-        """
-        Check if a file exists locally. If not, download it from S3.
-        Returns the full path if successful, else None.
-        """
-        log.info(f"Validating {local_dir=} - {local_prefix=} - {bucket_prefix=}")
+    def validate_path(self, local_dir: str, local_prefix: str, bucket_prefix: str) -> Optional[str]:
+        try:
+            if not local_prefix or not bucket_prefix:
+                log.error("Missing prefixes for model path")
+                return None
+            
 
-        if not local_prefix or not bucket_prefix:
-            log.error(f"Missing local_prefix ({local_prefix}) or bucket_prefix ({bucket_prefix})")
+            local_path = os.path.join(local_dir, local_prefix)
+            if os.path.exists(local_path):
+                log.info(f"Found locally at {local_path}")
+                return local_path
+            os.makedirs(local_dir, exist_ok=True)
+            if not self.bucket_handler.get_object(prefix=bucket_prefix, local_dir=local_dir):
+                log.error(f"Failed to download {local_prefix} from bucket: {bucket_prefix}")
+                return None
+            if os.path.exists(local_path):
+                log.info(f"Downloaded {local_prefix} to {local_path}")
+                return local_path
             return None
-
-        local_path = os.path.join(local_dir, local_prefix)
-
-        if os.path.exists(local_path):
-            log.info(f"Found local file at {local_path}")
-            return local_path
-
-        # Create directory if it doesn't exist
-        os.makedirs(local_dir, exist_ok=True)
-
-        bucket_handler = BucketHandler()
-        success = bucket_handler.get_object(prefix=bucket_prefix, local_dir=local_dir)
-
-        if not success:
-            log.error(f"Failed to retrieve {bucket_prefix} from S3 into {local_dir}")
+        except Exception as e:
+            log.error(f"Error validating path from {local_prefix}: {e}")
             return None
-
-        if not os.path.exists(local_path):
-            log.error(f"Download reported success, but file {local_path} not found")
-            return None
-
-        log.info(f"Successfully downloaded to {local_path}")
-        return local_path
 
     def _init_model(self):
-        """Initialize model from local or S3"""
-        log.info("Initializing model")
-        
-        # Get model - use the main model directory since it contains all files
-        model_path = os.path.join(self.model_dir, MODEL_CONFIG["MODEL"]["LOCAL_PREFIX"])
-        
-        if not os.path.exists(model_path):
-            log.info(f"Model not found locally, attempting to download")
-            model_path = self.validate_path(
-                local_dir=self.model_dir,
-                local_prefix=MODEL_CONFIG["MODEL"]["LOCAL_PREFIX"],
-                bucket_prefix=MODEL_CONFIG["MODEL"]["BUCKET_PREFIX"],
-            )
-        
-        if not model_path:
-            log.error("Failed to locate model")
-            return
-
         try:
-            # Use AutoModelForCausalLM for LLaMA models instead of QuestionAnswering
-            self.model = AutoModelForCausalLM.from_pretrained(model_path)
+            model_path = self.validate_path(self.model_dir, self.model_local_prefix, self.model_bucket_prefix)
+            if not model_path:
+                log.error("Model initialization failed: path invalid")
+                return
+            self.model = AutoModelForCausalLM.from_pretrained(model_path).to(self.device)
             self.tokenizer = AutoTokenizer.from_pretrained(model_path)
-
-            # Move model to appropriate device
-            self.model = self.model.to(self.device)
-            self.model.eval()  # Set to evaluation mode
-
-            log.info(f"Model loaded: {type(self.model).__name__}")
+            self.model.eval()
+            log.info(f"LLM loaded successfully at {model_path}")
         except Exception as e:
-            log.error(f"Failed to load model: {e}")
+            log.error(f"{self.error} loading LLM: {e}")
 
-    async def generate(self, query, document=None):
+    def _linear_interpolation(self, threshold: float) -> int:
+        return int(self.min_tokens + (self.max_tokens - self.min_tokens) * threshold)
+
+    async def generate(
+        self,
+        query: str,
+        document: Optional[List[str]] = None,
+        files: Optional[List[str]] = None,
+        is_files_relevant: Optional[List[bool]] = None,
+        threshold: Optional[float] = None,
+        token: Optional[str] = None,
+        biometrics: Optional[List[Dict]] = None
+    ):
         try:
             if not self.model or not self.tokenizer:
                 self._init_model()
-                
             if not self.model or not self.tokenizer:
-                return responses_handler.handle_exception(
-                    exception="Failed to initialize model"
-                )
+                return responses_handler.handle_exception("Failed to initialize model")
+            
 
-            # Prepare input with RAG context if available
-            input_text = query
-            if document and isinstance(document, list) and len(document) > 0:
+            prompt = query
+            if document:
                 context = " ".join(document)
-                # Format for context-based generation
-                input_text = f"Context: {context}\n\nQuestion: {query}\n\nAnswer:"
-            
-            # Prepare inputs for generation
-            inputs = self.tokenizer(
-                input_text,
-                return_tensors="pt", 
-                max_length=512, 
-                truncation=True
-            ).to(self.device)
+                prompt = f"Context:\n{context}\n\nQuestion: {query}\nAnswer:"
+            if biometrics:
+                prompt += f"\n\nBiometrics: {biometrics}"
             
             
+            if files and is_files_relevant:
+                for is_file_relevant, file in zip(is_files_relevant, files):
+                    if is_file_relevant:
+                        prompt += f"\n\nFile: {file}"
+            
+
+            inputs = self.tokenizer(prompt, return_tensors="pt", max_length=512, truncation=True).to(self.device)
+            max_tokens = self.max_tokens if threshold is None else self._linear_interpolation(threshold)
+
             with torch.no_grad():
                 outputs = self.model.generate(
-                    inputs.input_ids, 
-                    max_new_tokens=int(MODEL_CONFIG.get("MAX_NEW_TOKENS", 256)),
-                    temperature=0.7,
+                    inputs.input_ids,
+                    max_new_tokens=max_tokens,
+                    temperature=self.modal_temperature,
                     do_sample=True,
                     pad_token_id=self.tokenizer.eos_token_id
                 )
-                
-                # Decode only the new tokens (skip the input prompt)
-                input_length = inputs.input_ids.shape[1]
-                result = self.tokenizer.decode(
-                    outputs[0][input_length:], 
-                    skip_special_tokens=True
-                )
             
-            return responses_handler.handle_response(response=result)
+            generated = self.tokenizer.decode(outputs[0][inputs.input_ids.shape[1]:], skip_special_tokens=True)
+             
+            
+            return responses_handler.handle_response(response=generated)
         except Exception as e:
-            log.error(f"Error in generate: {str(e)}")
-            return responses_handler.handle_exception(exception=f"Error in generate: {str(e)}")
+            return responses_handler.handle_exception(f"Error in generate: {e}")

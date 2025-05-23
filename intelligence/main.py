@@ -1,16 +1,14 @@
+# main.py
 import os
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
-from app_handler import AppHandler
-from log_handler import LogHandler  # Fixed import statement
 
+from database_handler import DatabaseHandler
+from log_handler import LogHandler
+from responses_handler import ResponseHandler
 
-# Initialize logger first
-log = LogHandler()
-
-# Initialize FastAPI app
 app = FastAPI(
     title="Bio Intelligence API",
     description="API for bio intelligence text generation",
@@ -19,35 +17,46 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Replace "*" with specific domains in production
+    allow_origins=["*"],  
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Initialize application handler after logger
-app_handler = AppHandler()
+database_handler = DatabaseHandler()
+log = LogHandler()
+response_handler = ResponseHandler()
 
-# Request models
 class GenerateTextRequest(BaseModel):
     query: str
-    token: Optional[str]
+    token: Optional[str] = None
+    files: Optional[list[str]] = None
+    biometrics: Optional[dict] = None
 
-# Wrapper model for the "data" field
 class InferenceRequest(BaseModel):
     data: GenerateTextRequest
 
-
 @app.post("/intelligence/inference")
-async def generate_text(request: InferenceRequest):
-    """Generate text based on the provided query"""
-    if not request.data.query:
-        raise HTTPException(status_code=400, detail="Query cannot be empty")
-    
-    return await app_handler.generate_text(request.data.query)
+async def get_generate_text(request: InferenceRequest):
+    """Async endpoint - properly handles async operations"""
+    try:
+        return await database_handler.generate_text(
+            query=request.data.query,
+            token=request.data.token,
+            files=request.data.files,
+            biometrics=request.data.biometrics
+        )
+    except Exception as e:
+        return response_handler.handle_exception(
+            exception=f"Error in get generating text: {str(e)}"
+        )
 
+# Health check endpoint
+@app.get("/health")
+async def health_check():
+    """Simple health check"""
+    return {"status": "healthy", "message": "API is running"}
 
-# Run server
 if __name__ == "__main__":
     import uvicorn
     port = int(os.getenv("PORT", 8003))

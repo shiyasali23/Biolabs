@@ -1,9 +1,12 @@
+# responses_handler.py
 from fastapi.responses import JSONResponse
 from log_handler import LogHandler
 
 log = LogHandler()
 
 class ResponseHandler:
+    """Synchronous - response handling is fast and doesn't need async"""
+    
     MESSAGES = {
         "INTERNAL_SERVER_ERROR": "An internal server error occurred.",
         "UNEXPECTED_ERROR": "An unexpected error occurred.",
@@ -19,8 +22,6 @@ class ResponseHandler:
         "CONTENT_POLICY_VIOLATION": "Content violates usage policies.",
         "CONTEXT_LENGTH_EXCEEDED": "Input context length exceeds model limits.",
         "NOT_RELEVANT": "Query is not relevant.",
-                   
-        
     }
 
     def handle_response(self, status_code=200, message=None, error=None, response=None) -> JSONResponse:
