@@ -3,12 +3,16 @@ import os
 import torch
 from typing import List, Optional, Dict
 from transformers import AutoModelForCausalLM, AutoTokenizer
+import asyncio
+
 
 from log_handler import LogHandler
 from bucket_handler import BucketHandler
 from responses_handler import ResponseHandler
 from config import DIRECTORIES, MODEL_CONFIG
 
+# Run generation in thread pool to avoid blocking
+loop = asyncio.get_event_loop()
 log = LogHandler()
 responses_handler = ResponseHandler()
 
@@ -22,7 +26,6 @@ class ModalHandler:
         return cls._instance
 
     def _init_once(self):
-        
         self.error = "Error in ModalHandler:"
         
         self.model_dir = DIRECTORIES["MODEL_DIR"]
@@ -45,20 +48,22 @@ class ModalHandler:
         self.bucket_handler = BucketHandler()
 
     def validate_path(self, local_dir: str, local_prefix: str, bucket_prefix: str) -> Optional[str]:
+        """Synchronous - file system operations are fast"""
         try:
             if not local_prefix or not bucket_prefix:
                 log.error("Missing prefixes for model path")
                 return None
             
-
             local_path = os.path.join(local_dir, local_prefix)
             if os.path.exists(local_path):
                 log.info(f"Found locally at {local_path}")
                 return local_path
+                
             os.makedirs(local_dir, exist_ok=True)
             if not self.bucket_handler.get_object(prefix=bucket_prefix, local_dir=local_dir):
                 log.error(f"Failed to download {local_prefix} from bucket: {bucket_prefix}")
                 return None
+                
             if os.path.exists(local_path):
                 log.info(f"Downloaded {local_prefix} to {local_path}")
                 return local_path
@@ -68,11 +73,13 @@ class ModalHandler:
             return None
 
     def _init_model(self):
+        """Synchronous - model loading is typically synchronous"""
         try:
             model_path = self.validate_path(self.model_dir, self.model_local_prefix, self.model_bucket_prefix)
             if not model_path:
                 log.error("Model initialization failed: path invalid")
                 return
+                
             self.model = AutoModelForCausalLM.from_pretrained(model_path).to(self.device)
             self.tokenizer = AutoTokenizer.from_pretrained(model_path)
             self.model.eval()
@@ -81,6 +88,7 @@ class ModalHandler:
             log.error(f"{self.error} loading LLM: {e}")
 
     def _linear_interpolation(self, threshold: float) -> int:
+        """Synchronous - simple calculation"""
         return int(self.min_tokens + (self.max_tokens - self.min_tokens) * threshold)
 
     async def generate(
@@ -93,13 +101,14 @@ class ModalHandler:
         token: Optional[str] = None,
         biometrics: Optional[List[Dict]] = None
     ):
+        """Async - AI generation can be time-consuming"""
         try:
             if not self.model or not self.tokenizer:
                 self._init_model()
             if not self.model or not self.tokenizer:
                 return responses_handler.handle_exception("Failed to initialize model")
             
-
+            # Build prompt
             prompt = query
             if document:
                 context = " ".join(document)
@@ -107,28 +116,36 @@ class ModalHandler:
             if biometrics:
                 prompt += f"\n\nBiometrics: {biometrics}"
             
-            
             if files and is_files_relevant:
                 for is_file_relevant, file in zip(is_files_relevant, files):
                     if is_file_relevant:
                         prompt += f"\n\nFile: {file}"
             
-
+            # Tokenization and generation
             inputs = self.tokenizer(prompt, return_tensors="pt", max_length=512, truncation=True).to(self.device)
             max_tokens = self.max_tokens if threshold is None else self._linear_interpolation(threshold)
-
-            with torch.no_grad():
-                outputs = self.model.generate(
-                    inputs.input_ids,
-                    max_new_tokens=max_tokens,
-                    temperature=self.modal_temperature,
-                    do_sample=True,
-                    pad_token_id=self.tokenizer.eos_token_id
-                )
             
-            generated = self.tokenizer.decode(outputs[0][inputs.input_ids.shape[1]:], skip_special_tokens=True)
-             
+            def _generate():
+                with torch.no_grad():
+                    outputs = self.model.generate(
+                        inputs.input_ids,
+                        max_new_tokens=max_tokens,
+                        temperature=self.modal_temperature,
+                        do_sample=True,
+                        pad_token_id=self.tokenizer.eos_token_id
+                    )
+                return self.tokenizer.decode(outputs[0][inputs.input_ids.shape[1]:], skip_special_tokens=True)
+            
+            # Run CPU/GPU intensive task in thread pool
+            generated = await loop.run_in_executor(None, _generate)
             
             return responses_handler.handle_response(response=generated)
         except Exception as e:
             return responses_handler.handle_exception(f"Error in generate: {e}")
+
+
+
+
+
+
+

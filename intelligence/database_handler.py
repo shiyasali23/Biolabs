@@ -8,7 +8,7 @@ from tqdm import tqdm
 from transformers import AutoModel, AutoTokenizer
 from sklearn.metrics.pairwise import cosine_similarity
 from typing import Callable, Optional, List
-
+import asyncio
 
 from log_handler import LogHandler
 from responses_handler import ResponseHandler
@@ -52,6 +52,7 @@ class DatabaseHandler:
         self.modal_handler = ModalHandler()
 
     def _init_embedding_model(self):
+        """Synchronous - model loading"""
         prefix = FILE_PREFIXES.get("EMBEDDING_MODEL", {})
         path = self.modal_handler.validate_path(
             DIRECTORIES["EMBEDDING_MODEL_DIR"],
@@ -69,7 +70,7 @@ class DatabaseHandler:
             log.error(f"{self.error} failed loading embedder: {e}")
 
     def _init_database(self):
-        # Initialize ChromaDB and load embeddings
+        """Synchronous - database initialization"""
         try:
             self.client = chromadb.PersistentClient(path=DIRECTORIES["DATABASE_DIR"])
             name = os.path.splitext(FILE_PREFIXES["EMBEDDINGS"]["LOCAL_PREFIX"])[0]
@@ -93,6 +94,7 @@ class DatabaseHandler:
                 docs = df[self.target_column].tolist()
                 ids = [f"doc_{i}" for i in range(len(self.embeddings))]
                 metas = [{"id": i} for i in range(len(self.embeddings))]
+                
                 for i in tqdm(range(0, len(self.embeddings), 5000), desc="Indexing embeddings"):
                     j = min(i + 5000, len(self.embeddings))
                     self.collection.add(
@@ -106,27 +108,53 @@ class DatabaseHandler:
             log.error(f"{self.error} database init failed: {e}")
 
     def _initialize_system(self):
+        """Synchronous - initialization check"""
         if not self.embedding_model:
             self._init_embedding_model()
         if not self.collection:
             self._init_database()
 
-    def _get_documents(self, text: str) -> Optional[List[str]]:
+    async def _get_embedding_async(self, text: str) -> Optional[np.ndarray]:
+        """Async - embedding generation can be CPU intensive"""
         try:
             tokens = self.embedding_tokenizer(text, **self.embedding_params)
             tokens = {k: v.to(self.device) for k, v in tokens.items()}
             
-            with torch.no_grad():
-                embedding = self.embedding_model(**tokens).last_hidden_state.mean(dim=1).cpu().numpy()
-                normalized_embedding = embedding / np.linalg.norm(embedding).reshape(-1)
+            # Run embedding generation in thread pool
+            loop = asyncio.get_event_loop()
             
-            query_result = self.collection.query(query_embeddings=[normalized_embedding.tolist()], n_results=1)
+            def _generate_embedding():
+                with torch.no_grad():
+                    embedding = self.embedding_model(**tokens).last_hidden_state.mean(dim=1).cpu().numpy()
+                    return embedding / np.linalg.norm(embedding)
+            
+            return await loop.run_in_executor(None, _generate_embedding)
+        except Exception as e:
+            log.error(f"{self.error} create embedding error: {e}")
+            return None
+
+    async def _get_documents(self, text: str) -> Optional[List[str]]:
+        """Async - uses async embedding generation"""
+        try:
+            normalized_embedding = await self._get_embedding_async(text)
+            if normalized_embedding is None:
+                return None
+            
+            query_result = self.collection.query(
+                query_embeddings=[normalized_embedding.reshape(-1).tolist()], 
+                n_results=1
+            )
+            
             if not isinstance(query_result, dict) or not query_result.get('ids') or not query_result['ids'][0]:
                 return None
             
             db_embedding = np.array(query_result['embeddings'][0]).reshape(-1)
-            similarity_score = float(cosine_similarity(db_embedding.reshape(1, -1), normalized_embedding.reshape(1, -1))[0][0])
+            similarity_score = float(cosine_similarity(
+                db_embedding.reshape(1, -1), 
+                normalized_embedding.reshape(1, -1)
+            )[0][0])
             
+            # Dynamic threshold based on query length
             length = len(text.split())
             if length < 3:
                 threshold = self.min_threshold
@@ -142,27 +170,14 @@ class DatabaseHandler:
                 return None
         
         except Exception as e:
-            log.error(f"{self.error} create embedding error: {e}")
-            return None
-
-    def _get_documents_from_db(self, text: str) -> Optional[np.ndarray]:
-        try:
-            tokens = self.embedding_tokenizer(text, **self.embedding_params)
-            tokens = {k: v.to(self.device) for k, v in tokens.items()}
-            
-            with torch.no_grad():
-                embedding = self.embedding_model(**tokens).last_hidden_state.mean(dim=1).cpu().numpy()
-                normalized_embedding = embedding / np.linalg.norm(embedding)
-            
-            return normalized_embedding
-        except Exception as e:
-            log.error(f"{self.error} create embedding error: {e}")
+            log.error(f"{self.error} get documents error: {e}")
             return None
 
     async def is_relevant(self, query: str, **kwargs) -> dict:
+        """Async - main entry point for relevance checking"""
         self._initialize_system()
         try:
-            query_embedding = self._get_documents_from_db(query)
+            query_embedding = await self._get_embedding_async(query)
             if query_embedding is None:
                 return response_handler.handle_response(
                     error=response_handler.MESSAGES['NOT_RELEVANT'],
@@ -170,7 +185,10 @@ class DatabaseHandler:
                     status_code=400
                 )
             
-            query_result = self.collection.query(query_embeddings=[query_embedding.tolist()], n_results=1)
+            query_result = self.collection.query(
+                query_embeddings=[query_embedding.reshape(-1).tolist()], 
+                n_results=1
+            )
             
             if not isinstance(query_result, dict) or not query_result.get('ids') or not query_result['ids'][0]:
                 return response_handler.handle_response(
@@ -180,7 +198,10 @@ class DatabaseHandler:
                 )
             
             db_embedding = np.array(query_result['embeddings'][0]).reshape(-1)
-            sim = float(cosine_similarity(db_embedding.reshape(1, -1), query_embedding.reshape(1, -1))[0][0])
+            sim = float(cosine_similarity(
+                db_embedding.reshape(1, -1), 
+                query_embedding.reshape(1, -1)
+            )[0][0])
 
             length = len(query.split())
             if length < 3:
@@ -191,7 +212,7 @@ class DatabaseHandler:
                 threshold = self.base_threshold
 
             if sim >= threshold:
-                return self.retrieve(
+                return await self.retrieve(
                     query=query,
                     kwargs=kwargs,
                     threshold=threshold,
@@ -208,27 +229,34 @@ class DatabaseHandler:
                 exception=f"{self.error} is_relevant error: {e}",
             )
 
-    async def genarate_text(
+    async def generate_text(
         self,
         query: str,
         token: str,
         files: list[str] = None,
         biometrics: list[dict] = None,
     ):
-        """Retrieve documents and generate a response."""
+        """Async - orchestrates document retrieval and text generation"""
         try:
             self._initialize_system()
-            db_documents = self._get_documents(query)
+            
+            # Retrieve documents asynchronously
+            db_documents = await self._get_documents(query)
             if not db_documents:
                 return response_handler.handle_response(
                     error=response_handler.MESSAGES['NOT_RELEVANT'],
                     message=response_handler.MESSAGES['NOT_RELEVANT'],
                     status_code=400
                 )
+            
+            # Check file relevance asynchronously
             is_files_relevant = []
             if files:
-                is_files_relevant = [bool(self._get_documents(file)) for file in files]
+                relevance_tasks = [self._get_documents(file) for file in files]
+                relevance_results = await asyncio.gather(*relevance_tasks)
+                is_files_relevant = [bool(result) for result in relevance_results]
             
+            # Generate text asynchronously
             return await self.modal_handler.generate(
                 query=query,
                 document=db_documents,
@@ -239,5 +267,5 @@ class DatabaseHandler:
             )
         except Exception as e:
             return response_handler.handle_exception(
-                exception=f"{self.error} retrieve error: {e}"
+                exception=f"{self.error} generate_text error: {e}"
             )
