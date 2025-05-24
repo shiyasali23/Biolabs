@@ -50,6 +50,7 @@ class BucketHandler:
         Returns:
             str | None: Path to downloaded file or directory, or None if failure.
         """
+        message = f"Fetched {prefix} from s3://{self.MODEL_BUCKET_NAME}/{prefix} to {local_dir}"
         if not self.s3_client:
             log.error("S3 client not initialized.")
             return None
@@ -70,12 +71,9 @@ class BucketHandler:
                 return local_file_path
 
         except self.s3_client.exceptions.NoSuchKey:
-            log.info(f"File not found: {prefix}, trying prefix-based folder download.")
+            log.info(f"File not found: {prefix}, trying prefix-based folder download. \n\n {message}")
         except Exception as e:
-            if "Not Found" in str(e):
-                log.info("Falling back to directory download.")
-            else:
-                log.error(f"Download error: {e}")
+                log.error(f"Download error: {e} \n\n {message}")
                 return None
 
         # Directory download fallback
@@ -96,15 +94,14 @@ class BucketHandler:
 
                     if os.path.exists(local_file_path):
                         os.remove(local_file_path)
-
-                    log.info(f"Downloading s3://{self.MODEL_BUCKET_NAME}/{s3_key} to {local_file_path}")
                     self.s3_client.download_file(self.MODEL_BUCKET_NAME, s3_key, local_file_path)
                     downloaded_files.append(local_file_path)
 
             if downloaded_files:
+                log.info(f"Successfully {message}")
                 return local_dir if len(downloaded_files) > 1 else downloaded_files[0]
             else:
-                log.warning(f"No files found for prefix: {prefix}")
+                log.warning(f"No files found for prefix: {prefix}: Failes {message}")
                 return None
 
         except Exception as e:

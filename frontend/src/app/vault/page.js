@@ -14,7 +14,7 @@ const Vault = () => {
   const { isLogined, userDataLoading } = useUser();
   const { recordsArray, recordsLoading, updateRecord, fetchRecords } =
     useRecord();
-
+  
   const [intelligenceOpen, setIntelligenceOpen] = useState(false);
   const [extractedTexts, setExtractedTexts] = useState([]);
   const [text, setText] = useState("");
@@ -25,16 +25,13 @@ const Vault = () => {
       fetchRecords();
     }
   }, [recordsArray]);
-
-  console.log("recordsArray", recordsArray);
-  
-
-  const handleSend = (response) => {
-    if (response && response.error) {
-      setMessage("Something went wrong");
-    } else {
-      setText("");
-      setExtractedTexts([]);
+     
+  const handleSend = (data) => {
+    console.log("data from vault page", data);
+    // Handle successful save - could refresh records or show success message
+    if (data && !data.error) {
+      // Optionally refresh records after successful save
+      fetchRecords();
     }
   };
 
@@ -70,13 +67,14 @@ const Vault = () => {
             <HealthInputPanel
               setIntelligenceOpen={setIntelligenceOpen}
               isIntelligence={false}
-              updateRecord={updateRecord}
               handleSend={handleSend}
+              updateRecord={updateRecord}
               isLogined={isLogined}
               text={text}
               setText={setText}
               extractedTexts={extractedTexts}
               setExtractedTexts={setExtractedTexts}
+              setMessage={setMessage}
             />
             {extractedTexts && extractedTexts.length > 0 && (
               <div className="  shadow-sm mt-5 overflow-hidden h-full border flex flex-col items-start justify-start overflow-y-auto p-2">
@@ -109,6 +107,7 @@ const Vault = () => {
         onClose={() => setIntelligenceOpen(false)}
         text={text}
         extractedTexts={extractedTexts}
+        setMessage={setMessage}
       />
     </div>
   );

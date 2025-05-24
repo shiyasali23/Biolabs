@@ -28,12 +28,11 @@ const HealthInputPanel = ({
   setText,
   promt = "",
   setPromt,
+  setMessage = () => {}, // Provide default function to prevent errors
 }) => {
-    const {  latestBiometrics 
-    } = useUser();
+  const { latestBiometrics } = useUser();
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [fileLoading, setFileLoading] = useState(false);
-  const [message, setMessage] = useState("");
   const [isBiometricsSelected, setIsBiometricsSelected] = useState(false);
 
   // Use the appropriate state based on whether we're in intelligence mode or not
@@ -94,7 +93,7 @@ const HealthInputPanel = ({
         setFileLoading(false);
       }
     },
-    [setExtractedTexts, setExtractedPromts, isIntelligence]
+    [setExtractedTexts, setExtractedPromts, isIntelligence, setMessage]
   );
 
   const handleRemoveFile = useCallback(
@@ -139,14 +138,13 @@ const HealthInputPanel = ({
     }
 
     if (isBiometricsSelected && latestBiometrics && latestBiometrics.length > 0) {
-        recordData.biometrics = latestBiometrics.map(biometric => ({
-          name: biometric.name,
-          value: biometric.value,
-          healthy_min: biometric.healthy_min,
-          healthy_max: biometric.healthy_max,
-        }));
-      }
-      
+      recordData.biometrics = latestBiometrics.map(biometric => ({
+        name: biometric.name,
+        value: biometric.value,
+        healthy_min: biometric.healthy_min,
+        healthy_max: biometric.healthy_max,
+      }));
+    }
 
     let response = null;
 
@@ -165,10 +163,9 @@ const HealthInputPanel = ({
       setMessage("Error submitting data");
     }
   };
-  
 
   return (
-    <div className="w-full  flex flex-col items-center justify-center gap-2 border border-red-500 relative">
+    <div className="w-full flex flex-col items-center justify-center gap-2 border  relative">
       <Textarea
         placeholder="What's your health concern?"
         className="h-[25vh] w-full border-none rounded-none shadow-none focus:ring-0 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"

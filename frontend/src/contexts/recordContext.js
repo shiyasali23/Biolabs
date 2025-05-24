@@ -42,12 +42,12 @@ export const RecordProvider = ({ children }) => {
           cacheManager.set("records", updatedArray);
           return updatedArray;
         });
-        return { error: null, data: true };
+        return { message: "Record updated Successfull", data: true };
       } else {
-        return { error: "Something went wrong", data: null };
+        return { message: "Something went wrong", data: null };
       }
     } catch (error) {
-      return { error: "Something went wrong", data: null };
+      return { message: "Something went wrong", data: null };
     } finally {
       setRecordsLoading(false);
     }
