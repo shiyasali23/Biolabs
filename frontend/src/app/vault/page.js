@@ -26,14 +26,7 @@ const Vault = () => {
     }
   }, [recordsArray]);
      
-  const handleSend = (data) => {
-    console.log("data from vault page", data);
-    // Handle successful save - could refresh records or show success message
-    if (data && !data.error) {
-      // Optionally refresh records after successful save
-      fetchRecords();
-    }
-  };
+ 
 
   const handleSelectedRecord = (record) => {
     if (!record) return;
@@ -46,6 +39,20 @@ const Vault = () => {
 
     // Ensure we only keep at most 2 extracted texts
     setExtractedTexts(newExtractedTexts.slice(0, 2));
+  };
+
+   const handleRecordUpdate= async (recordData) => {
+    const response = await updateRecord(recordData);
+    if (response && response.message) {
+      setMessage(response.message);
+    }
+
+    if (response && response.data) {
+      setExtractedTexts([]);
+      setText("");
+      
+    }
+    
   };
 
   return (
@@ -67,8 +74,7 @@ const Vault = () => {
             <HealthInputPanel
               setIntelligenceOpen={setIntelligenceOpen}
               isIntelligence={false}
-              handleSend={handleSend}
-              updateRecord={updateRecord}
+              handleRecordUpdate={handleRecordUpdate}
               isLogined={isLogined}
               text={text}
               setText={setText}
@@ -107,7 +113,6 @@ const Vault = () => {
         onClose={() => setIntelligenceOpen(false)}
         text={text}
         extractedTexts={extractedTexts}
-        setMessage={setMessage}
       />
     </div>
   );

@@ -220,7 +220,7 @@ class DatabaseHandler:
                 return response_handler.handle_response(
                     error=response_handler.MESSAGES['NOT_RELEVANT'],
                     message=response_handler.MESSAGES['NOT_RELEVANT'],
-                    status_code=400
+                    status_code=204
                 )
             
             relevant_files = None

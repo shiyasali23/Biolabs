@@ -124,17 +124,8 @@ class ModalHandler:
                     )
 
             outputs = await loop.run_in_executor(None, _generate)
-            generated = self.tokenizer.decode(outputs[0][inputs.input_ids.shape[1]:], skip_special_tokens=True)
+            generated_text = self.tokenizer.decode(outputs[0][inputs.input_ids.shape[1]:], skip_special_tokens=True)
 
-            return responses_handler.handle_response(response={
-                "generated_text": generated,
-                "query": query,
-                "document": document,
-                "relevant_files": relevant_files,
-                "threshold": threshold,
-                "token": token,
-                "biometrics": biometrics,
-                "mode": mode
-            })
+            return responses_handler.handle_response(response=generated_text)
         except Exception as e:
             return responses_handler.handle_exception(f"Error in generate: {e}")

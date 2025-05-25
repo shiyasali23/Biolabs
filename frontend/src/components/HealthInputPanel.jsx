@@ -4,20 +4,21 @@ import React, { useState, useCallback, useMemo, useEffect } from "react";
 import Image from "next/image";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import CustomButton from "@/components/CustomButton";
+
 import { IoMdClose } from "react-icons/io";
 import { Loader } from "lucide-react";
 import { RiHealthBookFill, RiMentalHealthFill } from "react-icons/ri";
 import { AiFillSlackCircle } from "react-icons/ai";
-import { extractTextFromImage } from "@/utils/vault-utils";
-import CustomButton from "@/components/CustomButton";
 import { FaChevronCircleUp } from "react-icons/fa";
 import { useUser } from "@/contexts/userContext";
+import { extractTextFromImage } from "@/utils/vault-utils";
+
 
 const HealthInputPanel = ({
   isIntelligence,
-  handleSend,
   isLogined,
-  updateRecord = null,
+  handleRecordUpdate = null,
   getGeratedTexts = null,
   setIntelligenceOpen = null,
   extractedTexts = [],
@@ -123,7 +124,7 @@ const HealthInputPanel = ({
     return isIntelligence ? promt && promt.length > 0 : text && text.length > 0;
   }, [isIntelligence, text, promt]);
 
-  const handleSubmitClick = async () => {
+  const handleSubmitClick = () => {
     setMessage("");
     const recordData = {
       text: isIntelligence ? promt : text || "",
@@ -146,29 +147,19 @@ const HealthInputPanel = ({
       }));
     }
 
-    let response = null;
-
-    try {
-      if (isIntelligence && getGeratedTexts) {
-        response = await getGeratedTexts(recordData);
-      } else if (!isIntelligence && updateRecord) {
-        response = await updateRecord(recordData);
+    
+    if (isIntelligence && getGeratedTexts) {
+        getGeratedTexts(recordData);
+      } else if (!isIntelligence && handleRecordUpdate) {
+        handleRecordUpdate(recordData);
       }
-
-      if (response) {
-        handleSend(response);
-      }
-    } catch (error) {
-      console.error("Error submitting data:", error);
-      setMessage("Error submitting data");
-    }
   };
 
   return (
     <div className="w-full flex flex-col items-center justify-center gap-2 border  relative">
       <Textarea
-        placeholder="What's your health concern?"
-        className="h-[25vh] w-full border-none rounded-none shadow-none focus:ring-0 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+        placeholder="Type here"
+        className="h-[20vh] w-full border-none rounded-none shadow-none focus:ring-0 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
         onChange={handleTextChange}
         value={isIntelligence ? promt : text || ""}
       />
@@ -203,7 +194,7 @@ const HealthInputPanel = ({
           ))}
         </div>
 
-        <div>
+        <div className=" mb-1">
           {fileLoading ? (
             <Loader className="animate-spin" />
           ) : (

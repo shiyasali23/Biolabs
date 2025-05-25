@@ -63,7 +63,7 @@ export const registerRecords = async (recordsData) => {
     const result = await response.json();
     return result.response || null;
   } catch (error) {
-    console.error("Error updating user:", error.message);
+    console.error("Error updating user records:", error.message);
     return null;
   } finally {
     clearTimeout(timeoutId);

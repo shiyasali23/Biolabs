@@ -42,7 +42,7 @@ export const RecordProvider = ({ children }) => {
           cacheManager.set("records", updatedArray);
           return updatedArray;
         });
-        return { message: "Record updated Successfull", data: true };
+        return { message: "", data: true };
       } else {
         return { message: "Something went wrong", data: null };
       }

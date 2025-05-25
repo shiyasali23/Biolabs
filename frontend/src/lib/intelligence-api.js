@@ -2,9 +2,7 @@ const INTELLIGENCE_API_URL = 'https://intelligence.biolabsltd.com';
 
 // List of intro phrases a user might say
 const INTRO_INPUTS = [
-  "hi", "hello", "hey",
-  "good morning", "good afternoon", "good evening",
-  "how are you", "what can you do", "who are you"
+  "hi", "hello", "hey"
 ];
 
 // List of possible replies to any of the intro inputs
@@ -12,10 +10,6 @@ const INTRO_REPLIES = [
   "Hello there!",
   "Hey! How are you?",
   "Hey! What's on your mind?",
-  "Good to see you! What can I help with?",
-  "Hi! Ready to dive into your health journey?",
-  "Hey there! Let’s make health simple today.",
-  "Welcome! I'm here to support your wellness."
 ];
 
 // Session tracker to avoid repeating the same reply
@@ -30,30 +24,19 @@ function getRandomIntroReply() {
 
 export const inference = async (inputData, abortSignal = null) => {
   let token = null;
+
   try {
     token = localStorage.getItem("token");
   } catch (error) {
     console.warn("localStorage not available:", error);
   }
 
-  const query = inputData?.query?.trim().toLowerCase();
+  const query = inputData?.text?.trim().toLowerCase();
 
   if (query && INTRO_INPUTS.includes(query)) {
-    return {
-      message: null,
-      data: {
-        generated_text: getRandomIntroReply(),
-        query: inputData.query,
-        document: inputData.document || [],
-        relevant_files: inputData.relevant_files || [],
-        biometrics: inputData.biometrics || [],
-        mode: inputData.mode || "sample"
-      },
-      isRelevant: true
-    };
+    return { response: getRandomIntroReply(), message: null };
   }
 
-  // Proceed with API call if not an instant intro reply
   const payload = { ...inputData };
   if (token) {
     payload.token = token;
@@ -65,8 +48,7 @@ export const inference = async (inputData, abortSignal = null) => {
       body: JSON.stringify({ data: payload }),
       signal: abortSignal,
       headers: { 
-        "Content-Type": "application/json",
-        ...(token && { "Authorization": `Bearer ${token}` })
+        "Content-Type": "application/json"
       },
     });
 
@@ -76,42 +58,18 @@ export const inference = async (inputData, abortSignal = null) => {
 
     const result = await response.json();
 
-    if (result.status === 400 && result.error === "Query is not relevant.") {
-      return {
-        message: "Please ask health-related questions only.",
-        data: null,
-        isRelevant: false
-      };
+    if (result.status === 204) {
+      return { response: "Ask health related questions.", message: null };
     }
 
-    if (result.status === 200 && result.response) {
-      return {
-        message: null,
-        data: result.response,
-        isRelevant: true
-      };
+    if (result.response) {
+      return { response: result.response, message: null };
     }
 
-    return {
-      message: "Unexpected response format.",
-      data: null,
-      isRelevant: false
-    };
+    return { response: "", message: "Something went wrong" };
 
   } catch (error) {
-    if (error.name === 'AbortError') {
-      return {
-        message: "Request was cancelled.",
-        data: null,
-        isRelevant: false
-      };
-    }
-
-    console.error("Intelligence API error:", error.message);
-    return {
-      message: "Something went wrong. Please try again.",
-      data: null,
-      isRelevant: false
-    };
+    console.error("Inference request failed:", error);
+    return { response: "", message: "Something went wrong" };
   }
 };
