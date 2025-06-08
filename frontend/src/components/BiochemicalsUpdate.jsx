@@ -80,7 +80,7 @@ const BiochemicalsUpdate = () => {
         Biometrics 
       </h1>
       {biochemicalDataLoading ? (
-        <LoadingComponent text="Processing Biometrics Data" />
+        <LoadingComponent />
       ) : !biochemicalData ? (
         <ErrorComponent handleTryAgain={fetchBiochemicals} />
       ) : (

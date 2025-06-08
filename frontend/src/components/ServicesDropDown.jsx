@@ -9,7 +9,8 @@ import NoDataFound from "./NoDataFound";
 import DiagnosisModal from "./DiagnosisModal";
 import DiseaseDetectionModal from "./DiseaseDetectionModal";
 import Intelligence from "./Intelligence";
-
+import {useServiceHandler} from "@/utils/serviceHandler";
+ 
 
 const ServicesDropDown = ({ isLogined, logOutUser }) => {
   const { servicesArray } = useData();
@@ -18,7 +19,7 @@ const ServicesDropDown = ({ isLogined, logOutUser }) => {
   const [diagnosisModalOpen, setDiagnosisModalOpen] = useState(false);
   const [noDataFoundModalOpen, setNoDataFoundModalOpen] = useState(false);
   const [commingSoonModalOpen, setCommingSoonModalOpen] = useState(false);
-    const [intelligenceOpen, setIntelligenceOpen] = useState(false);
+  const [intelligenceOpen, setIntelligenceOpen] = useState(false);
   
   const [commingSoonIndex, setCommingSoonIndex] = useState(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -26,37 +27,28 @@ const ServicesDropDown = ({ isLogined, logOutUser }) => {
   const buttonRef = useRef(null);
   const [noDataFoundRoute, setNoDataFoundRoute] = useState("analytics");
 
-  const handleServiceClick = (index) => {
+  const { handleServiceClick, checkIntelligenceParam, closeIntelligenceModal } = useServiceHandler();
+
+  // Check for intelligence parameter on component mount
+  useEffect(() => {
+    checkIntelligenceParam(setIntelligenceOpen);
+  }, []);
+
+  const onServiceClick = (index) => {
     // Always close the dropdown first
     setDropdownOpen(false);
     
-    if (index === 0) {
-      setDiseaseDetectionModalOpen(true);
-    } else if (index === 1) {
-      setDiagnosisModalOpen(true);
-    } else if (index === 2) {
-      router.push("/food");
-    } else if (index === 3) {
-      if (isLogined) {
-        router.push("/analytics");
-      } else {
-        setNoDataFoundModalOpen(true);
-      }
-    }else if (index === 4) {
-      setIntelligenceOpen(true);
-    } 
-    else if (index === 5) {
-      if (isLogined) {
-        router.push("/vault");
-      } else {
-        setNoDataFoundRoute("vault");
-        setNoDataFoundModalOpen(true);
-      }
-    } 
-    else if (index >= 5) {
-      setCommingSoonModalOpen(true);
-      setCommingSoonIndex(index);
-    }
+    handleServiceClick(
+      index,
+      isLogined,
+      setDiseaseDetectionModalOpen,
+      setDiagnosisModalOpen,
+      setNoDataFoundModalOpen,
+      setCommingSoonModalOpen,
+      setIntelligenceOpen,
+      setCommingSoonIndex,
+      setNoDataFoundRoute
+    );
   };
 
   const toggleDropdown = () => {
@@ -117,7 +109,7 @@ const ServicesDropDown = ({ isLogined, logOutUser }) => {
           {servicesArray.map((service, index) => (
             <h1
               key={index}
-              onClick={() => handleServiceClick(index)}
+              onClick={() => onServiceClick(index)}
               className="text-left text-sm block pl-4 py-2 hover:bg-gray-200 transition duration-200 w-full border-b border-dashed my-1 cursor-pointer"
             >
               <span className="flex items-center gap-2">
@@ -176,7 +168,7 @@ const ServicesDropDown = ({ isLogined, logOutUser }) => {
       {intelligenceOpen && (
         <Intelligence
           isOpen={intelligenceOpen}
-          onClose={() => setIntelligenceOpen(false)}
+          onClose={() => closeIntelligenceModal(setIntelligenceOpen)}
         />
       )}
     </div>

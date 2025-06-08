@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { FaTimes } from "react-icons/fa";
 import { useUser } from "@/contexts/userContext";
@@ -20,6 +19,7 @@ const Intelligence = ({
   const [extractedPromts, setExtractedPromts] = useState([]);
   const [chatArray, setChatArray] = useState([]);
   const [chatLoading, setChatLoading] = useState(false);
+  const [shouldAnimate, setShouldAnimate] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -36,12 +36,21 @@ const Intelligence = ({
               "Hi! What's your health concern today? should i need to review any documents?",
           },
         ]);
+        setShouldAnimate(false);
       }
     }
   }, [isOpen, text, extractedTexts]);
 
+  // Trigger animation when chat array grows
+  useEffect(() => {
+    if (chatArray.length > 1) {
+      setShouldAnimate(true);
+    }
+  }, [chatArray.length]);
+
   const getGeratedTexts = useCallback(async (inputData) => {
     setChatLoading(true);
+    console.log("inputData data from intelligence:", inputData);
 
     try {
       const result = await inference(inputData);
@@ -62,7 +71,6 @@ const Intelligence = ({
       console.error("Generation error:", error);
     } finally {
       setChatLoading(false);
-      console.log("Chat array updated:", chatArray);
     }
   }, []);
 
@@ -71,29 +79,42 @@ const Intelligence = ({
     setChatArray([]);
     setPromt("");
     setExtractedPromts([]);
+    setShouldAnimate(false);
 
     onClose();
   }, [onClose]);
 
+  const isInitialState = chatArray.length <= 1;
+
   return (
     <div
-      className={`fixed top-0 right-0 w-screen xl:w-1/2 h-full bg-white shadow-lg transform transition-transform duration-300 z-50 ${
+      className={`fixed top-0 rounded-2xl right-0 w-screen xl:w-[50vw] h-full my-auto bg-white shadow-lg transform transition-transform duration-300 z-50 ${
         isOpen ? "translate-x-0" : "translate-x-full"
       }`}
     >
-      <div className="relative w-full h-[5vh] flex items-center justify-end pr-5 xl:pr-10 ">
+      <div className="relative w-full h-[5vh] flex items-center justify-end pr-5 xl:pr-10">
         <FaTimes
           className="cursor-pointer text-2xl hover:text-gray-600 transition-colors"
           onClick={handleClose}
         />
       </div>
 
-      <div className="flex-1 h-full flex flex-col">
+      <div className="flex-1 h-full flex flex-col relative">
+        {/* Chat Section */}
         <div className="flex-1 overflow-hidden">
           <ChatSection chatArray={chatArray} isLoading={chatLoading} />
         </div>
 
-        <div className="px-2  mb-9 xl:mb-12">
+        {/* Health Input Panel */}
+        <div
+          className={`
+            ${isInitialState 
+              ? "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full px-4 max-w-2xl"
+              : "px-2 mb-9 xl:mb-12"
+            }
+            ${shouldAnimate && !isInitialState ? "animate-slide-to-bottom" : ""}
+          `}
+        >
           <HealthInputPanel
             isIntelligence={true}
             isLogined={isLogined}

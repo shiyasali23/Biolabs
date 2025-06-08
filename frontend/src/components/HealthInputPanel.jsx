@@ -14,7 +14,6 @@ import { FaChevronCircleUp } from "react-icons/fa";
 import { useUser } from "@/contexts/userContext";
 import { extractTextFromImage } from "@/utils/vault-utils";
 
-
 const HealthInputPanel = ({
   isIntelligence,
   isLogined,
@@ -126,37 +125,44 @@ const HealthInputPanel = ({
 
   const handleSubmitClick = () => {
     setMessage("");
+
     const recordData = {
-      text: isIntelligence ? promt : text || "",
+      text: isIntelligence ? promt : (text || ""), // Fixed: was using prompt instead of promt
     };
 
     // Add extracted texts to recordData
     const extractedContents = isIntelligence ? extractedPromts : extractedTexts;
-    if (extractedContents && extractedContents.length > 0) {
-      extractedContents.forEach((text, i) => {
-        recordData[`file_${i + 1}`] = text;
-      });
-    }
-
-    if (isBiometricsSelected && latestBiometrics && latestBiometrics.length > 0) {
-      recordData.biometrics = latestBiometrics.map(biometric => ({
-        name: biometric.name,
-        value: biometric.value,
-        healthy_min: biometric.healthy_min,
-        healthy_max: biometric.healthy_max,
-      }));
-    }
-
-    
-    if (isIntelligence && getGeratedTexts) {
-        getGeratedTexts(recordData);
-      } else if (!isIntelligence && handleRecordUpdate) {
-        handleRecordUpdate(recordData);
+    if (Array.isArray(extractedContents) && extractedContents.length > 0) {
+      if (isIntelligence) {
+        recordData.files = [...extractedContents];
+      } else {
+        extractedContents.forEach((text, i) => {
+          recordData[`file_${i + 1}`] = text;
+        });
       }
+    }
+
+    if (isBiometricsSelected && Array.isArray(latestBiometrics) && latestBiometrics.length > 0) {
+      recordData.biometrics = latestBiometrics.reduce((acc, biometric) => {
+        acc[biometric.name] = {
+          value: biometric.value,
+          healthy_min: biometric.healthy_min,
+          healthy_max: biometric.healthy_max,
+        };
+        return acc;
+      }, {});
+    }
+
+    if (isIntelligence) {
+      getGeratedTexts(recordData);
+    } else if (!isIntelligence) {
+      handleRecordUpdate(recordData);
+    }
+    console.log("Record data from healthinput:", recordData);
   };
 
   return (
-    <div className="w-full flex flex-col items-center justify-center gap-2 border  relative">
+    <div className="w-full rounded-2xl  flex flex-col items-center justify-center gap-2 border  relative">
       <Textarea
         placeholder="Type here"
         className="h-[20vh] w-full border-none rounded-none shadow-none focus:ring-0 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"

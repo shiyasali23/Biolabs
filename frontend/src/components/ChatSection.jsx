@@ -30,21 +30,24 @@ const ChatSection = ({ chatArray = [], isLoading = false }) => {
     useEffect(() => {
       if (!shouldAnimate) return;
 
-      const tick = () => {
-        if (indexRef.current < text.length) {
-          setDisplayed(text.slice(0, indexRef.current + 1));
-          indexRef.current += 1;
-          requestAnimationFrame(tick);
-        } else {
-          setIsAnimating(false);
-          // Mark this message as completed
-          setCompletedAnimations((prev) => new Set([...prev, messageId]));
-        }
-      };
+      // Prepare text with first letter uppercased
+      const fixedText = text.charAt(0).toUpperCase() + text.slice(1);
 
       indexRef.current = 0;
       setDisplayed("");
       setIsAnimating(true);
+
+      const tick = () => {
+        if (indexRef.current < fixedText.length) {
+          setDisplayed(fixedText.slice(0, indexRef.current + 1));
+          indexRef.current += 1;
+          requestAnimationFrame(tick);
+        } else {
+          setIsAnimating(false);
+          setCompletedAnimations((prev) => new Set([...prev, messageId]));
+        }
+      };
+
       requestAnimationFrame(tick);
     }, [text, shouldAnimate, messageId]);
 
@@ -82,7 +85,7 @@ const ChatSection = ({ chatArray = [], isLoading = false }) => {
               <div className="w-full flex justify-start">
                 <div className="max-w-[80%] px-4 py-3 rounded-2xl bg-gray-100 text-gray-800 rounded-bl-sm text-sm leading-relaxed whitespace-pre-wrap break-words">
                   <AnimatedText
-                    text={chat.response}
+                    text={chat.response || ""}
                     shouldAnimate={shouldAnimate}
                     messageId={messageId}
                   />

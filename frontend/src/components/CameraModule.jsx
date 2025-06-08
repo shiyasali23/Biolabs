@@ -109,7 +109,7 @@ const CameraModule = ({ handleImage, className, predictionLoading }) => {
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center bg-gray-100 p-4 ">
             {predictionLoading ? (
-              <LoadingComponent text="Processing Data." />
+              <LoadingComponent  />
             ) : (
               <div
                 {...getRootProps()}

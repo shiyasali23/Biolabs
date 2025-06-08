@@ -40,16 +40,6 @@ class BucketHandler:
 
     def get_object(self, prefix: str, local_dir: str) -> Optional[str]:
 
-        """
-        Download file or directory from S3.
-
-        Args:
-            prefix (str): S3 key or prefix.
-            local_dir (str): Local destination directory.
-
-        Returns:
-            str | None: Path to downloaded file or directory, or None if failure.
-        """
         message = f"Fetched {prefix} from s3://{self.MODEL_BUCKET_NAME}/{prefix} to {local_dir}"
         if not self.s3_client:
             log.error("S3 client not initialized.")
@@ -101,30 +91,20 @@ class BucketHandler:
                 log.info(f"Successfully {message}")
                 return local_dir if len(downloaded_files) > 1 else downloaded_files[0]
             else:
-                log.warning(f"No files found for prefix: {prefix}: Failes {message}")
+                log.critical_error(f"No files found for prefix: {prefix}: Failes {message}")
                 return None
 
         except Exception as e:
             log.error(f"Error downloading from prefix '{prefix}': {e}")
             return None
 
-    def store_query_data(self, response: str, token: str = None, query: str = None) -> bool:
-        """
-        Store a user query and system response to the queries bucket.
-
-        Args:
-            response (str): System's response to the user query.
-            token (str, optional): User token or session ID.
-            query (str, optional): User's input query.
-
-        Returns:
-            bool: True if upload succeeded, False otherwise.
-        """
-        if not self.s3_client:
-            log.error("S3 client not initialized.")
-            return False
-
+    async def store_query_data(self, response: str, token: str = None, query: str = None) -> bool:
+    
         try:
+            if not self.s3_client:
+                log.critical_error("S3 client not initialized. Skipping query data storage.")
+                return False
+
             now = datetime.utcnow()
             timestamp = now.isoformat()
 
@@ -154,5 +134,5 @@ class BucketHandler:
             return True
 
         except Exception as e:
-            log.error(f"Error storing query data: {e}")
+            log.critical_error(f"Failed to store query data to S3 (non-critical): {e}")
             return False

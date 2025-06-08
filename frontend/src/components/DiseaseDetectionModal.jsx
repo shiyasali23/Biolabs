@@ -308,7 +308,7 @@ const DiseaseDetectionModal = ({ isOpen, onClose }) => {
 
         <div className="flex flex-col gap-3 animate-dropdown">
           {loading ? (
-            <LoadingComponent text="Setting Up" />
+            <LoadingComponent  />
           ) : !diseaseDetectionModals.length ? (
             <ErrorComponent handleTryAgain={loadModels} />
           ) : (

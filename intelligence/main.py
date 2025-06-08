@@ -28,7 +28,7 @@ log = LogHandler()
 response_handler = ResponseHandler()
 
 class GenerateTextRequest(BaseModel):
-    query: str
+    text: str
     token: Optional[str] = None
     files: Optional[list[str]] = None
     biometrics: Optional[dict] = None
@@ -39,9 +39,10 @@ class InferenceRequest(BaseModel):
 @app.post("/intelligence/inference")
 async def get_generate_text(request: InferenceRequest):
     """Async endpoint - properly handles async operations"""
+    log.info(f"Received request for text generation: {request.data}")
     try:
         return await database_handler.generate_text(
-            query=request.data.query,
+            query=request.data.text,
             token=request.data.token,
             files=request.data.files,
             biometrics=request.data.biometrics

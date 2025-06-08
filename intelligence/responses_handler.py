@@ -1,5 +1,6 @@
 # responses_handler.py
 from fastapi.responses import JSONResponse
+import json
 from log_handler import LogHandler
 
 log = LogHandler()
@@ -25,16 +26,25 @@ class ResponseHandler:
     }
 
     def handle_response(self, status_code=200, message=None, error=None, response=None) -> JSONResponse:
-        """Handle successful API responses"""
+        """Handle successful API responses - Fixed Content-Length issue"""
         message = message or self.MESSAGES.get("GENERATION_SUCCESS")
+        
+        content = {  
+            "response": response,
+            "message": message,
+            "error": error,
+            "status": status_code,
+        }
+        
+        # Manually serialize to ensure proper encoding and Content-Length calculation
+        json_content = json.dumps(content, ensure_ascii=False)
+        
         return JSONResponse(
-            content={  
-                "response": response,
-                "message": message,
-                "error": error,
-                "status": status_code,
-            },
-            status_code=status_code  
+            content=content,
+            status_code=status_code,
+            headers={
+                "Content-Type": "application/json; charset=utf-8"
+            }
         )
 
     def handle_exception(self, exception=None, status_code=500, error=None, message=None) -> JSONResponse:

@@ -106,7 +106,7 @@ const DiagnosisModal = ({ isOpen, onClose }) => {
         <FaTimes className="cursor-pointer text-2xl right-5 top-5 absolute" onClick={onClose} />
         {loading || predictionLoading ? (
           <LoadingComponent
-            text={predictionLoading ? "Finding disease" : "Setting up"}
+           
           />
         ) : diagnosisModel.length === 0 ? (
           <ErrorComponent handleTryAgain={() => loadModel()} />

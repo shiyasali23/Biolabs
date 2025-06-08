@@ -109,7 +109,7 @@ const Food = () => {
   return (
     <div className="flex w-screen min-h-screen flex-col">
       {foodNutrientsDataLoading ? (
-        <LoadingComponent text="Loading Nutrients Details." />
+        <LoadingComponent  />
       ) : (
         <div className="flex h-full flex-col w-full gap-10">
           <section className="w-full h-auto min-h-[75vh] flex flex-col gap-5 mt-5 overflow-hidden">

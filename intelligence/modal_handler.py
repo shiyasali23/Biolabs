@@ -3,6 +3,7 @@ import torch
 from typing import List, Optional, Dict
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import asyncio
+import threading
 
 from log_handler import LogHandler
 from bucket_handler import BucketHandler
@@ -43,6 +44,7 @@ class ModalHandler:
         self.model = None
         self.tokenizer = None
         self.bucket_handler = BucketHandler()
+        
 
     def validate_path(self, local_dir: str, local_prefix: str, bucket_prefix: str) -> Optional[str]:
         try:
@@ -74,20 +76,31 @@ class ModalHandler:
 
             self.model = AutoModelForCausalLM.from_pretrained(model_path).to(self.device)
             self.tokenizer = AutoTokenizer.from_pretrained(model_path)
+            
+            if self.tokenizer.pad_token is None:
+                self.tokenizer.pad_token = self.tokenizer.eos_token
+                
             self.model.eval()
-            log.info(f"LLM loaded successfully at {model_path}")
+            log.info(f"LLM loaded successfully from {model_path}")
         except Exception as e:
             log.error(f"{self.error} loading LLM: {e}")
+            
+    def _get_max_tokens(self, prompt_token_count: int) -> int:
+      
+        model_max_length = self.tokenizer.model_max_length
+        # Always leave some safety margin if needed (optional)
+        available_tokens = model_max_length - prompt_token_count
+        return max(self.min_tokens, min(available_tokens, self.max_tokens))
 
-    def _linear_interpolation(self, threshold: float) -> int:
-        return int(self.min_tokens + (self.max_tokens - self.min_tokens) * threshold)
+
+
+
 
     async def generate(
         self,
         query: str,
         document: Optional[List[str]] = None,
         relevant_files: Optional[List[str]] = None,
-        threshold: Optional[float] = None,
         token: Optional[str] = None,
         biometrics: Optional[List[Dict]] = None,
         mode: Optional[str] = "sample"
@@ -96,8 +109,10 @@ class ModalHandler:
             if not self.model or not self.tokenizer:
                 self._init_model()
             if not self.model or not self.tokenizer:
-                return responses_handler.handle_exception("Failed to initialize model")
-            
+                return responses_handler.handle_exception(
+                    exception="Failed to initialize model"
+                )
+
             prompt = query
             if document:
                 context = " ".join(document)
@@ -108,23 +123,31 @@ class ModalHandler:
                 for file in relevant_files:
                     prompt += f"\n\nFile: {file}"
 
-            inputs = self.tokenizer(prompt, return_tensors="pt", max_length=512, truncation=True).to(self.device)
-            max_tokens = self.max_tokens if threshold is None else self._linear_interpolation(threshold)
+            inputs = self.tokenizer(
+                prompt, 
+                return_tensors="pt", 
+                max_length=self.tokenizer.model_max_length, 
+                truncation=True,
+                padding=True  
+            ).to(self.device)
+            
+            prompt_token_count = len(self.tokenizer(prompt).input_ids)
+            max_tokens = self._get_max_tokens(prompt_token_count)
 
-            def _generate():
-                with torch.no_grad():
-                    return self.model.generate(
-                        inputs.input_ids,
-                        max_new_tokens=max_tokens,
-                        temperature=self.modal_temperature,
-                        do_sample=(mode != "greedy") and self.modal_do_sample,
-                        top_p=self.modal_top_p,
-                        top_k=self.modal_top_k,
-                        pad_token_id=self.tokenizer.eos_token_id
-                    )
+            with torch.no_grad():
+                outputs = self.model.generate(
+                    inputs.input_ids,
+                    attention_mask=inputs.attention_mask,  
+                    max_new_tokens=max_tokens,
+                    temperature=self.modal_temperature,
+                    do_sample=(mode != "greedy") and self.modal_do_sample,
+                    top_p=self.modal_top_p,
+                    top_k=self.modal_top_k,
+                    pad_token_id=self.tokenizer.pad_token_id  
+                )
 
-            outputs = await loop.run_in_executor(None, _generate)
             generated_text = self.tokenizer.decode(outputs[0][inputs.input_ids.shape[1]:], skip_special_tokens=True)
+            asyncio.create_task(self.bucket_handler.store_query_data(generated_text, token, query))
 
             return responses_handler.handle_response(response=generated_text)
         except Exception as e:

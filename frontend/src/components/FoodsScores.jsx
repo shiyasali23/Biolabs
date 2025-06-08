@@ -26,7 +26,7 @@ const FoodsScores = ({ processedFoodsScore, handleSelectedItem }) => {
   return (
     <div className="flex justify-center items-center min-h-[20vh] h-full w-full">
       {userDataLoading ? (
-        <LoadingComponent text={"Loading Foods Score"} />
+        <LoadingComponent />
       ) : !isLogined ? (
         <NoDataFound isOpen={true} isModal={false} route={"food"} />
       ) : !processedFoodsScore ? (

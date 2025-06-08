@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import DiseaseDetectionModal from "./DiseaseDetectionModal";
 import DiagnosisModal from "./DiagnosisModal";
@@ -9,7 +9,7 @@ import { useUser } from "@/contexts/userContext";
 import NoDataFound from "./NoDataFound";
 import CommingSoon from "./CommingSoon";
 import Intelligence from "./Intelligence";
-
+import { useServiceHandler } from "@/utils/serviceHandler";
 const ServicesComponent = () => {
   const { servicesArray } = useData();
   const { isLogined } = useUser();
@@ -24,36 +24,25 @@ const ServicesComponent = () => {
   const [commingSoonIndex, setCommingSoonIndex] = useState(null);
   const [noDataFoundRoute, setNoDataFoundRoute] = useState(null);
 
-  const handleServiceClick = (index) => {
-    
-    if (index === 0) {
-      setDiseaseDetectionModalOpen(true);
-    } else if (index === 1) {
-      setDiagnosisModalOpen(true);
-    } else if (index === 2) {
-      router.push("/food");
-    } else if (index === 3) {
-      if (isLogined) {
-        router.push("/analytics");
-      } else {
-        setNoDataFoundRoute("analytics");
-        setNoDataFoundModalOpen(true);
-      }
-    }else if (index === 4) {
-      setIntelligenceOpen(true);
-    } 
-    else if (index === 5) {
-      if (isLogined) {
-        router.push("/vault");
-      } else {
-        setNoDataFoundRoute("vault");
-        setNoDataFoundModalOpen(true);
-      }
-    } 
-    else if (index >= 5) {
-      setCommingSoonModalOpen(true);
-      setCommingSoonIndex(index);
-    }
+  const { handleServiceClick, checkIntelligenceParam, closeIntelligenceModal } = useServiceHandler();
+
+  // Check for intelligence parameter on component mount
+  useEffect(() => {
+    checkIntelligenceParam(setIntelligenceOpen);
+  }, []);
+
+  const onServiceClick = (index) => {
+    handleServiceClick(
+      index,
+      isLogined,
+      setDiseaseDetectionModalOpen,
+      setDiagnosisModalOpen,
+      setNoDataFoundModalOpen,
+      setCommingSoonModalOpen,
+      setIntelligenceOpen,
+      setCommingSoonIndex,
+      setNoDataFoundRoute
+    );
   };
 
   return (
@@ -65,7 +54,7 @@ const ServicesComponent = () => {
         {servicesArray.map((service, index) => (
           <div
             key={index}
-            onClick={() => handleServiceClick(index)}
+            onClick={() => onServiceClick(index)}
             className="shadow-xl rounded   cursor-pointer py-2 px-1 xl:py-5 hover:shadow-2xl  sm:h-[10rem] xl:h-[10rem] flex flex-col justify-between   gap-4"
           >
             <h1 className="tracking-wider word-spacing-wider text-xs xl:text-lg font-semibold text-left leading-tight px-2 xl:px-8">
@@ -118,7 +107,10 @@ const ServicesComponent = () => {
       )}
 
       {intelligenceOpen && (
-        <Intelligence isOpen={intelligenceOpen} onClose={() => setIntelligenceOpen(false)} />
+        <Intelligence 
+          isOpen={intelligenceOpen} 
+          onClose={() => closeIntelligenceModal(setIntelligenceOpen)} 
+        />
       )}
     </div>
   );

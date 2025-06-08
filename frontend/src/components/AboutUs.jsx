@@ -1,72 +1,71 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import CommingSoon from "./CommingSoon";
 import NoDataFound from "./NoDataFound";
 import DiagnosisModal from "./DiagnosisModal";
 import DiseaseDetectionModal from "./DiseaseDetectionModal";
 import { useData } from "@/contexts/dataContext";
 import Intelligence from "./Intelligence";
+import { useServiceHandler } from "@/utils/serviceHandler";
 
-const infoUs = ({ isLogined }) => {
+const AboutUs = ({ isLogined }) => {
   const { servicesArray } = useData();
   const router = useRouter();
-  const [diseaseDetectionModalOpen, setDiseaseDetectionModalOpen] = useState(false);
+  const [diseaseDetectionModalOpen, setDiseaseDetectionModalOpen] =
+    useState(false);
   const [diagnosisModalOpen, setDiagnosisModalOpen] = useState(false);
   const [noDataFoundModalOpen, setNoDataFoundModalOpen] = useState(false);
   const [commingSoonModalOpen, setCommingSoonModalOpen] = useState(false);
   const [intelligenceOpen, setIntelligenceOpen] = useState(false);
   const [commingSoonIndex, setCommingSoonIndex] = useState(null);
 
+  const { handleServiceClick, checkIntelligenceParam, closeIntelligenceModal } =
+    useServiceHandler();
+
+  // Check for intelligence parameter on component mount
+  useEffect(() => {
+    checkIntelligenceParam(setIntelligenceOpen);
+  }, []);
+
   const versionGroups = [
     {
-      versionText: "(v1.0.0):",
+      date: "Oct 4, 2024",
+      version: "v1.0.0",
+      status: "Released",
       indices: [0, 1, 2, 3],
     },
     {
-      versionText: "(v2.0.0) Up Comming:",
+      date: "Jun 18, 2025",
+      version: "v2.0.0",
+      status: "Released",
       indices: [4, 5],
     },
     {
-      versionText: "(3.0.0) Up Comming:",
+      date: "Mar 20, 2025",
+      version: "v3.0.0",
+      status: "Upcoming",
       indices: [6, 7],
     },
   ];
 
-  const handleServiceClick = (index) => {
-    
-    if (index === 0) {
-      setDiseaseDetectionModalOpen(true);
-    } else if (index === 1) {
-      setDiagnosisModalOpen(true);
-    } else if (index === 2) {
-      router.push("/food");
-    } else if (index === 3) {
-      if (isLogined) {
-        router.push("/analytics");
-      } else {
-        setNoDataFoundModalOpen(true);
-      }
-    }else if (index === 4) {
-      setIntelligenceOpen(true);
-    } 
-    else if (index === 5) {
-      if (isLogined) {
-        router.push("/vault");
-      } else {
-        setNoDataFoundModalOpen(true);
-      }
-    } 
-    else if (index >= 5) {
-      setCommingSoonModalOpen(true);
-      setCommingSoonIndex(index);
-    }
+  const onServiceClick = (index) => {
+    handleServiceClick(
+      index,
+      isLogined,
+      setDiseaseDetectionModalOpen,
+      setDiagnosisModalOpen,
+      setNoDataFoundModalOpen,
+      setCommingSoonModalOpen,
+      setIntelligenceOpen,
+      setCommingSoonIndex
+    );
   };
 
   return (
     <div className="w-full h-full my-20">
-      <div className="w-full px-10 xl:px-32 py-5 gap-20 flex flex-col">
+      <div className="w-full px-10 xl:px-32 py-5 gap-16 flex flex-col">
         <h1 className="text-base leading-[2rem] font-semibold ">
           <span className="font-bold text-3xl mr-2">Biolabs</span>an
           organization founded on October 4th of 2024, designed to keeping
@@ -76,29 +75,61 @@ const infoUs = ({ isLogined }) => {
           users to every insitution that can contiribute to our vision.
         </h1>
 
-        {versionGroups.map((group, groupIndex) => (
-          <div key={groupIndex} className="flex flex-col gap-5">
-            <h1 className="text-3xl font-bold">
-              Biolabs <span className="text-lg">{group.versionText}</span>
-            </h1>
-            {group.indices.map((serviceIndex) => {
-              const service = servicesArray[serviceIndex];
-              return (
-                <div key={serviceIndex} className=" flex flex-col px-5 hover:cursor-pointer gap-2" onClick={() => handleServiceClick(serviceIndex)}>
-                  <span className="font-bold text-lg hover:text-blue-600 ">{service[1]}:</span>
-                  <h1 className="ml-5 text-sm leading-[1.5rem] font-semibold hover:text-blue-600">
-                    {service[2]}
-                  </h1>
-                </div>
-              );
-            })}
-          </div>
-        ))}
+        {/* Version Release Table */}
+        <div className="flex flex-col gap-5">
+          <h1 className="text-2xl font-semibold">Release Notes:</h1>
+          <table className="w-full">
+            <tbody>
+              {versionGroups.map((group, groupIndex) => (
+                <tr
+                  key={groupIndex}
+                  className="border-b  flex items-center gap-16 p-3"
+                >
+                  <td className=" font-semibold h-full w-[5%] text-left text-md">
+                    {groupIndex == versionGroups.length - 1
+                      ? "Upcoming"
+                      : group.date}{" "}
+                    <span className="text-xs text-gray-500">
+                      ({group.version})
+                    </span>
+                  </td>
+
+                  <td className=" ml-2">
+                    {group.indices.map((serviceIndex) => {
+                      const service = servicesArray[serviceIndex];
+                      return (
+                        <div
+                          key={serviceIndex}
+                          className="flex flex-col  mb-10"
+                        >
+                          <h1
+                            key={serviceIndex}
+                            className="hover:cursor-pointer hover:text-blue-600 mb-1 font-bold text-lg  leading-[2rem] tracking-normal"
+                            onClick={() => onServiceClick(serviceIndex)}
+                          >
+                            {service[1]}
+                          </h1>
+                          <h1
+                            key={serviceIndex + 1}
+                            className="hover:cursor-pointer   ml-5 text-sm leading-[2rem] font-semibold tracking-normal"
+                            onClick={() => onServiceClick(serviceIndex)}
+                          >
+                            {service[2]}
+                          </h1>
+                        </div>
+                      );
+                    })}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        
 
         <div className="flex flex-col gap-5">
-          <h1 className="text-3xl w-full text-center font-bold">
-            Vision
-          </h1>
+          <h1 className="text-3xl w-full text-center font-bold">Vision</h1>
           <h1 className="text-sm leading-[2rem] font-semibold">
             For the time beigh of a human lives health is the most valuable
             thing.Our vision is a world where every individual, regardless of
@@ -114,9 +145,7 @@ const infoUs = ({ isLogined }) => {
         </div>
 
         <div className="flex flex-col gap-5">
-          <h1 className="text-3xl w-full text-center font-bold">
-            Capable Of
-          </h1>
+          <h1 className="text-3xl w-full text-center font-bold">Capable Of</h1>
           <h1 className="text-sm leading-[2rem] font-semibold">
             Our platform can be used as a personalized healthcare assistance
             shaped for each users.Also can be connect with any health care
@@ -169,11 +198,13 @@ const infoUs = ({ isLogined }) => {
         />
       )}
       {intelligenceOpen && (
-        <Intelligence isOpen={intelligenceOpen} onClose={() => setIntelligenceOpen(false)} />
+        <Intelligence
+          isOpen={intelligenceOpen}
+          onClose={() => closeIntelligenceModal(setIntelligenceOpen)}
+        />
       )}
     </div>
   );
 };
 
-export default infoUs;
-
+export default AboutUs;
