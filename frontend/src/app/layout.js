@@ -1,6 +1,4 @@
-
 import { Inter } from "next/font/google";
-
 
 import { BiochemicalProvider } from "@/contexts/biochemicalContext";
 import "./globals.css";
@@ -11,6 +9,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { RecordProvider } from "@/contexts/recordContext";
 import { IntelligenceProvider } from "@/contexts/intelligenceContext";
+import { HealthProvider } from "@/contexts/healthContext";
 
 export const metadata = {
   title: "Biolabs",
@@ -29,11 +28,10 @@ export const viewport = {
   viewportFit: "cover",
 };
 
-
 const inter = Inter({
   subsets: ["latin"],
-  weight: ['400', '700'], // regular and bold
-  variable: '--font-inter', // optional for custom CSS use
+  weight: ["400", "700"], // regular and bold
+  variable: "--font-inter", // optional for custom CSS use
 });
 
 export default function RootLayout({ children }) {
@@ -100,17 +98,19 @@ export default function RootLayout({ children }) {
       <body>
         <BiochemicalProvider>
           <FoodProvider>
-            <DataProvider>
-              <RecordProvider>
-              <IntelligenceProvider>
-                <UserProvider>
-                  <Header />
-                  {children}
-                  <Footer />
-                </UserProvider>
-                </IntelligenceProvider>
-              </RecordProvider>
-            </DataProvider>
+            <HealthProvider>
+              <DataProvider>
+                <RecordProvider>
+                  <IntelligenceProvider>
+                    <UserProvider>
+                      <Header />
+                      {children}
+                      <Footer />
+                    </UserProvider>
+                  </IntelligenceProvider>
+                </RecordProvider>
+              </DataProvider>
+            </HealthProvider>
           </FoodProvider>
         </BiochemicalProvider>
       </body>

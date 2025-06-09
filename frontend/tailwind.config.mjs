@@ -1,4 +1,3 @@
-// tailwind.config.js
 export default {
     darkMode: ["class"],
     content: [
@@ -48,6 +47,26 @@ export default {
   					transform: 'translateY(0)'
   				}
   			},
+  			'slide-in-right': {
+  				'0%': {
+  					transform: 'translateX(100%)',
+  					opacity: '0'
+  				},
+  				'100%': {
+  					transform: 'translateX(0)',
+  					opacity: '1'
+  				}
+  			},
+  			'slide-in-left': {
+  				'0%': {
+  					transform: 'translateX(-100%)',
+  					opacity: '0'
+  				},
+  				'100%': {
+  					transform: 'translateX(0)',
+  					opacity: '1'
+  				}
+  			},
   			'accordion-down': {
   				from: {
   					height: '0'
@@ -70,6 +89,8 @@ export default {
   			dropdown: 'dropdown 0.5s ease-out',
   			'pulse-opacity': 'pulseOpacity 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
   			'fade-in': 'fadeIn 0.3s ease-out forwards',
+  			'slide-in-right': 'slide-in-right 0.3s ease-in-out forwards',
+  			'slide-in-left': 'slide-in-left 0.3s ease-in-out forwards',
   			'accordion-down': 'accordion-down 0.2s ease-out',
   			'accordion-up': 'accordion-up 0.2s ease-out'
   		},

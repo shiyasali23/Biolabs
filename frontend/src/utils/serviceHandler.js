@@ -47,6 +47,8 @@ export const useServiceHandler = () => {
         }
         setNoDataFoundModalOpen(true);
       }
+    }else if (index === 6){
+      router.push("/fold");
     } else if (index >= 6) {
       setCommingSoonModalOpen(true);
       setCommingSoonIndex(index);

@@ -1,59 +1,81 @@
 "use client";
-import React, { createContext, useContext, useState } from "react";
-import { FaChartLine, FaMicroscope, FaStethoscope } from "react-icons/fa";
-import { IoFastFood } from "react-icons/io5";
-import { PiDnaFill } from "react-icons/pi";
-import { AiFillSlackCircle } from "react-icons/ai";
-import { RiHealthBookFill } from "react-icons/ri";
-import { SiMatomo } from "react-icons/si";
+import React, { createContext, useContext } from "react";
 
 const HealthContext = createContext();
 
 export const HealthProvider = ({ children }) => {
-  const questionsArray = {
-    default: [
-      {
-        question: "Gender",
-        input_type: "text",
+  
+
+  const questionsArray = [
+    {
+      question: "Mental Health",
+      input: ["Depression", "Anxity", "Normal"],
+    },
+    {
+      question: "Gender",
+      skippable: true,
+      input: ["Male", "Female"],
+    },
+    {
+      question: "Age Group",
+      skippable: true,
+      input: ["18-25", "26-35", "36-45", "46-55", "56+"],
+    },
+    
+    {
+      question: "Sleep",
+      input: ["Poor", "Average", "Good", "Excellent"],
+    },
+    {
+      question: "Exercise",
+      input: ["Never", "Rarely", "Always"],
+      followup: {
+        question: "Contact with sunlight",
+        input: 3,
+        skippable: true,
       },
-      
-      {
-        question: "Age",
-        input_type: "number",
+    },
+    {
+      question: "Clean Food",
+      input: ["Poor", "Average", "Good", "Excellent"],
+    },
+    {
+      question: "Stress",
+      input: ["Everytime", "Sometimes", "I am cool"],
+      followup: {
+        question: "Job satisfaction",
+        input: ["Hate it", "Its ok", "Love it"],
+        skippable: true,
       },
-    ],
-    customSlider: [
-      {
-        question: "Sleep",
+    },
+    {
+      question: "Satiscation with people around you",
+      input: ["Sad", "Not good", "Happy"],
+    },
+    {
+      question: "Fatigue",
+      skippable: true,
+      input: ["Always", "Sometimes", "No"],
+    },
+    {
+      question: "Finantial stability",
+      skippable: true,
+      input: ["Poor", "Its ok", "Stable"],
+    },
+    {
+      question: "Maried",
+      skippable: true,
+      input: ["Yes", "No"],
+      followup: {
+        question: "Satisfaction on matertial life",
+        skippable: true,
+        input: ["Poor", "Average", "Good", "Excellent"],
       },
-      {
-        question: "Exercise",
-        followup:"How much time you can have daily"
-      },
-      {
-        question: "Clean Food",
-        followup:"How much you can spend monthly"
-      },
-    ],
-  };
-  const [diseaseDetectionModals, setDiseaseDetectionModals] = useState([]);
-  const [diagnosisModel, setDiagnosisModel] = useState([]);
-  const dignosisModelsTypes = ["diagnosis_model", "disease_detections"];
-  const authApiOPtions = ["authenticate", "signup"];
+    },
+  ];
 
   return (
-    <HealthContext.Provider
-      value={{
-        questionsArray,
-        companyName,
-        diseaseDetectionModals,
-        setDiseaseDetectionModals,
-        diagnosisModel,
-        setDiagnosisModel,
-        dignosisModelsTypes,
-        authApiOPtions,
-      }}
-    >
+    <HealthContext.Provider value={questionsArray}>
       {children}
     </HealthContext.Provider>
   );

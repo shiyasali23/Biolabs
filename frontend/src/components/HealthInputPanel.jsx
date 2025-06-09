@@ -2,15 +2,10 @@
 
 import React, { useState, useCallback, useMemo, useEffect } from "react";
 import Image from "next/image";
-import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import CustomButton from "@/components/CustomButton";
 
-import { IoMdClose } from "react-icons/io";
-import { Loader } from "lucide-react";
-import { RiHealthBookFill, RiMentalHealthFill } from "react-icons/ri";
-import { AiFillSlackCircle } from "react-icons/ai";
-import { FaChevronCircleUp } from "react-icons/fa";
+import { X, Loader2, FileImage, Activity, Brain, Send, Plus, Sparkles } from "lucide-react";
 import { useUser } from "@/contexts/userContext";
 import { extractTextFromImage } from "@/utils/vault-utils";
 
@@ -28,12 +23,13 @@ const HealthInputPanel = ({
   setText,
   promt = "",
   setPromt,
-  setMessage = () => {}, // Provide default function to prevent errors
+  setMessage = () => {},
 }) => {
   const { latestBiometrics } = useUser();
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [fileLoading, setFileLoading] = useState(false);
   const [isBiometricsSelected, setIsBiometricsSelected] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   // Use the appropriate state based on whether we're in intelligence mode or not
   const currentExtractedContents = isIntelligence
@@ -127,7 +123,7 @@ const HealthInputPanel = ({
     setMessage("");
 
     const recordData = {
-      text: isIntelligence ? promt : (text || ""), // Fixed: was using prompt instead of promt
+      text: isIntelligence ? promt : (text || ""),
     };
 
     // Add extracted texts to recordData
@@ -161,97 +157,172 @@ const HealthInputPanel = ({
     console.log("Record data from healthinput:", recordData);
   };
 
-  return (
-    <div className="w-full rounded-2xl  flex flex-col items-center justify-center gap-2 border  relative">
-      <Textarea
-        placeholder="Type here"
-        className="h-[20vh] w-full border-none rounded-none shadow-none focus:ring-0 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
-        onChange={handleTextChange}
-        value={isIntelligence ? promt : text || ""}
-      />
+  const currentText = isIntelligence ? promt : text || "";
+  const hasContent = isTextValid || (currentExtractedContents && currentExtractedContents.length > 0);
 
-      <div className="w-full flex items-center justify-between gap-5 px-10">
-        <div className="w-full flex gap-2 items-center justify-center">
-          {/* Display extracted contents with file previews if available */}
-          {currentExtractedContents.map((item, index) => (
-            <div
-              key={`extract-${index}`}
-              className="relative h-[35px] w-[35px] flex-shrink-0"
-            >
-              <IoMdClose
-                onClick={() => handleRemoveFile(index)}
-                size={20}
-                className="absolute z-10 right-1 top-1 cursor-pointer text-gray-100"
-              />
-              {uploadedFiles[index] && fileUrls[index] ? (
-                <Image
-                  src={fileUrls[index].url}
-                  alt={`Uploaded ${index}`}
-                  fill
-                  className="object-cover w-full h-full border"
-                  priority={index < 2}
-                />
-              ) : (
-                <div className="text-xs overflow-hidden border h-full w-full bg-gray-100 flex items-center justify-center">
-                  {item.substring(0, 3)}...
+  return (
+    <div className="w-full bg-gradient-to-br from-slate-800/60 to-slate-700/60 backdrop-blur-xl rounded-2xl border border-cyan-500/20 shadow-2xl shadow-cyan-500/10 overflow-hidden">
+      {/* Header with attached files and biometrics */}
+      {(currentExtractedContents.length > 0 || isBiometricsSelected) && (
+        <div className="px-4 py-3 border-b border-cyan-500/20 bg-gradient-to-r from-cyan-500/10 to-blue-500/10">
+          <div className="flex items-center justify-between">
+            <span className="text-cyan-300 text-sm font-medium">Attached Content</span>
+            <div className="flex items-center space-x-2">
+              {currentExtractedContents.length > 0 && (
+                <div className="flex items-center space-x-1">
+                  <FileImage className="w-4 h-4 text-cyan-400" />
+                  <span className="text-cyan-300 text-xs">{currentExtractedContents.length} files</span>
+                </div>
+              )}
+              {isBiometricsSelected && latestBiometrics && (
+                <div className="flex items-center space-x-1">
+                  <Activity className="w-4 h-4 text-green-400" />
+                  <span className="text-green-300 text-xs">Biometrics</span>
                 </div>
               )}
             </div>
-          ))}
+          </div>
+          
+          {/* File Previews */}
+          {currentExtractedContents.length > 0 && (
+            <div className="flex gap-2 mt-3">
+              {currentExtractedContents.map((item, index) => (
+                <div
+                  key={`extract-${index}`}
+                  className="relative group"
+                >
+                  <div className="w-16 h-16 rounded-lg overflow-hidden border border-cyan-500/30 bg-slate-700/50">
+                    <button
+                      onClick={() => handleRemoveFile(index)}
+                      className="absolute -top-1 -right-1 z-10 w-5 h-5 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center transition-colors"
+                    >
+                      <X className="w-3 h-3 text-white" />
+                    </button>
+                    {uploadedFiles[index] && fileUrls[index] ? (
+                      <Image
+                        src={fileUrls[index].url}
+                        alt={`Uploaded ${index}`}
+                        fill
+                        className="object-cover"
+                        priority={index < 2}
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <FileImage className="w-6 h-6 text-cyan-400" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
+      )}
 
-        <div className=" mb-1">
-          {fileLoading ? (
-            <Loader className="animate-spin" />
-          ) : (
-            <div className="flex items-center gap-5">
-              <label className="cursor-pointer flex-shrink-0">
-                <RiHealthBookFill size={40} className="hover:scale-110" />
-                <Input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleFileChange}
-                  disabled={currentExtractedContents.length >= 2}
-                />
-              </label>
+      {/* Main Input Area */}
+      <div className="relative">
+        <textarea
+          placeholder={isIntelligence ? "Describe your health concern or ask a question..." : "Type your health notes here..."}
+          className="w-full h-32 px-4 py-4 bg-transparent text-white placeholder-cyan-300/60 border-none resize-none focus:outline-none focus:ring-0 text-sm leading-relaxed"
+          onChange={handleTextChange}
+          value={currentText}
+          onFocus={() => setIsExpanded(true)}
+          onBlur={() => setTimeout(() => setIsExpanded(false), 200)}
+        />
+        
+        {/* Gradient Overlay for Focus Effect */}
+        <div className={`absolute inset-0 pointer-events-none transition-opacity duration-300 ${
+          isExpanded ? 'opacity-100' : 'opacity-0'
+        }`}>
+          <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 to-blue-500/5 rounded-2xl"></div>
+        </div>
+      </div>
 
-              {isIntelligence && isLogined && latestBiometrics && (
-                <RiMentalHealthFill
-                  size={40}
-                  className={`cursor-pointer ${
-                    isBiometricsSelected ? "text-black" : "text-gray-400"
-                  }`}
-                  onClick={() => setIsBiometricsSelected(!isBiometricsSelected)}
-                />
-              )}
-
-              {(isTextValid ||
-                (currentExtractedContents &&
-                  currentExtractedContents.length > 0)) && (
-                <div>
-                  {isIntelligence ? (
-                    <FaChevronCircleUp
-                      onClick={handleSubmitClick}
-                      size={40}
-                      className="cursor-pointer hover:scale-110"
-                    />
-                  ) : (
-                    <CustomButton text="Save" onClick={handleSubmitClick} />
+      {/* Bottom Action Bar */}
+      <div className="px-4 py-3 border-t border-cyan-500/20 bg-gradient-to-r from-slate-800/40 to-slate-700/40">
+        <div className="flex items-center justify-between">
+          {/* Left Side - File Upload and Biometrics */}
+          <div className="flex items-center space-x-3">
+            {/* File Upload */}
+            <label className={`cursor-pointer p-2 rounded-lg transition-all duration-200 ${
+              fileLoading 
+                ? 'bg-cyan-500/20 cursor-not-allowed' 
+                : 'hover:bg-cyan-500/20 group'
+            } ${currentExtractedContents.length >= 2 ? 'opacity-50 cursor-not-allowed' : ''}`}>
+              {fileLoading ? (
+                <Loader2 className="w-5 h-5 text-cyan-400 animate-spin" />
+              ) : (
+                <div className="relative">
+                  <FileImage className="w-5 h-5 text-cyan-400 group-hover:text-cyan-300 transition-colors" />
+                  {currentExtractedContents.length < 2 && (
+                    <Plus className="w-3 h-3 text-cyan-400 absolute -top-1 -right-1 bg-slate-800 rounded-full" />
                   )}
                 </div>
               )}
+              <Input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleFileChange}
+                disabled={currentExtractedContents.length >= 2 || fileLoading}
+              />
+            </label>
 
-              {setIntelligenceOpen && !isIntelligence && (
-                <AiFillSlackCircle
-                  size={40}
-                  className="cursor-pointer hover:scale-110"
-                  onClick={() => setIntelligenceOpen(true)}
-                />
+            {/* Biometrics Toggle */}
+            {isIntelligence && isLogined && latestBiometrics && (
+              <button
+                onClick={() => setIsBiometricsSelected(!isBiometricsSelected)}
+                className={`p-2 rounded-lg transition-all duration-200 ${
+                  isBiometricsSelected 
+                    ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
+                    : 'hover:bg-green-500/20 text-green-400/60 hover:text-green-400'
+                }`}
+              >
+                <Activity className="w-5 h-5" />
+              </button>
+            )}
+
+            {/* Intelligence Toggle for non-intelligence mode */}
+            {setIntelligenceOpen && !isIntelligence && (
+              <button
+                onClick={() => setIntelligenceOpen(true)}
+                className="p-2 rounded-lg hover:bg-purple-500/20 text-purple-400/60 hover:text-purple-400 transition-all duration-200 group"
+              >
+                <div className="relative">
+                  <Brain className="w-5 h-5" />
+                  <Sparkles className="w-3 h-3 absolute -top-1 -right-1 text-purple-400 animate-pulse" />
+                </div>
+              </button>
+            )}
+          </div>
+
+          {/* Right Side - Submit Button */}
+          {hasContent && (
+            <div className="flex items-center space-x-2">
+              {isIntelligence ? (
+                <button
+                  onClick={handleSubmitClick}
+                  className="p-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 rounded-lg transition-all duration-200 group shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/35"
+                >
+                  <Send className="w-5 h-5 text-white group-hover:scale-110 transition-transform" />
+                </button>
+              ) : (
+                <div className="transform hover:scale-105 transition-transform">
+                  <CustomButton text="Save" onClick={handleSubmitClick} />
+                </div>
               )}
             </div>
           )}
         </div>
+
+        {/* Character Count for Intelligence Mode */}
+        {isIntelligence && currentText && (
+          <div className="flex justify-end mt-2">
+            <span className="text-cyan-300/60 text-xs">
+              {currentText.length} characters
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );
