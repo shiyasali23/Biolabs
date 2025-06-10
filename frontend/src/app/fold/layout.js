@@ -1,11 +1,4 @@
-// layout.js - Fixed Root Layout
-import { Inter } from "next/font/google";
 
-const inter = Inter({
-  subsets: ["latin"],
-  weight: ["400", "700"],
-  variable: "--font-inter",
-});
 
 export const metadata = {
   title: "Bio Fold",
@@ -14,8 +7,8 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={inter.variable}>
-      <body className={inter.className}>
+    <html lang="en" >
+      <body >
         {children}
       </body>
     </html>
