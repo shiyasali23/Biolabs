@@ -31,12 +31,15 @@ services:
       DB_NAME: biolabs
       DB_USER: postgres
       DB_PASSWORD: postgres123
-      DB_HOST: db  
+      DB_HOST: db
       DB_PORT: "5432"
     depends_on:
       - db
     networks:
       - app-network
+    # Add host access for intelligence service
+    extra_hosts:
+      - "intelligence:host-gateway"
 
   # Diagnosis service for Fast API
   diagnosis:
@@ -48,7 +51,10 @@ services:
       - "8001:8001"
     networks:
       - app-network
-  
+    # Add host access for intelligence service
+    extra_hosts:
+      - "intelligence:host-gateway"
+
   # Detection service for Fast API
   detection:
     build:
@@ -59,6 +65,9 @@ services:
       - "8002:8002"
     networks:
       - app-network
+    # Add host access for intelligence service
+    extra_hosts:
+      - "intelligence:host-gateway"
 
   # Frontend service for Next.js
   frontend:
@@ -70,6 +79,9 @@ services:
       - "3000:3000"
     networks:
       - app-network
+    # Add host access for intelligence service
+    extra_hosts:
+      - "intelligence:host-gateway"
 
   # Nginx service
   nginx:
@@ -92,10 +104,13 @@ services:
     depends_on:
       - frontend
       - backend
+    # Add host access for intelligence service
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
 networks:
   app-network:
     driver: bridge
 
 volumes:
-  pg_data:  
+  pg_data:

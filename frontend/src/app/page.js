@@ -27,7 +27,7 @@ export default function Home() {
 
       <section className="h-[70vh] xl:h-[88vh] flex flex-col items-center justify-center xl:px-32 border-gray-300 bg-white relative overflow-hidden">
         <div className="w-full max-w-6xl mx-auto flex flex-col justify-center items-center text-right gap-5 lg:gap-10">
-          <h1 className="text-5xl lg:text-9xl w-full text-center font-medium ">
+          <h1 className="text-5xl lg:text-9xl w-full text-center font-semibold ">
             {Array.from("WHO ARE WE?").map((char, i) => (
               <span
                 key={i}
@@ -62,7 +62,7 @@ export default function Home() {
             </Link>
           </h2>
 
-          <h3 className="text-md lg:text-2xl flex items-center gap-1  text-center font-medium">
+          <h3 className="text-md lg:text-xl flex items-center gap-1  text-center font-medium">
             {Array.from("Get Started").map((char, i) => (
               <span
                 key={i}
