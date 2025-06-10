@@ -85,7 +85,7 @@ const NoDataFound = ({
       <div className="flex flex-col gap-3 animate-dropdown">
         {setupStatus.isSettingUp ? (
           <div className="mt-4">
-            <h1 className="font-bold text-center xl:text-2xl text-lg mb-6">
+            <h1 className="font-semibold text-center xl:text-2xl text-lg mb-6">
               Setting Up
             </h1>
             {settingUpSteps.map(
@@ -93,7 +93,7 @@ const NoDataFound = ({
                 index <= currentStep && (
                   <div key={item} className="flex items-center space-x-2 mt-3">
                     <span
-                      className={`text-l font-semibold transition-all  ${
+                      className={`text-l font-semisemibold transition-all  ${
                         index < currentStep
                           ? "text-gray-800"
                           : "text-gray-400 animate-pulse-opacity"
@@ -117,15 +117,15 @@ const NoDataFound = ({
           </div>
         ) : (
           <div>
-            <h1 className="font-bold text-xl text-center">Oops.. No Records Found.</h1>
+            <h1 className="font-semibold text-xl text-center">Oops.. No Records Found.</h1>
             <div className="flex flex-col items-center gap-5 mt-12">
               <button
-                className="font-bold text-center xl:text-xl text-lg underline hover:scale-110 transition duration-150"
+                className="font-semibold text-center xl:text-xl text-lg underline hover:scale-110 transition duration-150"
                 onClick={handleDummyAccountSetup}
               >
                 Try with a dummy account
               </button>
-              <span className="font-bold text-center xl:text-xl text-lg">
+              <span className="font-semibold text-center xl:text-xl text-lg">
                 Or
               </span>
 

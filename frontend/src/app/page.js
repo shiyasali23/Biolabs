@@ -40,7 +40,7 @@ export default function Home() {
           </h1>
 
           <h2 className="w-full text-sm  lg:text-2xl font-semibold text-center">
-            {Array.from("WE helps humans to stay healthy. ").map((char, i) => (
+            {Array.from("Platform for humans to stay healthy. ").map((char, i) => (
               <span
                 key={i}
                 className="animate-char-reveal text-white"

@@ -178,7 +178,7 @@ const UserDataComponent = () => {
       <Accordion type="single" collapsible className="w-full">
         {/* Profile Section */}
         <AccordionItem value="profile">
-          <AccordionTrigger className="text-md font-semibold">
+          <AccordionTrigger className="text-md font-medium">
             User Profile
           </AccordionTrigger>
           <AccordionContent className="grid xl:grid-cols-2 grid-cols-1 gap-3 p-4">
@@ -243,7 +243,7 @@ const UserDataComponent = () => {
 
         {/* Additional Details Section */}
         <AccordionItem value="details">
-          <AccordionTrigger className="text-md font-semibold">
+          <AccordionTrigger className="text-md font-medium">
             Additional Details
           </AccordionTrigger>
           <AccordionContent className="grid xl:grid-cols-2 grid-cols-1 gap-3 p-4">
@@ -287,7 +287,7 @@ const UserDataComponent = () => {
 
         {/* Address Section */}
         <AccordionItem value="address">
-          <AccordionTrigger className="text-md font-semibold">
+          <AccordionTrigger className="text-md font-medium">
             Address
           </AccordionTrigger>
           <AccordionContent className="grid xl:grid-cols-2 grid-cols-1 gap-3 p-4">

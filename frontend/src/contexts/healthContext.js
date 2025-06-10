@@ -19,7 +19,7 @@ export const HealthProvider = ({ children }) => {
     {
       question: "Age Group",
       skippable: true,
-      input: ["18-25", "26-35", "36-45", "46-55", "56+"],
+      input: ["15-25", "26-35", "36-45", "46+"],
     },
     
     {
@@ -41,7 +41,7 @@ export const HealthProvider = ({ children }) => {
     },
     {
       question: "Stress",
-      input: ["Everytime", "Sometimes", "I am cool"],
+      input: ["Everytime", "Sometimes", "Never"],
       followup: {
         question: "Job satisfaction",
         input: ["Hate it", "Its ok", "Love it"],
@@ -69,7 +69,7 @@ export const HealthProvider = ({ children }) => {
       followup: {
         question: "Satisfaction on matertial life",
         skippable: true,
-        input: ["Poor", "Average", "Good", "Excellent"],
+        input: [ "Average", "Good", "Excellent"],
       },
     },
   ];

@@ -9,47 +9,40 @@ const CustomSlider = ({
 }) => {
   const steps = useMemo(() => {
     if (Array.isArray(input)) return input.map((_, i) => i);
-    if (typeof input === "number") {
-      const baseSteps = [];
-      for (let i = Math.max(1, input - 3); i <= input + 3; i++)
-        baseSteps.push(i);
-      return baseSteps;
-    }
     return [];
   }, [input]);
 
   const [currentStepIndex, setCurrentStepIndex] = useState(-1);
   const [hasInteracted, setHasInteracted] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   const getStepPosition = useCallback(
-    (stepIndex) => 30 + (stepIndex / (steps.length - 1)) * 60,
+    (stepIndex) => 15 + (stepIndex / (steps.length - 1)) * 70,
     [steps]
   );
 
   const getSliderPosition = useCallback(
     () =>
       currentStepIndex === -1
-        ? 10
-        : 30 + (currentStepIndex / (steps.length - 1)) * 60,
+        ? 5
+        : 15 + (currentStepIndex / (steps.length - 1)) * 70,
     [currentStepIndex, steps]
   );
 
   const handleSliderChange = useCallback(
     (e) => {
       const sliderValue = parseFloat(e.target.value);
-      if (sliderValue < 25) return;
+      if (sliderValue < 10) return;
 
       setHasInteracted(true);
       const totalSteps = steps.length - 1;
-      const adjustedValue = ((sliderValue - 30) / 60) * 100;
+      const adjustedValue = ((sliderValue - 15) / 70) * 100;
       const stepIndex = Math.round((adjustedValue / 100) * totalSteps);
       const clampedIndex = Math.max(0, Math.min(totalSteps, stepIndex));
 
       setCurrentStepIndex(clampedIndex);
       if (setSelectedValue) {
-        const actualValue = Array.isArray(input)
-          ? input[clampedIndex]
-          : steps[clampedIndex];
+        const actualValue = input[clampedIndex];
         setSelectedValue(actualValue);
       }
     },
@@ -57,8 +50,9 @@ const CustomSlider = ({
   );
 
   const handleInteractionEnd = useCallback(() => {
+    setIsDragging(false);
     if (hasInteracted && currentStepIndex !== -1 && onInteractionEnd) {
-      onInteractionEnd();
+      setTimeout(() => onInteractionEnd(), 100);
     }
   }, [onInteractionEnd, hasInteracted, currentStepIndex]);
 
@@ -67,78 +61,89 @@ const CustomSlider = ({
       setHasInteracted(true);
       setCurrentStepIndex(stepIndex);
       if (setSelectedValue) {
-        const actualValue = Array.isArray(input)
-          ? input[stepIndex]
-          : steps[stepIndex];
+        const actualValue = input[stepIndex];
         setSelectedValue(actualValue);
       }
-      if (onInteractionEnd) onInteractionEnd();
+      if (onInteractionEnd) {
+        setTimeout(() => onInteractionEnd(), 100);
+      }
     },
-    [steps, input, setSelectedValue, onInteractionEnd]
+    [input, setSelectedValue, onInteractionEnd]
   );
 
   return (
-    <div className="w-full max-w-lg mx-auto">
-      <div className="relative mb-12">
+    <div className="w-full  mx-auto">
+      {/* Step Labels */}
+      <div className="relative w-[90%] mx-auto flex items-center justify-between">
         {steps.map((step, index) => (
           <div
             key={step}
-            className="absolute flex flex-col items-center cursor-pointer hover:scale-110 transition-transform duration-200"
+            className="absolute  flex flex-col items-center cursor-pointer "
             style={{
               left: `${getStepPosition(index)}%`,
               transform: "translateX(-50%)",
-              top: "-30px",
+              top: "-55px",
             }}
             onClick={() => handleStepClick(index)}
           >
             <span
-              className={`text-md font-bold transition-colors duration-300 ${
+              className={`min-w-[80px]  px-4 py-2 shadow-lg  rounded-lg backdrop-blur-xl  transition-all duration-500 ease-out transform ${
                 currentStepIndex === index
-                  ? "text-blue-600 scale-110"
-                  : "text-gray-600"
-              }`}
+                  ? " scale-110 shadow-2xl text-blue-600"
+                  : "text-gray-800 "
+              } backdrop-blur-2xl border border-black/5  font-medium text-sm text-center`}
             >
-              {Array.isArray(input) ? input[index] : step}
+              {input[index]}
             </span>
             <div
-              className={`w-3 h-3 rounded-full mt-2 transition-all duration-300 ${
+              className={`w-2 h-2 rounded-full mt-4 transition-all duration-500 ${
                 currentStepIndex === index
-                  ? "bg-blue-600 scale-125 shadow-lg"
-                  : "bg-gray-300 hover:bg-gray-400"
+                  ? "bg-blue-600 shadow-lg shadow-blue-600/50 scale-150"
+                  : "bg-gray-400 group-hover:bg-gray-300"
               }`}
             />
           </div>
         ))}
       </div>
 
-      <div className="relative px-4">
-        <div className="relative h-5 bg-gray-200 rounded-full overflow-hidden">
+      {/* Slider Track */}
+      <div className="relative px-2 mt-10">
+        <div
+          style={{
+            background:
+              "linear-gradient(90deg, rgba(59, 59, 59, 0.24) 0%, rgba(150, 150, 150, 0.6) 50%, rgba(226, 226, 226, 0.9) 100%)",
+          }}
+          className="relative h-4  bg-gray-400 rounded-full overflow-hidden   "
+        >
           <div
             style={{
-               width: `${getSliderPosition()}%` ,
+              width: `${getSliderPosition() - 1}%`,
               background:
                 "linear-gradient(to right,rgb(30, 116, 138), #0ea5e9, #06b6d4, #67e8f9)",
             }}
-            className="absolute left-0 top-0 h-full rounded-full bg-blue-200"
+            className="absolute left-0 top-0 h-full rounded-full transition-all duration-300 ease-out"
           />
         </div>
 
+        {/* Slider Handle */}
         <div
-          className={`absolute top-1/2 w-8 h-8 bg-white rounded-full shadow-xl cursor-pointer transition-all duration-300 ${
+          className={`absolute top-1/2 w-8 h-8 rounded-full cursor-pointer transition-all duration-300 ease-out border ${
             hasInteracted && currentStepIndex !== -1
-              ? "border-4 border-blue-500 hover:scale-110"
-              : "border-3 border-gray-400"
-          }`}
+              ? "bg-white border-white/20 shadow-2xl shadow-black/30 scale-110"
+              : "bg-gray-100 border-gray-200/50 shadow-lg shadow-black/20"
+          } ${isDragging ? "scale-125" : ""}`}
           style={{
             left: `${getSliderPosition()}%`,
             transform: "translateX(-50%) translateY(-50%)",
+            backdropFilter: "blur(20px)",
             boxShadow:
               hasInteracted && currentStepIndex !== -1
-                ? "0 6px 20px rgba(59, 130, 246, 0.4)"
-                : "0 4px 12px rgba(0, 0, 0, 0.15)",
+                ? "0 20px 40px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.8)"
+                : "0 12px 24px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.6)",
           }}
         />
 
+        {/* Invisible Input */}
         <input
           type="range"
           min="0"
@@ -146,7 +151,9 @@ const CustomSlider = ({
           step="0.1"
           value={getSliderPosition()}
           onChange={handleSliderChange}
+          onMouseDown={() => setIsDragging(true)}
           onMouseUp={handleInteractionEnd}
+          onTouchStart={() => setIsDragging(true)}
           onTouchEnd={handleInteractionEnd}
           className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer"
           style={{ margin: 0 }}

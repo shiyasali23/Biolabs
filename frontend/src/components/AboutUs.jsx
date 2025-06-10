@@ -66,8 +66,8 @@ const AboutUs = ({ isLogined }) => {
   return (
     <div className="w-full h-full my-20">
       <div className="w-full px-10 xl:px-32 py-5 gap-16 flex flex-col">
-        <h1 className="text-base leading-[2rem] font-semibold ">
-          <span className="font-bold text-3xl mr-2">Biolabs</span>an
+        <h1 className="text-base leading-[2rem] font-medium tracking-wide">
+          <span className=" text-3xl mr-2">Biolabs</span>an
           organization founded on October 4th of 2024, designed to keeping
           humans healthy. Built on top of the most advanced, cutting-edge
           technologies and backed by the world's elite medical experts and
@@ -77,7 +77,7 @@ const AboutUs = ({ isLogined }) => {
 
         {/* Version Release Table */}
         <div className="flex flex-col gap-5">
-          <h1 className="text-2xl font-semibold">Release Notes:</h1>
+          <h1 className="text-2xl font-light">Release Notes:</h1>
           <table className="w-full">
             <tbody>
               {versionGroups.map((group, groupIndex) => (
@@ -85,7 +85,7 @@ const AboutUs = ({ isLogined }) => {
                   key={groupIndex}
                   className="border-b  flex items-center gap-16 p-3"
                 >
-                  <td className=" font-semibold h-full w-[5%] text-left text-md">
+                  <td className=" font-semibold h-full w-[5%]">
                     {groupIndex == versionGroups.length - 1
                       ? "Upcoming"
                       : group.date}{" "}
@@ -104,14 +104,14 @@ const AboutUs = ({ isLogined }) => {
                         >
                           <h1
                             key={serviceIndex}
-                            className="hover:cursor-pointer hover:text-blue-600 mb-1 font-bold text-lg  leading-[2rem] tracking-normal"
+                            className="hover:cursor-pointer hover:text-blue-600 mb-1 font-semibold text-lg  leading-[2rem] tracking-normal"
                             onClick={() => onServiceClick(serviceIndex)}
                           >
                             {service[1]}
                           </h1>
                           <h1
                             key={serviceIndex + 1}
-                            className="hover:cursor-pointer   ml-5 text-sm leading-[2rem] font-semibold tracking-normal"
+                            className="hover:cursor-pointer   ml-5 text-sm leading-[2rem] font-medium tracking-normal"
                             onClick={() => onServiceClick(serviceIndex)}
                           >
                             {service[2]}
@@ -130,7 +130,7 @@ const AboutUs = ({ isLogined }) => {
 
         <div className="flex flex-col gap-5">
           <h1 className="text-3xl w-full text-center font-bold">Vision</h1>
-          <h1 className="text-sm leading-[2rem] font-semibold">
+          <h1 className="text-sm leading-[2rem] font-medium">
             For the time beigh of a human lives health is the most valuable
             thing.Our vision is a world where every individual, regardless of
             location, has access to essential tools and resources for
@@ -146,7 +146,7 @@ const AboutUs = ({ isLogined }) => {
 
         <div className="flex flex-col gap-5">
           <h1 className="text-3xl w-full text-center font-bold">Capable Of</h1>
-          <h1 className="text-sm leading-[2rem] font-semibold">
+          <h1 className="text-sm leading-[2rem] font-medium">
             Our platform can be used as a personalized healthcare assistance
             shaped for each users.Also can be connect with any health care
             providers like hospitals. Wich can learns from local health patterns
@@ -154,7 +154,7 @@ const AboutUs = ({ isLogined }) => {
             any other proffesional to make better treatment and automate
             dignosis.
           </h1>
-          <h1 className="text-sm leading-[2rem] font-semibold">
+          <h1 className="text-sm leading-[2rem] font-medium">
             Imagine connecting each and every healthcare information worldwide
             to bringing global health knowledge under one umbrella. The true
             power of our solution emerges. We can identify emerging health

@@ -89,7 +89,7 @@ const ServicesDropDown = ({ isLogined, logOutUser }) => {
         aria-haspopup="true"
         aria-expanded={dropdownOpen}
       >
-        <span className="text-xs xl:text-sm relative z-10 group-hover:text-black transition-colors duration-500 ease-out">
+        <span className="text-xs xl:text-sm font-light relative z-10 group-hover:text-black transition-colors duration-500 ease-out">
           Services
         </span>
         <FaCaretDown

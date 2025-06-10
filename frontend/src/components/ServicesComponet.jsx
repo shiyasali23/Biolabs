@@ -2,18 +2,16 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import DiseaseDetectionModal from "./DiseaseDetectionModal";
 import DiagnosisModal from "./DiagnosisModal";
-
 import { useData } from "@/contexts/dataContext";
-import CustomButton from "./CustomButton";
 import { useUser } from "@/contexts/userContext";
 import NoDataFound from "./NoDataFound";
 import CommingSoon from "./CommingSoon";
 import Intelligence from "./Intelligence";
 import { useServiceHandler } from "@/utils/serviceHandler";
+
 const ServicesComponent = () => {
   const { servicesArray } = useData();
   const { isLogined } = useUser();
-
   const router = useRouter();
   const [diseaseDetectionModalOpen, setDiseaseDetectionModalOpen] =
     useState(false);
@@ -23,10 +21,11 @@ const ServicesComponent = () => {
   const [intelligenceOpen, setIntelligenceOpen] = useState(false);
   const [commingSoonIndex, setCommingSoonIndex] = useState(null);
   const [noDataFoundRoute, setNoDataFoundRoute] = useState(null);
+  const [expandedIndex, setExpandedIndex] = useState(null);
 
-  const { handleServiceClick, checkIntelligenceParam, closeIntelligenceModal } = useServiceHandler();
+  const { handleServiceClick, checkIntelligenceParam, closeIntelligenceModal } =
+    useServiceHandler();
 
-  // Check for intelligence parameter on component mount
   useEffect(() => {
     checkIntelligenceParam(setIntelligenceOpen);
   }, []);
@@ -45,34 +44,69 @@ const ServicesComponent = () => {
     );
   };
 
+  const toggleDescription = (index) => {
+    setExpandedIndex(expandedIndex === index ? null : index);
+  };
+
   return (
-    <div className="w-full h-screen flex flex-col items-center justify-evenly p-2 xl:p-4 gap-5">
-      <h1 className="text-3xl xl:text-4xl underline underline-offset-8  font-bold">
-        Our Services
-      </h1>
-      <div className=" grid grid-cols-2 md:grid-cols-3 gap-7 xl:px-12 w-full">
-        {servicesArray.map((service, index) => (
-          <div
-            key={index}
-            onClick={() => onServiceClick(index)}
-            className="shadow-xl rounded   cursor-pointer py-2 px-1 xl:py-5 hover:shadow-2xl  sm:h-[10rem] xl:h-[10rem] flex flex-col justify-between   gap-4"
-          >
-            <h1 className="tracking-wider word-spacing-wider text-xs xl:text-lg font-semibold text-left leading-tight px-2 xl:px-8">
-              {service[0]}
-            </h1>
-            <div className="px-0 xl:px-8">
-              <CustomButton
-                text={
-                  <span className="flex items-center gap-2">
-                    {service[3]} {/* Renders the icon properly */}
-                    {service[1]} {/* Renders the text */}
-                  </span>
-                }
-                className="mx-auto w-full text-xs rounded"
-              />
-            </div>
+    <div className="min-h-screen bg-white">
+      <div className="pt-20 pb-16 px-8">
+        <div className="max-w-4xl mx-auto text-center">
+          <h1 className="text-5xl font-light text-gray-900 tracking-tight mb-3">
+            Our Services
+          </h1>
+        </div>
+      </div>
+
+      <div className="px-8 pb-20">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid grid-cols-1  lg:grid-cols-2 gap-3">
+            {servicesArray.map((service, index) => (
+              <div
+                key={index}
+                onClick={() => onServiceClick(index)}
+                className="flex flex-col gap-2 group bg-gray-50/50 border border-gray-200/60 rounded-2xl p-8 cursor-pointer transition-all duration-200 hover:bg-white hover:border-gray-300/80 hover:shadow-sm active:scale-[0.98]"
+              >
+                <div className="  w-12 h-12 mb-2 flex items-center justify-center bg-gray-200 hover:bg-gray-600 text-blue-400 rounded-xl   transition-all duration-300">
+                  {service[3]}
+                </div>
+                <span className="text-xl font-semibold text-gray-900 ">
+                  {service[1]}
+                </span>
+                <div className="space-y-3">
+                  <h3 className="text-md font-medium text-gray-800">
+                    {service[0]}
+                  </h3>
+                  
+                </div>
+
+                <div className="mt-6 pt-4 border-t border-gray-100">
+                  <div className="relative">
+                    <p
+                      className={`text-sm text-gray-500 leading-relaxed ${
+                        expandedIndex === index ? "" : "truncate"
+                      }`}
+                    >
+                      {service[2] || "Advanced healthcare solution"}
+                    </p>
+                  </div>
+                  {service[2] && service[2].length > 100 && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleDescription(index);
+                      }}
+                      className="text-sm font-medium mt-1 focus:outline-none"
+                    >
+                      {expandedIndex === index ? "Know Less" : "Know More" }
+
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
+        </div>
       </div>
 
       {diseaseDetectionModalOpen && (
@@ -107,9 +141,9 @@ const ServicesComponent = () => {
       )}
 
       {intelligenceOpen && (
-        <Intelligence 
-          isOpen={intelligenceOpen} 
-          onClose={() => closeIntelligenceModal(setIntelligenceOpen)} 
+        <Intelligence
+          isOpen={intelligenceOpen}
+          onClose={() => closeIntelligenceModal(setIntelligenceOpen)}
         />
       )}
     </div>

@@ -2,7 +2,6 @@
 import { useEffect, useState } from "react";
 import { useUser } from "@/contexts/userContext";
 import { useHealth } from "@/contexts/healthContext";
-import CustomButton from "@/components/CustomButton";
 import CustomSlider from "@/components/ui/CustomSlider";
 import LoadingComponent from "@/components/LoadingComponent";
 import { Button } from "@/components/ui/button";
@@ -40,26 +39,21 @@ const Health = () => {
     if (Array.isArray(questionInput)) {
       return questionInput.indexOf(answer) / (questionInput.length - 1);
     }
-    if (typeof questionInput === "number") {
-      const maxValue = questionInput + 3;
-      const minValue = Math.max(1, questionInput - 3);
-      return (answer - minValue) / (maxValue - minValue);
-    }
     return 0.5;
   };
 
   const getQualityColor = (quality) =>
     quality <= 0.33
-      ? "bg-red-100 border-red-300 text-red-800"
+      ? "bg-red-500/5 border-red-500/20 text-red-300"
       : quality <= 0.66
-      ? "bg-yellow-100 border-yellow-300 text-yellow-800"
-      : "bg-green-100 border-green-300 text-green-800";
+      ? "bg-yellow-500/5 border-yellow-500/20 text-yellow-300"
+      : "bg-green-500/5 border-green-500/20 text-green-300";
 
   const transition = (direction, callback) => {
     setIsTransitioning(true);
     setTimeout(() => {
       callback();
-      setTimeout(() => setIsTransitioning(false), 50);
+      setTimeout(() => setIsTransitioning(false), 100);
     }, 300);
   };
 
@@ -67,11 +61,23 @@ const Health = () => {
     transition("next", () => {
       if (isFollowup) {
         setIsFollowup(false);
-        setIndex((i) => (i + 1 < questions.length ? i + 1 : i));
+        const nextIndex = index + 1;
+        if (nextIndex < questions.length) {
+          setIndex(nextIndex);
+        } else {
+          // All questions finished, set loading to true
+          setLoading(true);
+        }
       } else if (current?.followup && inputData[questionKey]) {
         setIsFollowup(true);
       } else {
-        setIndex((i) => (i + 1 < questions.length ? i + 1 : i));
+        const nextIndex = index + 1;
+        if (nextIndex < questions.length) {
+          setIndex(nextIndex);
+        } else {
+          // All questions finished, set loading to true
+          setLoading(true);
+        }
       }
     });
 
@@ -89,7 +95,7 @@ const Health = () => {
           question: displayQ.question,
         },
       }));
-      setTimeout(next, 400);
+      setTimeout(next, 600);
     }
   };
 
@@ -106,75 +112,74 @@ const Health = () => {
   const shouldShowStart = answeredCount >= 4 || isLastQuestion;
 
   return (
-    <div className="w-screen min-h-[92vh] xl:min-h-[88vh] flex flex-col items-center gap-5">
-      <div className="w-[90%] xl:w-[60%] h-[60vh] xl:h-[50vh] m-auto shadow-lg px-2 py-5 pr-5 flex flex-col items-center justify-center mt-20 overflow-hidden ">
-        <div className="w-full h-full flex items-center justify-center">
-          {loading ? (
-            <LoadingComponent />
-          ) : (
-            <div className="w-full h-full flex flex-col items-center justify-center relative">
-              <div
-                className={`w-full h-full flex gap-10 flex-col items-center justify-center transition-all duration-300 ease-in-out ${
-                  isTransitioning
-                    ? "transform translate-x-full opacity-0"
-                    : "transform translate-x-0 opacity-100"
-                }`}
-              >
-                <h1 className="font-bold text-2xl w-full text-center mb-8">
-                  {displayQ?.question}
-                </h1>
-                <CustomSlider
-                  key={`${index}-${isFollowup}`}
-                  input={displayQ?.input}
-                  selectedValue={currentAnswer}
-                  setSelectedValue={setCurrentAnswer}
-                  onInteractionEnd={handleInteractionEnd}
-                />
-              </div>
-            </div>
-          )}
-        </div>
+    <div className="xl:min-h-[88vh] min-h-[90vh]  overflow-hidden flex flex-col items-center justify-center ">
+      <div className=" backdrop-blur-2xl border border-black/5 rounded-xl px-3 xl:px-10 py-5 shadow-lg   mx-auto w-[90vw] xl:w-[60vw]  max-h-[60vh] flex flex-col  justify-between gap-10 relative">
+        {loading ? (
+          <LoadingComponent />
+        ) : (
+          <div
+            className={`transition-all duration-500 ease-out flex flex-col gap-20   ${
+              isTransitioning
+                ? "transform translate-x-8 opacity-0"
+                : "transform translate-x-0 opacity-100"
+            }`}
+          >
+            <h1 className="text-3xl font-light text-gray-800 text-center  leading-relaxed">
+              {displayQ?.question}
+            </h1>
 
-        {!loading && (
-          <div className="w-full flex items-center justify-center gap-4 min-h-[48px] mt-4">
-            {(index > 0 || isFollowup) && (
+            <CustomSlider
+              key={`${index}-${isFollowup}`}
+              input={displayQ?.input}
+              selectedValue={currentAnswer}
+              setSelectedValue={setCurrentAnswer}
+              onInteractionEnd={handleInteractionEnd}
+            />
+
+            {/* Navigation Buttons */}
+            <div className="flex items-center justify-center gap-6">
+              {(index > 0 || isFollowup) && (
+                <Button
+                  onClick={prev}
+                  disabled={isTransitioning}
+                  className=" px-6 py-3 bg-gray-900"
+                >
+                  Previous
+                </Button>
+              )}
+
+              {displayQ?.skippable && (
+                <Button
+                  onClick={next}
+                  disabled={isTransitioning}
+                  className=" px-6 py-3 bg-gray-900 "
+                >
+                  Skip
+                </Button>
+              )}
+            </div>
+
+            {/* Start Button */}
+            {shouldShowStart && (
               <Button
-                className="rounded-lg  xl:w-1/6 w-1/4 xl:h-full tracking-wider hover:scale-105 transition-transform duration-200"
-                onClick={prev}
+                className=" px-6 py-3 bg-gray-900 w-1/2 mx-auto"
+                onClick={() => {
+                  setLoading(true);
+                  console.log("Start clicked", inputData);
+                }}
                 disabled={isTransitioning}
               >
-                Back
-              </Button>
-            )}
-            {displayQ?.skippable && (
-              <Button
-                className="rounded-lg  xl:w-1/6 w-1/4 xl:h-full tracking-wider hover:scale-105 transition-transform duration-200"
-                onClick={next}
-                disabled={isTransitioning}
-              >
-                Skip
+                Get Assessment
               </Button>
             )}
           </div>
         )}
-
-        {shouldShowStart && !loading && (
-          <Button
-            className="rounded-lg  h-1/6 w-1/4 m-5 text-base font-semibold tracking-wider hover:scale-105 transition-transform duration-200"
-            onClick={() => {
-              setLoading(true);
-              console.log("Start clicked", inputData);
-            }}
-            disabled={isTransitioning}
-          >
-            Start
-          </Button>
-        )}
       </div>
 
+      {/* Answer Summary */}
       {Object.keys(inputData).length > 0 && (
-        <div className=" xl:w-[60%] rounded-lg p-4">
-          <div className="mb-4 grid grid-cols-2 md:grid-cols-3 gap-2 items-center justify-between">
+        <div className="backdrop-blur-xl p-6 w-[90vw] xl:w-[70vw] mx-auto mt-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {Object.entries(inputData)
               .filter(([key]) => key !== "age")
               .sort(
@@ -186,22 +191,34 @@ const Health = () => {
                 const isFollowupAnswer = key.includes("_followup");
                 const originalQuestion = questions[questionIndex];
                 const questionInput = isFollowupAnswer
-                  ? originalQuestion.followup.input
-                  : originalQuestion.input;
+                  ? originalQuestion?.followup?.input
+                  : originalQuestion?.input;
                 const quality = getAnswerQuality(data.userInput, questionInput);
                 const colorClass = getQualityColor(quality);
 
                 return (
                   <div
                     key={key}
-                    className={`flex w-full items-center justify-between py-3 px-2 rounded-lg h-[60px] cursor-pointer hover:shadow-md transition-all duration-200 ${colorClass}`}
                     onClick={() => handleEditQuestion(key)}
+                    className={`p-4 border rounded-xl cursor-pointer hover:scale-105 transition-all duration-300 backdrop-blur-sm ${colorClass}`}
                   >
-                    <div className="flex flex-col">
-                      <p className="font-medium text-xs mb-1">
-                        {data.question} {isFollowupAnswer && "(Follow-up)"}
+                    <p className="text-gray-800 text-md font-semibold mb-2 line-clamp-2">
+                      {data.question} {isFollowupAnswer && "(Follow-up)"}
+                    </p>
+
+                    <div className="mt-2 flex items-center gap-2">
+                      <div
+                        className={`w-2 h-2 rounded-full ${
+                          quality <= 0.33
+                            ? "bg-red-400"
+                            : quality <= 0.66
+                            ? "bg-yellow-400"
+                            : "bg-green-400"
+                        }`}
+                      />
+                      <p className="text-gray-600 font-medium">
+                        {data.userInput}
                       </p>
-                      <p className="text-sm font-semibold">{data.userInput}</p>
                     </div>
                   </div>
                 );

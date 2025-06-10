@@ -17,7 +17,7 @@ const Header = () => {
   const [intelligenceOpen, setIntelligenceOpen] = useState(false);
 
   return (
-    <header className="w-full sticky z-50 top-0 h-[8vh] xl:h-[12vh] xl:mb-2 flex justify-center items-center bg-white">
+    <header className="w-full sticky z-50 top-0 h-[10vh] xl:h-[12vh] xl:mb-2 flex justify-center items-center bg-white">
       {/* Logo section */}
       <div className=" flex xl:justify-center  w-full ">
         <Link href="/" className="flex items-center">
@@ -28,7 +28,7 @@ const Header = () => {
             height={75}
             className="xl:w-24 xl:h-24 w-14 h-14 "
           />
-          <h1 className="xl:text-6xl text-2xl font-semibold xl:font-bold">
+          <h1 className="xl:text-6xl text-2xl font-semibold  tracking-tight ml-2 xl:ml-4">
             Biolabs
           </h1>
         </Link>
@@ -42,19 +42,19 @@ const Header = () => {
           {isLogined && (
             <div className="flex items-center flex-col">
             <RiMentalHealthFill
-              className="cursor-pointer text-2xl xl:text-4xl font-bold"
+              className="cursor-pointer text-2xl xl:text-4xl "
               onClick={() => router.push("/profile")}
             />
-            <h1 className="text-xs font-semibold">Profile</h1>
+            <h1 className="text-xs xl:text-sm font-semibold">Profile</h1>
           </div>
           )}
 
           <div className="flex items-center flex-col">
             <AiFillSlackCircle
-              className="cursor-pointer text-2xl xl:text-4xl font-bold"
+              className="cursor-pointer text-2xl xl:text-4xl "
               onClick={() => setIntelligenceOpen(true)}
             />
-            <h1 className="text-xs font-semibold">Intelligence</h1>
+            <h1 className="text-xs xl:text-sm font-semibold">Intelligence</h1>
           </div>
         </div>
       </div>
