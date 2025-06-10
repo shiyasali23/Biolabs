@@ -195,37 +195,16 @@ const Fold = () => {
   }, [stages.length]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 transform-gpu">
+    <div className="min-h-screen ">
       {/* Optimized Background - Reduced animations */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-br from-cyan-500/5 to-transparent rounded-full" />
-        <div className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-gradient-to-tl from-blue-500/5 to-transparent rounded-full" />
+        <div className="absolute -top-1/2 -left-1/2 w-full h-full  rounded-full" />
+        <div className="absolute -bottom-1/2 -right-1/2 w-full h-full  rounded-full" />
       </div>
 
       <div className="relative z-10">
         {/* Optimized Header */}
-        <header className="sticky top-0 z-50 border-b border-cyan-500/20 backdrop-blur-sm bg-black/20">
-          <div className="max-w-7xl mx-auto px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className="p-2 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-xl">
-                  <Dna className="w-8 h-8 text-white" />
-                </div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-300 bg-clip-text text-transparent">
-                  Bio Fold
-                </h1>
-              </div>
-              <div className="flex items-center space-x-4">
-                <button className="p-2 hover:bg-cyan-500/20 rounded-lg transition-colors duration-200">
-                  <Settings className="w-5 h-5 text-cyan-400" />
-                </button>
-                <div className="px-4 py-2 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-lg border border-cyan-500/30">
-                  <span className="text-cyan-300 font-medium">System Active</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </header>
+        
 
         {/* Main Content */}
         <main className="max-w-7xl mx-auto px-6 py-8">
@@ -248,7 +227,7 @@ const Fold = () => {
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
             {/* Hypothesis Generation Panel */}
             <section className="xl:col-span-2 space-y-6">
-              <div className="bg-gradient-to-br from-slate-800/60 to-slate-700/60 backdrop-blur-sm rounded-2xl border border-cyan-500/20 p-6">
+              <div className="bg-gradient-to-br from-slate-500/60 to-slate-700/60 backdrop-blur-sm rounded-2xl border border-cyan-500/20 p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-lg font-semibold text-white flex items-center space-x-2">
                     <Brain className="w-5 h-5 text-cyan-400" />
@@ -292,7 +271,7 @@ const Fold = () => {
               </div>
 
               {/* Multi-Modal Analysis */}
-              <div className="bg-gradient-to-br from-slate-800/60 to-slate-700/60 backdrop-blur-sm rounded-2xl border border-cyan-500/20 p-6">
+              <div className="bg-gradient-to-br from-slate-500/60 to-slate-700/60 backdrop-blur-sm rounded-2xl border border-cyan-500/20 p-6">
                 <h3 className="text-lg font-semibold text-white flex items-center space-x-2 mb-6">
                   <Atom className="w-5 h-5 text-purple-400" />
                   <span>Multi-Modal Analysis</span>
@@ -364,7 +343,7 @@ const Fold = () => {
             {/* Side Panel */}
             <aside className="space-y-6">
               {/* System Status */}
-              <div className="bg-gradient-to-br from-slate-800/60 to-slate-700/60 backdrop-blur-sm rounded-2xl border border-cyan-500/20 p-6">
+              <div className="bg-gradient-to-br from-slate-500/60 to-slate-700/60 backdrop-blur-sm rounded-2xl border border-cyan-500/20 p-6">
                 <h3 className="text-lg font-semibold text-white mb-4">System Status</h3>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
@@ -387,7 +366,7 @@ const Fold = () => {
               </div>
 
               {/* Recent Activity */}
-              <div className="bg-gradient-to-br from-slate-800/60 to-slate-700/60 backdrop-blur-sm rounded-2xl border border-cyan-500/20 p-6">
+              <div className="bg-gradient-to-br from-slate-500/60 to-slate-700/60 backdrop-blur-sm rounded-2xl border border-cyan-500/20 p-6">
                 <h3 className="text-lg font-semibold text-white mb-4">Recent Activity</h3>
                 <div className="space-y-3">
                   <div className="flex items-start space-x-3">
@@ -415,7 +394,7 @@ const Fold = () => {
               </div>
 
               {/* Experiment Planning */}
-              <div className="bg-gradient-to-br from-slate-800/60 to-slate-700/60 backdrop-blur-sm rounded-2xl border border-cyan-500/20 p-6">
+              <div className="bg-gradient-to-br from-slate-500/60 to-slate-700/60 backdrop-blur-sm rounded-2xl border border-cyan-500/20 p-6">
                 <h3 className="text-lg font-semibold text-white mb-4 flex items-center space-x-2">
                   <FlaskConical className="w-5 h-5 text-orange-400" />
                   <span>Wet Lab Queue</span>
