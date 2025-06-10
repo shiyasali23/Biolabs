@@ -4,7 +4,7 @@ import { FaChartLine, FaMicroscope, FaStethoscope } from "react-icons/fa";
 import { IoFastFood } from "react-icons/io5";
 import { PiDnaFill } from "react-icons/pi";
 import { AiFillSlackCircle } from "react-icons/ai";
-import { RiHealthBookFill } from "react-icons/ri";
+import { RiHealthBookFill, RiMentalHealthFill } from "react-icons/ri";
 import { SiMatomo } from "react-icons/si";
 
 const DataContext = createContext();
@@ -59,6 +59,14 @@ export const DataProvider = ({ children }) => {
       "Bio Fold",
       "Using advanced protein folding and molecular docking to design custom medications that perfectly matches unique biology. Through quantum-enhanced computational models, simulate how compounds interact with specific cellular receptors at the molecular level.To boost therapeutic outcomes by ensuring optimal drug-target interactions while minimizing adverse effects.",
       <SiMatomo />
+
+
+    ],
+    [
+      "Helps for psychological states",
+      "Bio Mind",
+      "AI-driven interventions to assess, stabilize, and enhance psychological well-being. Delivers personalized mental health strategies—from stress resilience protocols to neurofeedback training. Integrates with wearable data for real-time mood regulation and long-term brain health optimization",
+      <RiMentalHealthFill />
 
 
     ],

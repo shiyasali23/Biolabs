@@ -49,7 +49,9 @@ export const useServiceHandler = () => {
       }
     }else if (index === 6){
       router.push("/fold");
-    } else if (index >= 6) {
+    } else if (index === 7){
+      router.push("/health");
+    }else if (index >= 8) {
       setCommingSoonModalOpen(true);
       setCommingSoonIndex(index);
     }
