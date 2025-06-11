@@ -3,11 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "NODE_OPTIONS='--max-old-space-size=4096' NODE_ENV=development next dev --turbo",
-    "build": "NODE_OPTIONS='--max-old-space-size=4096' NODE_ENV=production next build",
-    "start": "NODE_OPTIONS='--max-old-space-size=4096' NODE_ENV=production next start",
-    "lint": "next lint"
-  },
+  "dev": "NODE_ENV=development next dev --turbo",
+  "build": "NODE_ENV=production next build",
+  "start": "NODE_ENV=production next start",
+  "lint": "next lint"
+}
+,
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.3",
     "@radix-ui/react-checkbox": "^1.1.4",
