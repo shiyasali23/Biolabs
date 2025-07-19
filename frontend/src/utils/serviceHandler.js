@@ -48,7 +48,7 @@ export const useServiceHandler = () => {
         setNoDataFoundModalOpen(true);
       }
     }else if (index === 6){
-      router.push("/fold");
+      window.location.href = "http://biofold-frontend:3001/landing"
     } else if (index === 7){
       router.push("/health");
     }else if (index >= 8) {

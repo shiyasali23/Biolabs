@@ -12,7 +12,6 @@ import { useServiceHandler } from "@/utils/serviceHandler";
 const ServicesComponent = () => {
   const { servicesArray } = useData();
   const { isLogined } = useUser();
-  const router = useRouter();
   const [diseaseDetectionModalOpen, setDiseaseDetectionModalOpen] =
     useState(false);
   const [diagnosisModalOpen, setDiagnosisModalOpen] = useState(false);
@@ -49,10 +48,10 @@ const ServicesComponent = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen  ">
       <div className="pt-20 pb-16 px-8">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-5xl font-light text-gray-900 tracking-tight mb-3">
+          <h1 className="text-5xl font-light text-gray-900 tracking-tight mb-3 ">
             Our Services
           </h1>
         </div>
@@ -65,19 +64,28 @@ const ServicesComponent = () => {
               <div
                 key={index}
                 onClick={() => onServiceClick(index)}
-                className="flex flex-col gap-2 group bg-gray-50/50 border border-gray-200/60 rounded-2xl p-8 cursor-pointer transition-all duration-200 hover:bg-white hover:border-gray-300/80 hover:shadow-sm active:scale-[0.98]"
-              >
-                <div className="  w-12 h-12 mb-2 flex items-center justify-center bg-gray-200 hover:bg-gray-600 text-blue-400 rounded-xl   transition-all duration-300">
+                className="
+                  bg-gradient-to-br from-slate-50 to-slate-100
+                  transition-all duration-300
+                  hover:bg-white/70
+                  hover:border-cyan-600/90
+                  hover:shadow-lg hover:shadow-cyan-200/20
+                  flex flex-col gap-2 group
+                  border border-gray-200/60
+                  rounded-2xl p-8 cursor-pointer
+                  active:scale-[0.98]
+                "
+              > 
+                <div className="text-cyan-600  w-12 h-12 mb-2 flex items-center justify-center bg-gray-200   rounded-xl   ">
                   {service[3]}
                 </div>
-                <span className="text-xl font-semibold text-gray-900 ">
+                <span className="text-xl  font-semibold  text-gray-900 ">
                   {service[1]}
                 </span>
                 <div className="space-y-3">
-                  <h3 className="text-md font-medium text-gray-800">
+                  <h3 className="text-md font-medium text-gray-900">
                     {service[0]}
                   </h3>
-                  
                 </div>
 
                 <div className="mt-6 pt-4 border-t border-gray-100">
@@ -98,8 +106,7 @@ const ServicesComponent = () => {
                       }}
                       className="text-sm font-medium mt-1 focus:outline-none"
                     >
-                      {expandedIndex === index ? "Know Less" : "Know More" }
-
+                      {expandedIndex === index ? "Know Less" : "Know More"}
                     </button>
                   )}
                 </div>

@@ -42,21 +42,21 @@ export const DataProvider = ({ children }) => {
     ],
     [
       "Personalized Artificial Intelligence",
-      "Bio Intelligence",
+      "Intelligence",
       "Personalized health assistant powered by artificial intelligence seamlessly integrated with all of our services. Designed to provide every possible comprehensive health insights and expert level guidance empowering to make informed decisions.",
       <AiFillSlackCircle />
 
     ],
     [
       "Archive Medical Records And Insight",
-      "Bio Vault",
+      "Vault",
       "Secure space that allows to store any kind of medical informations digitally. From reports and prescriptions to personal health notes and observations. That can be also shared with trusted individuals. To gain insights, track conditions to make informed decisions.",
       <RiHealthBookFill />
 
     ],
     [
       "Create Biology Specific Medicines",
-      "Bio Fold",
+      "Fold",
       "Using advanced protein folding and molecular docking to design custom medications that perfectly matches unique biology. Through quantum-enhanced computational models, simulate how compounds interact with specific cellular receptors at the molecular level.To boost therapeutic outcomes by ensuring optimal drug-target interactions while minimizing adverse effects.",
       <SiMatomo />
 
@@ -64,7 +64,7 @@ export const DataProvider = ({ children }) => {
     ],
     [
       "Helps for psychological states",
-      "Bio Mind",
+      "Mind",
       "AI-driven interventions to assess, stabilize, and enhance psychological well-being. Delivers personalized mental health strategies—from stress resilience protocols to neurofeedback training. Integrates with wearable data for real-time mood regulation and long-term brain health optimization",
       <RiMentalHealthFill />
 
@@ -72,7 +72,7 @@ export const DataProvider = ({ children }) => {
     ],
     [
       "Analysis And Report Over DNA Sequences",
-      "Bio Genes",
+      "Genes",
       "Genetic analysis to identify inherited health risks by comparing DNA with similar profiles. Advanced algorithms detect subtle genetic variations that traditional tests miss, enabling early intervention before symptoms appear wich shifts healthcare from reactive to preventative.",
       <PiDnaFill />
 

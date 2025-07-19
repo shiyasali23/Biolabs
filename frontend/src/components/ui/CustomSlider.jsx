@@ -87,7 +87,7 @@ const CustomSlider = ({
             onClick={() => handleStepClick(index)}
           >
             <span
-              className={`min-w-[80px]  px-4 py-2 shadow-lg  rounded-lg backdrop-blur-xl  transition-all duration-500 ease-out transform ${
+              className={`min-w-[80px]  px-4 py-2   rounded-lg backdrop-blur-xl  transition-all duration-500 ease-out transform ${
                 currentStepIndex === index
                   ? " scale-110 shadow-2xl text-blue-600"
                   : "text-gray-800 "
@@ -98,7 +98,7 @@ const CustomSlider = ({
             <div
               className={`w-2 h-2 rounded-full mt-4 transition-all duration-500 ${
                 currentStepIndex === index
-                  ? "bg-blue-600 shadow-lg shadow-blue-600/50 scale-150"
+                  ? "bg-blue-600  shadow-blue-600/50 scale-150"
                   : "bg-gray-400 group-hover:bg-gray-300"
               }`}
             />
@@ -109,10 +109,7 @@ const CustomSlider = ({
       {/* Slider Track */}
       <div className="relative px-2 mt-10">
         <div
-          style={{
-            background:
-              "linear-gradient(90deg, rgba(59, 59, 59, 0.24) 0%, rgba(150, 150, 150, 0.6) 50%, rgba(226, 226, 226, 0.9) 100%)",
-          }}
+          style={{ background: "rgba(226, 226, 226, 0.4)" }}
           className="relative h-4  bg-gray-400 rounded-full overflow-hidden   "
         >
           <div
@@ -130,16 +127,13 @@ const CustomSlider = ({
           className={`absolute top-1/2 w-8 h-8 rounded-full cursor-pointer transition-all duration-300 ease-out border ${
             hasInteracted && currentStepIndex !== -1
               ? "bg-white border-white/20 shadow-2xl shadow-black/30 scale-110"
-              : "bg-gray-100 border-gray-200/50 shadow-lg shadow-black/20"
+              : "bg-gray-100 border-gray-200/50  "
           } ${isDragging ? "scale-125" : ""}`}
           style={{
             left: `${getSliderPosition()}%`,
             transform: "translateX(-50%) translateY(-50%)",
             backdropFilter: "blur(20px)",
-            boxShadow:
-              hasInteracted && currentStepIndex !== -1
-                ? "0 20px 40px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.8)"
-                : "0 12px 24px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.6)",
+            boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
           }}
         />
 
