@@ -7,24 +7,22 @@ import NoDataFound from "@/components/NoDataFound";
 import { useState } from "react";
 
 export default function Home() {
-
   const [noDataFoundModalOpen, setNoDataFoundModalOpen] = useState(false);
-  const {isLogined} = useUser();
-  
+  const { isLogined } = useUser();
+
   const handleScanClick = (event) => {
     event.preventDefault();
     document.getElementById("services-section").scrollIntoView({
       behavior: "smooth",
       block: "start",
     });
-    if(!isLogined){
+    if (!isLogined) {
       setNoDataFoundModalOpen(true);
     }
   };
 
   return (
     <main className="w-full" style={{ scrollBehavior: "smooth" }}>
-
       <section className="h-[70vh] xl:h-[88vh] flex flex-col items-center justify-center xl:px-32 border-gray-300 bg-white relative overflow-hidden">
         <div className="w-full max-w-6xl mx-auto flex flex-col justify-center items-center text-right gap-5 lg:gap-10">
           <h1 className="text-5xl lg:text-9xl w-full text-center font-semibold ">
@@ -40,15 +38,17 @@ export default function Home() {
           </h1>
 
           <h2 className="w-full text-sm  lg:text-2xl  text-center font-medium">
-            {Array.from("Platform for humans to stay healthy. ").map((char, i) => (
-              <span
-                key={i}
-                className="animate-char-reveal text-white"
-                style={{ animationDelay: `${i * 20 + 10}ms` }}
-              >
-                {char}
-              </span>
-            ))}
+            {Array.from("Platform for humans to stay healthy. ").map(
+              (char, i) => (
+                <span
+                  key={i}
+                  className="animate-char-reveal text-white"
+                  style={{ animationDelay: `${i * 20 + 10}ms` }}
+                >
+                  {char}
+                </span>
+              )
+            )}
             <Link href="/info">
               {Array.from("Know More").map((char, i) => (
                 <span
@@ -85,7 +85,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section  id="services-section">
+      <section id="services-section">
         <ServicesComponent />
       </section>
       {noDataFoundModalOpen && (

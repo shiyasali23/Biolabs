@@ -3,10 +3,12 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { getRecords, registerRecords } from "@/lib/vault-api";
 import { cacheManager } from "@/utils/cache-wroker";
 import dummyRecordsData from "@/jsons/dummy-records-data.json";
+import { useIsClient } from "@/hooks/useIsClient";
 
 const RecordContext = createContext();
 
 export const RecordProvider = ({ children }) => {
+  const isClient = useIsClient();
   const [recordsArray, setrecordsArray] = useState(null);
   const [recordsLoading, setRecordsLoading] = useState(false);
 
@@ -21,14 +23,16 @@ export const RecordProvider = ({ children }) => {
   };
 
   useEffect(() => {
+    if (!isClient) return;
+
     setRecordsLoading(true);
     const cachedRecords = cacheManager.get("records");
 
     if (cachedRecords && Array.isArray(cachedRecords)) {
       setrecordsArray(cachedRecords);
-    } 
+    }
     setRecordsLoading(false);
-  }, []);
+  }, [isClient]);
 
   const updateRecord = async (reportData) => {
     try {
@@ -55,12 +59,10 @@ export const RecordProvider = ({ children }) => {
 
   const loadDummyRecords = async () => {
     if (!dummyRecordsData) return false;
-        setrecordsArray([dummyRecordsData]);
+    setrecordsArray([dummyRecordsData]);
     return true;
   };
 
-  
-  
   return (
     <RecordContext.Provider
       value={{
@@ -69,7 +71,7 @@ export const RecordProvider = ({ children }) => {
         updateRecord,
         fetchRecords,
         loadDummyRecords,
-        fetchRecords
+        fetchRecords,
       }}
     >
       {children}

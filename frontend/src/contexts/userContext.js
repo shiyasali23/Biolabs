@@ -4,10 +4,12 @@ import { processBiometricData } from "@/utils/biometrics-worker";
 import { cacheManager } from "@/utils/cache-wroker";
 import dummyUserData from "@/jsons/dummy-user-data.json";
 import { processDummyUserData } from "@/utils/dummy-data-worker";
+import { useIsClient } from "@/hooks/useIsClient";
 
 const UserContext = createContext();
 
 export const UserProvider = ({ children }) => {
+  const isClient = useIsClient();
   const [isLogined, setIsLogined] = useState(false);
   const [userData, setUserData] = useState(null);
   const [healthScore, setHealthScore] = useState(null);
@@ -21,6 +23,8 @@ export const UserProvider = ({ children }) => {
   const [foodsScore, setFoodsScore] = useState(null);
 
   useEffect(() => {
+    if (!isClient) return;
+
     setUserDataLoading(true);
     const cachedData = cacheManager.multiGet([
       "token",
@@ -48,7 +52,7 @@ export const UserProvider = ({ children }) => {
       setFoodsScore(cachedData.foodsScore);
     }
     setUserDataLoading(false);
-  }, []);
+  }, [isClient]);
 
   const handleAuthResponse = async (data) => {
     setUserDataLoading(true);
@@ -132,7 +136,9 @@ export const UserProvider = ({ children }) => {
 
     if (!dummyUserData.biometrics_entries) return false;
 
-   const processedDummyData = processDummyUserData(dummyUserData.biometrics_entries);
+    const processedDummyData = processDummyUserData(
+      dummyUserData.biometrics_entries
+    );
     if (!processedDummyData) return false;
 
     const {

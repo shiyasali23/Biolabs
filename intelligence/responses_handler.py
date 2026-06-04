@@ -1,4 +1,3 @@
-# responses_handler.py
 from fastapi.responses import JSONResponse
 import json
 from log_handler import LogHandler
@@ -6,8 +5,6 @@ from log_handler import LogHandler
 log = LogHandler()
 
 class ResponseHandler:
-    """Synchronous - response handling is fast and doesn't need async"""
-    
     MESSAGES = {
         "INTERNAL_SERVER_ERROR": "An internal server error occurred.",
         "UNEXPECTED_ERROR": "An unexpected error occurred.",
@@ -26,31 +23,22 @@ class ResponseHandler:
     }
 
     def handle_response(self, status_code=200, message=None, error=None, response=None) -> JSONResponse:
-        """Handle successful API responses - Fixed Content-Length issue"""
         message = message or self.MESSAGES.get("GENERATION_SUCCESS")
-        
-        content = {  
+        content = {
             "response": response,
             "message": message,
             "error": error,
             "status": status_code,
         }
-        
-        # Manually serialize to ensure proper encoding and Content-Length calculation
-        json_content = json.dumps(content, ensure_ascii=False)
-        
         return JSONResponse(
             content=content,
             status_code=status_code,
-            headers={
-                "Content-Type": "application/json; charset=utf-8"
-            }
+            headers={"Content-Type": "application/json; charset=utf-8"}
         )
 
     def handle_exception(self, exception=None, status_code=500, error=None, message=None) -> JSONResponse:
-        """Handle API exceptions"""
         message = message or self.MESSAGES.get("UNEXPECTED_ERROR")
         error = error or self.MESSAGES.get("INTERNAL_SERVER_ERROR")
         if exception:
-            log.error(f"{exception}")
+            log.error(str(exception))
         return self.handle_response(status_code=status_code, error=error, message=message)

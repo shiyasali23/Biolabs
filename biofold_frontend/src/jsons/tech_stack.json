@@ -1,0 +1,15 @@
+{
+  "problem_lead": "Today's Biomedical data are scattered across sources, a <span class=\"text-slate-900 font-semibold\">massive bottleneck</span> in the discovery pipeline for Biotech R&amp;D.",
+  "problems": [
+    { "html": "Scattered <strong class=\"text-blue-600 font-semibold\">30+ sources</strong> into one unified schema, enabling seamless cross-domain biological queries and analysis." },
+    { "html": "Scientific instrument where <strong class=\"text-blue-600 font-semibold\">genetics, chemistry, clinical evidence and machine intelligence</strong> come under one engine." },
+    { "html": "Intelligence and orchestrated tools for <strong class=\"text-blue-600 font-semibold\">Research-level workflows</strong> designed for faster simulation and discovery." }
+  ],
+  "stack": [
+    { "title": "LLM Layer",                "detail": "Conversational interface & reasoning engines" },
+    { "title": "Knowledge Graph Layer",    "detail": "15M+ Nodes · 254M+ edges" },
+    { "title": "Embeddings Layer",         "detail": "45M+ Biomedical text corpus" },
+    { "title": "Biomedical Tables",        "detail": "80M+ Variants and chemicals" },
+    { "title": "Machine Learning Models",  "detail": "Predictive & analytical workflows" }
+  ]
+}

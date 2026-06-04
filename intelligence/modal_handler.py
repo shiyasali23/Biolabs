@@ -1,16 +1,14 @@
 import os
 import torch
+import asyncio
 from typing import List, Optional, Dict
 from transformers import AutoModelForCausalLM, AutoTokenizer
-import asyncio
-import threading
 
 from log_handler import LogHandler
 from bucket_handler import BucketHandler
 from responses_handler import ResponseHandler
 from config import DIRECTORIES, MODEL_CONFIG
 
-loop = asyncio.get_event_loop()
 log = LogHandler()
 responses_handler = ResponseHandler()
 
@@ -24,8 +22,6 @@ class ModalHandler:
         return cls._instance
 
     def _init_once(self):
-        self.error = "Error in ModalHandler:"
-        
         self.model_dir = DIRECTORIES["MODEL_DIR"]
         self.model_local_prefix = MODEL_CONFIG["MODEL"]["LOCAL_PREFIX"]
         self.model_bucket_prefix = MODEL_CONFIG["MODEL"]["BUCKET_PREFIX"]
@@ -37,41 +33,35 @@ class ModalHandler:
         self.modal_do_sample = MODEL_CONFIG["MODEL"].get("DO_SAMPLE", True)
 
         os.makedirs(self.model_dir, exist_ok=True)
-        message = "ModalHandler on"
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        log.info(f"{message} {self.device.type.upper()}: {torch.cuda.get_device_name(0) if self.device.type == 'cuda' else ''}")
 
         self.model = None
         self.tokenizer = None
         self.bucket_handler = BucketHandler()
-        
+        self._generation_lock = asyncio.Lock()
 
     def validate_path(self, local_dir: str, local_prefix: str, bucket_prefix: str) -> Optional[str]:
         try:
             if not local_prefix or not bucket_prefix:
-                log.error("Missing prefixes for model path")
                 return None
             
             local_path = os.path.join(local_dir, local_prefix)
             if os.path.exists(local_path):
-                log.info(f"Found locally at {local_path}")
                 return local_path
 
             os.makedirs(local_dir, exist_ok=True)
             if not self.bucket_handler.get_object(prefix=bucket_prefix, local_dir=local_dir):
-                log.error(f"Failed to download {local_prefix} from bucket: {bucket_prefix}")
                 return None
 
             return local_path if os.path.exists(local_path) else None
         except Exception as e:
-            log.error(f"Error validating path from {local_prefix}: {e}")
+            log.error(str(e))
             return None
 
     def _init_model(self):
         try:
             model_path = self.validate_path(self.model_dir, self.model_local_prefix, self.model_bucket_prefix)
             if not model_path:
-                log.error("Model initialization failed: path invalid")
                 return
 
             self.model = AutoModelForCausalLM.from_pretrained(model_path).to(self.device)
@@ -81,37 +71,20 @@ class ModalHandler:
                 self.tokenizer.pad_token = self.tokenizer.eos_token
                 
             self.model.eval()
-            log.info(f"LLM loaded successfully from {model_path}")
         except Exception as e:
-            log.error(f"{self.error} loading LLM: {e}")
+            log.error(str(e))
             
     def _get_max_tokens(self, prompt_token_count: int) -> int:
-      
         model_max_length = self.tokenizer.model_max_length
-        # Always leave some safety margin if needed (optional)
         available_tokens = model_max_length - prompt_token_count
         return max(self.min_tokens, min(available_tokens, self.max_tokens))
 
-
-
-
-
-    async def generate(
-        self,
-        query: str,
-        document: Optional[List[str]] = None,
-        relevant_files: Optional[List[str]] = None,
-        token: Optional[str] = None,
-        biometrics: Optional[List[Dict]] = None,
-        mode: Optional[str] = "sample"
-    ):
+    async def generate(self, query: str, document: Optional[List[str]] = None, relevant_files: Optional[List[str]] = None, token: Optional[str] = None, biometrics: Optional[List[Dict]] = None, mode: Optional[str] = "sample"):
         try:
             if not self.model or not self.tokenizer:
                 self._init_model()
             if not self.model or not self.tokenizer:
-                return responses_handler.handle_exception(
-                    exception="Failed to initialize model"
-                )
+                return responses_handler.handle_exception(exception="Failed to initialize model")
 
             prompt = query
             if document:
@@ -134,21 +107,24 @@ class ModalHandler:
             prompt_token_count = len(self.tokenizer(prompt).input_ids)
             max_tokens = self._get_max_tokens(prompt_token_count)
 
-            with torch.no_grad():
-                outputs = self.model.generate(
-                    inputs.input_ids,
-                    attention_mask=inputs.attention_mask,  
-                    max_new_tokens=max_tokens,
-                    temperature=self.modal_temperature,
-                    do_sample=(mode != "greedy") and self.modal_do_sample,
-                    top_p=self.modal_top_p,
-                    top_k=self.modal_top_k,
-                    pad_token_id=self.tokenizer.pad_token_id  
-                )
+            async with self._generation_lock:
+                def _generate_sync():
+                    with torch.no_grad():
+                        return self.model.generate(
+                            inputs.input_ids,
+                            attention_mask=inputs.attention_mask,  
+                            max_new_tokens=max_tokens,
+                            temperature=self.modal_temperature,
+                            do_sample=(mode != "greedy") and self.modal_do_sample,
+                            top_p=self.modal_top_p,
+                            top_k=self.modal_top_k,
+                            pad_token_id=self.tokenizer.pad_token_id  
+                        )
+                outputs = await asyncio.to_thread(_generate_sync)
 
             generated_text = self.tokenizer.decode(outputs[0][inputs.input_ids.shape[1]:], skip_special_tokens=True)
             asyncio.create_task(self.bucket_handler.store_query_data(generated_text, token, query))
 
             return responses_handler.handle_response(response=generated_text)
         except Exception as e:
-            return responses_handler.handle_exception(f"Error in generate: {e}")
+            return responses_handler.handle_exception(str(e))

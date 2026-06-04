@@ -2,8 +2,6 @@
 import { getConditions } from "@/lib/biochemicals-api";
 
 export const processBiometricData = async (biometricsEntries) => {
-  
-  
   // Process health score entries.
   const healthScore = biometricsEntries
     .map((entry) => ({
@@ -156,9 +154,9 @@ export const processBiometricData = async (biometricsEntries) => {
       const conditions = await getConditions(hyperHypoBiochemicalsIds);
       if (conditions) {
         const processed = processConditions(
-          conditions, 
+          conditions,
           // Create copies of the arrays to avoid mutation issues
-          [...processedHyperBiochemicals], 
+          [...processedHyperBiochemicals],
           [...processedHypoBiochemicals]
         );
         // Only update if processing was successful
@@ -177,7 +175,6 @@ export const processBiometricData = async (biometricsEntries) => {
     latestBiometrics,
     hyperBiochemicals: processedHyperBiochemicals,
     hypoBiochemicals: processedHypoBiochemicals,
-    
   };
 };
 

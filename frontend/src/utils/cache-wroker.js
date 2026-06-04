@@ -1,8 +1,6 @@
 // @/utils/cache-worker.js
 
 const validCacheKeys = [
-
-
   "biochemicals",
   "foodNutrients",
   "nutrientsFoods",
@@ -24,6 +22,29 @@ const validCacheKeys = [
   "records",
 ];
 
+const isLocalStorageAvailable = () => {
+  try {
+    if (typeof window === "undefined") return false;
+    // Accessing window.localStorage itself might throw in some constrained environments
+    const storage = window.localStorage;
+    if (!storage) return false;
+
+    // Check if functions exist
+    if (typeof storage.getItem !== "function") return false;
+    if (typeof storage.setItem !== "function") return false;
+    if (typeof storage.removeItem !== "function") return false;
+
+    // Try to actually use it
+    const testKey = "__ls_test__";
+    storage.setItem(testKey, "test");
+    storage.removeItem(testKey);
+    return true;
+  } catch (e) {
+    // console.warn("LocalStorage check failed:", e);
+    return false;
+  }
+};
+
 class CacheManager {
   constructor(validKeys = []) {
     this.validKeys = new Set(validKeys);
@@ -37,33 +58,32 @@ class CacheManager {
   // Retrieve a single key from localStorage.
   get(key) {
     if (!this.isValidKey(key)) return null;
-    if (typeof window === "undefined" || !window.localStorage) return null;
-    const item = localStorage.getItem(key);
-    if (!item) return null;
-    
+    if (!isLocalStorageAvailable()) return null;
+
     try {
-      // Return raw string for "token", parse JSON for everything else
+      const item = window.localStorage.getItem(key);
+      if (!item) return null;
       return key === "token" ? item : JSON.parse(item);
     } catch (error) {
-      console.error(`Error parsing localStorage key "${key}":`, error);
       return null;
     }
   }
 
-  // Set a single key in localStorage.
   set(key, value) {
     if (!this.isValidKey(key)) return;
-    if (typeof window === "undefined" || !window.localStorage) return;
-  
-    // Store as raw string if the key is "token"
-    if (key === "token") {
-      localStorage.setItem(key, value);
-    } else {
-      localStorage.setItem(key, JSON.stringify(value));
+    if (!isLocalStorageAvailable()) return;
+
+    try {
+      if (key === "token") {
+        window.localStorage.setItem(key, value);
+      } else {
+        window.localStorage.setItem(key, JSON.stringify(value));
+      }
+    } catch (error) {
+      return;
     }
   }
 
-  // Retrieve multiple keys from localStorage at once.
   multiGet(keys) {
     const result = {};
     keys.forEach((key) => {
@@ -81,14 +101,17 @@ class CacheManager {
     });
   }
 
-  // Remove a specific key from localStorage.
   clear(key) {
     if (!this.isValidKey(key)) return;
-    if (typeof window === "undefined" || !window.localStorage) return;
-    localStorage.removeItem(key);
+    if (!isLocalStorageAvailable()) return;
+
+    try {
+      window.localStorage.removeItem(key);
+    } catch (error) {
+      return;
+    }
   }
 
-  // Clear all valid keys from localStorage.
   clearAll() {
     this.validKeys.forEach((key) => {
       this.clear(key);

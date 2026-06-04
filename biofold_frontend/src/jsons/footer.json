@@ -1,0 +1,22 @@
+{
+  "groups": [
+    {
+      "title": "Solutions",
+      "items": [
+        { "label": "Drug Discovery",       "href": "#" },
+        { "label": "Biomedical Analytics", "href": "#" },
+        { "label": "Hypothesis Testing",   "href": "#" },
+        { "label": "Biotech Research",     "href": "#" }
+      ]
+    },
+    {
+      "title": "Company",
+      "items": [
+        { "label": "About Us",       "href": "#" },
+        { "label": "Careers",        "href": "#" },
+        { "label": "Contact",        "href": "#" },
+        { "label": "Privacy Policy", "href": "#" }
+      ]
+    }
+  ]
+}

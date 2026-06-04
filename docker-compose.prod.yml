@@ -1,5 +1,4 @@
 services:
-  # PostgreSQL Database
   db:
     image: postgres:15
     container_name: db
@@ -15,12 +14,12 @@ services:
     networks:
       - app-network
 
-  # Backend service for Django
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
     container_name: backend
+    restart: unless-stopped
     ports:
       - "8000:8000"
     environment:
@@ -35,50 +34,76 @@ services:
       - db
     networks:
       - app-network
-    
 
-  # Diagnosis service for Fast API
   diagnosis:
     build:
       context: ./diagnosis
       dockerfile: Dockerfile
     container_name: diagnosis
+    restart: unless-stopped
     ports:
       - "8001:8001"
+    environment:
+      BACKEND_API_URL: "http://backend:8000/backend"
     networks:
       - app-network
-    
 
-  # Detection service for Fast API
   detection:
     build:
       context: ./detection
       dockerfile: Dockerfile
     container_name: detection
+    restart: unless-stopped
     ports:
       - "8002:8002"
+    environment:
+      BACKEND_API_URL: "http://backend:8000/backend"
     networks:
       - app-network
-    
 
-  # Frontend service for Next.js
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
     container_name: frontend
+    restart: unless-stopped
     ports:
       - "3000:3000"
     networks:
       - app-network
-    
 
-  # Nginx service
+  biofold-frontend:
+    build:
+      context: ./biofold_frontend
+      dockerfile: Dockerfile
+    container_name: biofold-frontend
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  intelligence:
+    build:
+      context: ./intelligence
+      dockerfile: Dockerfile
+    container_name: intelligence
+    restart: unless-stopped
+    env_file:
+      - ./intelligence/.env
+    volumes:
+      - ./intelligence/database:/app/database
+      - ./intelligence/vectors:/app/vectors
+      - ./intelligence/embedding_model:/app/embedding_model
+      - ./intelligence/dataset:/app/dataset
+      - ./intelligence/model:/app/model
+    networks:
+      - app-network
+
   nginx:
     build:
       context: ./nginx
       dockerfile: Dockerfile
     container_name: nginx
+    restart: unless-stopped
     volumes:
       - ./frontend/public:/usr/share/nginx/html/public
       - ./frontend/static:/usr/share/nginx/html/static
@@ -94,7 +119,9 @@ services:
     depends_on:
       - frontend
       - backend
-    
+      - biofold-frontend
+      - diagnosis
+      - detection
 
 networks:
   app-network:

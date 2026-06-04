@@ -1,3 +1,5 @@
+import { cacheManager } from "@/utils/cache-wroker";
+
 // utils/DiagnosisDetectionUtils.js
 const DIAGNOSIS_API_URL =
   process.env.NEXT_PUBLIC_DIAGNOSIS_API_URL || "/diagnosis";
@@ -36,7 +38,7 @@ export const getModels = async (type) => {
 
 export const getDiseasePredictions = async (modelId, inputValues) => {
   console.log(inputValues);
-  const token = localStorage.getItem("token");
+  const token = cacheManager.get("token");
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 10000);
 
@@ -75,8 +77,8 @@ export const getDiseasePredictions = async (modelId, inputValues) => {
 
 export const getDiagnosisPrediction = async (modelId, inputValues) => {
   console.log(inputValues);
-  
-  const token = localStorage.getItem("token");
+
+  const token = cacheManager.get("token");
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 10000);
 
@@ -106,7 +108,9 @@ export const getDiagnosisPrediction = async (modelId, inputValues) => {
     }
 
     try {
-      const diagnosisReport = await getDiagnosisReport(data.response.prediction);
+      const diagnosisReport = await getDiagnosisReport(
+        data.response.prediction
+      );
       if (diagnosisReport && typeof diagnosisReport === "object") {
         return { ...data.response, ...diagnosisReport }; // Merge objects
       }
@@ -123,11 +127,9 @@ export const getDiagnosisPrediction = async (modelId, inputValues) => {
   }
 };
 
-
 //--------------------Diagnosis Report-----------------------
 
-const BACKEND_API_URL =
-  process.env.NEXT_PUBLIC_BACKEND_API_URL || "/backend";
+const BACKEND_API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL || "/backend";
 
 export const getDiagnosisReport = async (disease) => {
   const controller = new AbortController();

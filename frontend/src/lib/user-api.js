@@ -1,11 +1,11 @@
-//utils/DiagnosisDetectionUtils.js
-const BACKEND_API_URL =
-  process.env.NEXT_PUBLIC_BACKEND_API_URL || "/backend";
+import { cacheManager } from "@/utils/cache-wroker";
 
+//utils/DiagnosisDetectionUtils.js
+const BACKEND_API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL || "/backend";
 
 //---------------------User Data-----------------------------
 export const updateUser = async (inputValues) => {
-  const token = localStorage.getItem("token");
+  const token = cacheManager.get("token");
   if (!token) {
     throw new Error("Something went wrong,");
   }
@@ -40,7 +40,7 @@ export const updateUser = async (inputValues) => {
 //---------------------Additional details-----------------------------
 
 export const updateDetails = async (inputValues) => {
-  const token = localStorage.getItem("token");
+  const token = cacheManager.get("token");
   if (!token) {
     throw new Error("Something went wrong,");
   }
@@ -74,7 +74,7 @@ export const updateDetails = async (inputValues) => {
 
 //---------------------Address-----------------------------
 export const updateAdress = async (inputValues) => {
-  const token = localStorage.getItem("token");
+  const token = cacheManager.get("token");
   if (!token) {
     throw new Error("Something went wrong,");
   }
@@ -107,17 +107,14 @@ export const updateAdress = async (inputValues) => {
 };
 //---------------------Biometrics-----------------------------
 
-
 export const updateBiometrics = async (
   updatedBiochemicalsData,
   unExpiredBiometricsData
 ) => {
-  const token = localStorage.getItem("token");
+  const token = cacheManager.get("token");
   if (!token) {
     throw new Error("Something went wrong, token is missing");
   }
-
-
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 10000);
@@ -137,8 +134,6 @@ export const updateBiometrics = async (
         },
       }),
     });
-
-    
 
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);

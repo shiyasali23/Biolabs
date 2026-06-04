@@ -1,0 +1,13 @@
+{
+  "name": "Biofold — Unified Biomedicine Platform",
+  "short_name": "Biofold",
+  "description": "Biofold unifies a 15M+ node biomedical knowledge graph with structure, binding prediction, and literature evidence to accelerate drug discovery.",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#07152d",
+  "theme_color": "#07152d",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

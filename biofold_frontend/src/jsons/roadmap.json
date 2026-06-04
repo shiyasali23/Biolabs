@@ -1,0 +1,5 @@
+[
+  { "label": "Simulate Anatomy",          "icon": "anatomy" },
+  { "label": "On Quantum Chips",          "icon": "quantum_chips" },
+  { "label": "Design Personalized Drugs", "icon": "drugs" }
+]

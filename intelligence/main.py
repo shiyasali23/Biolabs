@@ -1,23 +1,22 @@
-# main.py
 import os
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+os.environ["OMP_NUM_THREADS"] = "1"
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
+import uvicorn
 
 from database_handler import DatabaseHandler
 from log_handler import LogHandler
 from responses_handler import ResponseHandler
 
-app = FastAPI(
-    title="Bio Intelligence API",
-    description="API for bio intelligence text generation",
-    version="1.0.0"
-)
+app = FastAPI(title="Bio Intelligence API", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -38,8 +37,6 @@ class InferenceRequest(BaseModel):
 
 @app.post("/intelligence/inference")
 async def get_generate_text(request: InferenceRequest):
-    """Async endpoint - properly handles async operations"""
-    log.info(f"Received request for text generation: {request.data}")
     try:
         return await database_handler.generate_text(
             query=request.data.text,
@@ -48,18 +45,13 @@ async def get_generate_text(request: InferenceRequest):
             biometrics=request.data.biometrics
         )
     except Exception as e:
-        return response_handler.handle_exception(
-            exception=f"Error in get generating text: {str(e)}"
-        )
+        return response_handler.handle_exception(exception=str(e))
 
-# Health check endpoint
 @app.get("/health")
 async def health_check():
-    """Simple health check"""
     return {"status": "healthy", "message": "API is running"}
 
 if __name__ == "__main__":
-    import uvicorn
     port = int(os.getenv("PORT", 8003))
     host = os.getenv("HOST", "0.0.0.0")
-    uvicorn.run("main:app", host=host, port=port, reload=True)
+    uvicorn.run("main:app", host=host, port=port, reload=False)

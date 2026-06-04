@@ -1,0 +1,32 @@
+[
+  {
+    "title":  "Drug Profiling",
+    "quote":  "Atorvastatin Top measured targets by pChEMBL, top adverse events by report count.",
+    "result": "Full drug dossier — properties + pharmacology + safety."
+  },
+  {
+    "title":  "Target Dossier in Seconds",
+    "quote":  "Build a target dossier for BRCA1 — identity, PDB structure, top diseases, pathway.",
+    "result": "Gene → Protein → Structure → Disease → Pathway."
+  },
+  {
+    "title":  "In-Silico Binding Prediction",
+    "quote":  "Predict binding affinity between Imatinib and ABL1 kinase.",
+    "result": "Model returns prediction, label, confidence band and feature cutdown docking pipelines."
+  },
+  {
+    "title":  "Safety & Literature Mining",
+    "quote":  "What does the literature say about hERG blockade causing cardiac arrhythmia?",
+    "result": "Top-ranked biomedical research literatures."
+  },
+  {
+    "title":  "Drug Repurposing",
+    "quote":  "Find approved drugs hitting any protein in the IL-6 / JAK pathway with safety data in elderly cohorts.",
+    "result": "Ranked candidates · trial evidence cited · safety surfaced."
+  },
+  {
+    "title":  "Target Discovery from Genetics",
+    "quote":  "Show me rare variants converging on lipid metabolism with druggable targets.",
+    "result": "Variant → Gene → Protein → Pathway → Disease → Drug Candidates."
+  }
+]

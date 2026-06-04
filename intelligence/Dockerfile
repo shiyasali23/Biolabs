@@ -1,5 +1,5 @@
 # Stage 1: Builder with dependencies
-FROM python:3.9-slim-buster AS builder
+FROM python:3.9-slim-bullseye AS builder
 
 WORKDIR /app
 COPY requirements.txt .
@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Stage 2: Slim production image
-FROM python:3.9-slim-buster
+FROM python:3.9-slim-bullseye
 
 WORKDIR /app
 

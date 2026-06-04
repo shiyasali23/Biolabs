@@ -3,21 +3,25 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { getBiochemicals } from "@/lib/biochemicals-api";
 import { cacheManager } from "@/utils/cache-wroker";
 import { processBiochemicals } from "@/utils/biochemical-worker";
+import { useIsClient } from "@/hooks/useIsClient";
 
 const BiochemicalContext = createContext();
 
 export const BiochemicalProvider = ({ children }) => {
+  const isClient = useIsClient();
   const [biochemicalData, setBiochemicalData] = useState(null);
   const [biochemicalDataLoading, setBiochemicalDataLoading] = useState(true);
 
   useEffect(() => {
+    if (!isClient) return;
+
     setBiochemicalDataLoading(true);
     const localBiochemicals = cacheManager.get("biochemicals");
     if (localBiochemicals) {
       setBiochemicalData(localBiochemicals);
     }
     setBiochemicalDataLoading(false);
-  }, []);
+  }, [isClient]);
 
   const fetchBiochemicals = async () => {
     setBiochemicalDataLoading(true);

@@ -1,34 +1,24 @@
-# Ignore virtual environments
-intelligence/venv/
-intelligence/env/
-intelligence/ENV/
+venv/
+env/
+ENV/
+__pycache__/
+*.py[cod]
 
-# Ignore Python cache and compiled files
-intelligence/__pycache__/
-intelligence/*.pyc
+.env
+.env.*
 
-# Ignore environment variables
-intelligence/.env
-intelligence/.env.*
+.vscode/
+.idea/
 
-# Ignore IDE/editor folders
-intelligence/.vscode/
-intelligence/.idea/
+*.modal
+.modal/
+modal/
 
-# Ignore modal artifacts
-intelligence/*.modal
-intelligence/.modal/
-intelligence/modal/
+model/
+embedding_model/
+vectors/
+dataset/
+database/
 
-# Ignore model and data folders (as specified)
-intelligence/model/
-intelligence/database/
-intelligence/vectors/
-intelligence/embedding_model/
-intelligence/dataset/
-
-# Logs
-intelligence/*.log
-
-# macOS system files
-intelligence/.DS_Store
+*.log
+.DS_Store

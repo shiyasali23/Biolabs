@@ -1,0 +1,16 @@
+node_modules
+dist
+dist-ssr
+.git
+.gitignore
+.asset-originals
+.claude
+ai_agent_files
+Dockerfile
+docker-compose.yml
+.dockerignore
+*.local
+*.log
+.DS_Store
+.vscode
+.idea

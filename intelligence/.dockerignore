@@ -36,23 +36,12 @@ dist/
 build/
 *.egg-info
 
-# Project-specific exclusions
-intelligence/venv/
-intelligence/env/
-intelligence/ENV/
-intelligence/__pycache__/
-intelligence/*.pyc
-intelligence/.env
-intelligence/.env.*
-intelligence/.vscode/
-intelligence/.idea/
-intelligence/*.modal
-intelligence/.modal/
-intelligence/modal/
-intelligence/model/
-intelligence/database/
-intelligence/vectors/
-intelligence/embedding_model/
-intelligence/dataset/
-intelligence/*.log
-intelligence/.DS_Store
+model/
+embedding_model/
+vectors/
+dataset/
+database/
+*.modal
+.modal/
+modal/
+*.log

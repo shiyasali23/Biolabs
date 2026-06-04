@@ -1,13 +1,11 @@
-//utils/DiagnosisDetectionUtils.js
-const BACKEND_API_URL =
-  process.env.NEXT_PUBLIC_BACKEND_API_URL || "/backend";
+import { cacheManager } from "@/utils/cache-wroker";
 
+//utils/DiagnosisDetectionUtils.js
+const BACKEND_API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL || "/backend";
 
 //---------------------User Report-----------------------------
 export const getRecords = async () => {
-
-
-  const token = localStorage.getItem("token");
+  const token = cacheManager.get("token");
   if (!token) {
     throw new Error("Something went wrong,");
   }
@@ -37,8 +35,9 @@ export const getRecords = async () => {
     clearTimeout(timeoutId);
   }
 };
+
 export const registerRecords = async (recordsData) => {
-  const token = localStorage.getItem("token");
+  const token = cacheManager.get("token");
   if (!token) {
     throw new Error("Something went wrong,");
   }

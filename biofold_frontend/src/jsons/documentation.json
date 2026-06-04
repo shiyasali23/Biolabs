@@ -1,0 +1,80 @@
+{
+  "intro": "The next-generation bioinformatics platform. Solving the data problem in bioinformatics. The biomedical data is scattered into different databases for each of the domains. Our system integrates all of them into a clean, highly structured single unified schema that can be treated for large scale analytics and built intelligence on top of it.",
+  "foundation_lead": "The entire data layer is built from 35 sources spanning 8 high-level biomedical domains:",
+  "graph_lead": "Biofold represented the entire data into an enriched Knowledge Graph that carries up to Biological 15M+ Nodes · 254M+ Edges.",
+  "text_store_lead": "Engineered up to 42.4M+ structured texts corpus in a searchable space.",
+  "bio_tables_lead": "Highly structured analytical tables which unlocks pre-computed biomedical truth in milliseconds, engineered to power virtual screening, variant interpretation and personalized-medicine workflows with billions of rows.",
+  "text_store_left": [
+    { "number": "381K+",  "entity": "BIOMEDICAL RESEARCH PAPERS", "detail": "" },
+    { "number": "7.45M+", "entity": "GENE",                       "detail": "Descriptions, Functions, Synonyms across 44K+ genes." },
+    { "number": "1.4M+",  "entity": "PROTEIN",                    "detail": "Names, Subcellular locations and functional annotations." },
+    { "number": "67K+",   "entity": "PROTEIN STRUCTURE",          "detail": "Annotations." },
+    { "number": "5.41M",  "entity": "CHEMICAL",                   "detail": "Compound-name, Curated drug indication, Mechanism narratives." },
+    { "number": "2.86M+", "entity": "CHEMICAL-GENE",              "detail": "Interaction descriptions, Pharmacology narratives." }
+  ],
+  "text_store_right": [
+    { "number": "2.13M+", "entity": "CLINVAR VARIANT",     "detail": "Clinical descriptions across 307K+ variants." },
+    { "number": "4.05M+", "entity": "DISEASE",             "detail": "Descriptions, Condition narratives." },
+    { "number": "342K+",  "entity": "HPO PHENOTYPE",       "detail": "Definitions, Patient-trait descriptions." },
+    { "number": "12M+",   "entity": "CLINICAL TRIAL",      "detail": "Records, Outcome measures, Interventions." },
+    { "number": "203K+",  "entity": "PATHWAY",             "detail": "Descriptions across." },
+    { "number": "20K+",   "entity": "ADVERSE-EVENT TERMS", "detail": "" }
+  ],
+  "chemical_compounds": [
+    { "stat": "2.49M", "text": "Compounds. 21 pre-computed drug-design properties per molecule." },
+    { "stat": "1.36M", "text": "Strict drug-like + 880K high-QED leads + 70K fragment-like scaffolds — virtual screening libraries, instant-ready." },
+    { "stat": "—",     "text": "Lipinski, Veber, RO3 and QED filtering at speed without RDKit pipelines to re-run." }
+  ],
+  "genomic_variants": [
+    { "stat": "80M+",   "text": "Unified variants. Genes pathogenicity predictors." },
+    { "stat": "7.54M",  "text": "Pathogenic consensus variants — clinical-screening ready." },
+    { "stat": "73.28M", "text": "Ultra-rare variants, rare-disease pre-flagged." }
+  ],
+  "integration_bullets": [
+    "Variant → Gene → Protein → Pathway → Drug → Trial → Adverse Event → Publication",
+    "Genomics + Transcriptomics + Proteomics + Structure + Drugs + Trials + Safety + Pathways + Ontologies",
+    "Full genetics-to-clinic biological traceability",
+    "Single connected biomedical substrate"
+  ],
+  "unlocks": [
+    { "title": "Drug Repurposing",                 "path": "Chemical → Protein ← Gene → Disease" },
+    { "title": "Genetics-Driven Target Discovery", "path": "Variant → Gene → Protein → Pathway → Disease" },
+    { "title": "Pharmacovigilance Signals",        "path": "Chemical → AdverseEvent (population reports)" },
+    { "title": "Trial Evidence Linking",           "path": "ClinicalTrial → Disease ↔ Chemical → Mechanism" },
+    { "title": "Pathway Reasoning",                "path": "Shared mechanisms across diseases & chemicals" }
+  ],
+  "arch_lead": "An intelligence system built on top of a fully structured, computable, queryable data layer — orchestrated by the most advanced AI agentic architecture in biomedicine. Engineered to extract maximum insight and assemble viable biotech workflows and discovery.",
+  "pillars": [
+    { "label": "Think",      "icon": "think" },
+    { "label": "Plan",       "icon": "plan" },
+    { "label": "Execute",    "icon": "execute" },
+    { "label": "Synthesize", "icon": "synthesize" }
+  ],
+  "arch_orchestration": "Biofold can orchestrate long, complex, biotech research by streaming in a single reasoning loop:",
+  "actions": [
+    { "verb": "Query",   "target": "the Knowledge Graph" },
+    { "verb": "Search",  "target": "the Text Store" },
+    { "verb": "Look up", "target": "the Biomedical Tables" },
+    { "verb": "Run",     "target": "Machine Learning models" }
+  ],
+  "system_use_cases": [
+    { "title": "One-conversation drug repurposing", "path": "Question → Chemical ↔ Gene ↔ Disease → Trial Evidence → Ranked Answer" },
+    { "title": "Genetics-driven target discovery",  "path": "Variant → Gene → Protein → Pathway → Disease → Drug Candidates" }
+  ],
+  "arch_closing": "PhD-level biomedical workflows, orchestrated end-to-end — cutting manually stitching together 35 fragmented biomedical sources.",
+  "cross_modality_lead": "A real drug-discovery query traverses through graphs, semantic searches on literatures and a numerical filter on chemistry and biology with model-predicted scores.",
+  "cross_modality_body": "Biofold fuses all four in a single reasoning loop — symbolic, semantic, numerical and predictive — collapsed into one streaming answer.",
+  "reasoning_primitives_lead": "Every biomedical question decomposes into one of a small set of recurring motifs. Biofold operationalizes them as first-class primitives.",
+  "reasoning_primitives": [
+    { "name": "Triangulation",      "flow": "Drug ↔ Target ↔ Disease",                  "purpose": "repurposing and mechanism-of-action inference" },
+    { "name": "Convergence",        "flow": "Variant → Gene → Pathway ← Variant",       "purpose": "polygenic, pleiotropic and rare-disease discovery" },
+    { "name": "Traversal",          "flow": "Variant → Gene → Protein → Drug",          "purpose": "genetics-driven target nomination" },
+    { "name": "Disproportionality", "flow": "Chemical → Adverse Event over background", "purpose": "pharmacovigilance and safety-signal detection" }
+  ],
+  "whats_next_items": [
+    { "title": "Multi-Modal Reasoning",            "desc": "Sequences, structures, images and omics signals — fused into one query plane." },
+    { "title": "Generative Chemistry",             "desc": "De novo molecule design — molecules generated against a target, a pathway and a safety profile." },
+    { "title": "Closed-Loop Wet–Dry Integration",  "desc": "In-silico hypotheses, in-lab validation - autonomous biomedical discovery engine." },
+    { "title": "Native Foundation Models",         "desc": "Biology's Foundation models trained on unified biomedical substrate, learns every biomedical domains in the same language." }
+  ]
+}

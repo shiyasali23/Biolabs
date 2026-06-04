@@ -1,0 +1,26 @@
+{
+  "query_1": {
+    "query": "Build a concise structural triage card for rucaparib targeting PARP1. ONE card, four blocks: (Chemistry) rucaparib's canonical SMILES; (Target) PARP1 amino-acid sequence length and mean pLDDT; (Structures) the top 3 experimental PDB structures ranked best-resolution-first with PDB id, resolution, method; (Binding) the measured affinity from the knowledge graph plus the M2 predicted_score and predicted_label from predict_binding in pairs mode for (rucaparib, PARP1). Single card; end with the one-line M2 class-imbalance disclaimer. No extra sections.",
+    "title_card": "Profiling Rucaparib–PARP1 Binding in Synthetic-Lethality Oncology"
+  },
+  "query_2": {
+    "query": "For the apoptosis gene CASP3, build a concise functional readout; keep each part to its top result and mark anything absent as a 'data gap'. (a) The tissues where CASP3 is expressed and the biological pathways it participates in. (b) Using semantic literature search for CASP3, retrieve one abstract about CASP3 and cite its PMID. (c) From the chemical table, the molecular weight, logP and QED of the apoptosis-targeting drug venetoclax. (d) In 2-3 sentences, reason over CASP3's tissue expression, pathways and the literature to summarize CASP3's role in apoptosis.",
+    "title_card": "Profiling CASP3 Apoptosis Biology with Literature and Chemical Evidence"
+  },
+  "query_3": {
+    "query": "For the drug Imatinib, list its top 5 adverse events ranked by report count. Separately, for its target ABL1 (UniProt P00519), list the top 3 experimental PDB structures ranked best-resolution-first with PDB id, resolution in Angstrom, and method, and report ABL1's mean pLDDT. Keep it short; cite every identifier from retrieved evidence and mark anything absent as a 'data gap'.",
+    "title_card": "Assessing Imatinib–ABL1 Safety and Target Structure in Leukemia"
+  },
+  "query_4": {
+    "query": "Build a concise structural binding card for sitagliptin against DPP4 (dipeptidyl peptidase 4). ONE card, four blocks: (Chemistry) sitagliptin's canonical SMILES; (Target) DPP4 amino-acid sequence length and mean pLDDT; (Structures) the experimentally determined PDB structures ranked best-resolution-first with PDB id, resolution, method; (Binding) the measured inhibitory affinity from the knowledge graph plus the M2 predicted_score and predicted_label from predict_binding in pairs mode for (sitagliptin, DPP4). Single card; end with the one-line M2 class-imbalance disclaimer. No extra sections.",
+    "title_card": "Measuring Sitagliptin–DPP4 Binding Affinity in Type 2 Diabetes"
+  },
+  "query_5": {
+    "query": "For Parkinson Disease, list its top 5 genetically associated genes ranked by association score. Then, for the single highest-ranked gene, give its human protein's UniProt accession, amino-acid sequence length, and mean pLDDT, plus that protein's best-resolution experimental PDB structure with PDB id, resolution in Angstrom, and method. Keep it short; cite every identifier from retrieved evidence; mark anything absent as a 'data gap'.",
+    "title_card": "Discovering Parkinson's Disease Targets via Gene-Association Ranking"
+  },
+  "query_6": {
+    "query": "Build a concise structural triage card for tamoxifen acting on the estrogen receptor (ESR1). In ONE card, four blocks: (Chemistry) tamoxifen's canonical SMILES; (Target) the ESR1 amino-acid sequence length and mean pLDDT confidence; (Structures) the top 3 experimentally solved PDB structures for ESR1 ranked best-resolution-first, each with PDB id, resolution, determination method; (Binding) the measured drug-target binding affinity from the knowledge graph plus the M2 predicted_score and predicted_label from running predict_binding in pairs mode for (tamoxifen, ESR1). Keep it to a single card and end with the one-line M2 class-imbalance disclaimer. No extra sections.",
+    "title_card": "Triaging Tamoxifen–ESR1 Binding in ER-Positive Breast Cancer"
+  }
+}

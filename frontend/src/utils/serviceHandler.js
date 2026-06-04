@@ -35,8 +35,8 @@ export const useServiceHandler = () => {
     } else if (index === 4) {
       // Add URL parameter when intelligence opens
       const currentUrl = new URL(window.location);
-      currentUrl.searchParams.set('intelligence', 'true');
-      window.history.pushState({}, '', currentUrl);
+      currentUrl.searchParams.set("intelligence", "true");
+      window.history.pushState({}, "", currentUrl);
       setIntelligenceOpen(true);
     } else if (index === 5) {
       if (isLogined) {
@@ -47,11 +47,11 @@ export const useServiceHandler = () => {
         }
         setNoDataFoundModalOpen(true);
       }
-    }else if (index === 6){
-      window.location.href = "http://biofold-frontend:3001/landing"
-    } else if (index === 7){
+    } else if (index === 6) {
+      window.location.href = process.env.NEXT_PUBLIC_BIOFOLD_URL || "https://biofold.biolabsltd.com";
+    } else if (index === 7) {
       router.push("/health");
-    }else if (index >= 8) {
+    } else if (index >= 8) {
       setCommingSoonModalOpen(true);
       setCommingSoonIndex(index);
     }
@@ -59,7 +59,7 @@ export const useServiceHandler = () => {
 
   const checkIntelligenceParam = (setIntelligenceOpen) => {
     const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('intelligence') === 'true') {
+    if (urlParams.get("intelligence") === "true") {
       setIntelligenceOpen(true);
     }
   };
@@ -67,14 +67,14 @@ export const useServiceHandler = () => {
   const closeIntelligenceModal = (setIntelligenceOpen) => {
     // Remove URL parameter when intelligence closes
     const currentUrl = new URL(window.location);
-    currentUrl.searchParams.delete('intelligence');
-    window.history.pushState({}, '', currentUrl);
+    currentUrl.searchParams.delete("intelligence");
+    window.history.pushState({}, "", currentUrl);
     setIntelligenceOpen(false);
   };
 
   return {
     handleServiceClick,
     checkIntelligenceParam,
-    closeIntelligenceModal
+    closeIntelligenceModal,
   };
 };

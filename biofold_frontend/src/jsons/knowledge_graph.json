@@ -1,0 +1,23 @@
+{
+  "kicker": "15M+ Entities · 254M+ Relationships · 30+ Sources",
+  "entities": [
+    { "value": 4.1, "unit": "M", "label": "Genomic Variants" },
+    { "value": 4.0, "unit": "M", "label": "Proteins" },
+    { "value": 2.5, "unit": "M", "label": "Chemicals" },
+    { "value": 557, "unit": "K", "label": "Clinical Trials" },
+    { "value": 31,  "unit": "K", "label": "Diseases" },
+    { "value": 24,  "unit": "K", "label": "Pathways" }
+  ],
+  "relationships": [
+    { "value": 196.6, "unit": "M", "label": "Literature Citations" },
+    { "value": 25,    "unit": "M", "label": "Ontology Subsumption" },
+    { "value": 9.6,   "unit": "M", "label": "Gene-Disease" },
+    { "value": 6.5,   "unit": "M", "label": "Drug-Target Bindings" },
+    { "value": 4.4,   "unit": "M", "label": "Variant-Gene" },
+    { "value": 2.6,   "unit": "M", "label": "Chemical-Adverse Events" },
+    { "value": 893,   "unit": "K", "label": "Chemical-Disease" },
+    { "value": 690,   "unit": "K", "label": "Protein-Protein Interactions" },
+    { "value": 453,   "unit": "K", "label": "Gene-Tissue Expression" },
+    { "value": 51,    "unit": "K", "label": "Drug Indications" }
+  ]
+}

@@ -1,48 +1,39 @@
 import os
 import json
 import boto3
+import asyncio
 from typing import Optional
-
 from datetime import datetime
 from log_handler import LogHandler
 from config import AWS_CONFIG
-
 
 log = LogHandler()
 
 class BucketHandler:
     def __init__(self):
-        self.AWS_ACCESS_KEY_ID = AWS_CONFIG.get("AWS_ACCESS_KEY_ID")
-        self.AWS_SECRET_ACCESS_KEY = AWS_CONFIG.get("AWS_SECRET_ACCESS_KEY")
-        self.MODEL_BUCKET_NAME = AWS_CONFIG.get("MODEL_BUCKET_NAME")
-        self.QUERIES_BUCKET_NAME = AWS_CONFIG.get("QUERIES_BUCKET_NAME")
-        self.AWS_REGION = AWS_CONFIG.get("AWS_REGION")
+        self.aws_access_key_id = AWS_CONFIG.get("AWS_ACCESS_KEY_ID")
+        self.aws_secret_access_key = AWS_CONFIG.get("AWS_SECRET_ACCESS_KEY")
+        self.model_bucket_name = AWS_CONFIG.get("MODEL_BUCKET_NAME")
+        self.queries_bucket_name = AWS_CONFIG.get("QUERIES_BUCKET_NAME")
+        self.aws_region = AWS_CONFIG.get("AWS_REGION")
 
-        log.info(f"Connecting to model bucket: {self.MODEL_BUCKET_NAME} in region {self.AWS_REGION}")
-        log.info(f"Connecting to queries bucket: {self.QUERIES_BUCKET_NAME} in region {self.AWS_REGION}")
-
-        if not all([self.AWS_ACCESS_KEY_ID, self.AWS_SECRET_ACCESS_KEY,
-                    self.MODEL_BUCKET_NAME, self.QUERIES_BUCKET_NAME, self.AWS_REGION]):
-            log.error("Missing required AWS configuration.")
+        if not all([self.aws_access_key_id, self.aws_secret_access_key, self.model_bucket_name, self.queries_bucket_name, self.aws_region]):
             self.s3_client = None
             return
 
         try:
             self.s3_client = boto3.client(
                 "s3",
-                region_name=self.AWS_REGION,
-                aws_access_key_id=self.AWS_ACCESS_KEY_ID,
-                aws_secret_access_key=self.AWS_SECRET_ACCESS_KEY
+                region_name=self.aws_region,
+                aws_access_key_id=self.aws_access_key_id,
+                aws_secret_access_key=self.aws_secret_access_key
             )
         except Exception as e:
-            log.error(f"Failed to initialize S3 client: {e}")
+            log.error(str(e))
             self.s3_client = None
 
     def get_object(self, prefix: str, local_dir: str) -> Optional[str]:
-
-        message = f"Fetched {prefix} from s3://{self.MODEL_BUCKET_NAME}/{prefix} to {local_dir}"
         if not self.s3_client:
-            log.error("S3 client not initialized.")
             return None
 
         os.makedirs(local_dir, exist_ok=True)
@@ -50,33 +41,24 @@ class BucketHandler:
 
         try:
             if not is_dir:
-                # Attempt to download single file
                 local_file_path = os.path.join(local_dir, os.path.basename(prefix))
-
                 if os.path.exists(local_file_path):
                     os.remove(local_file_path)
-
-                log.info(f"Downloading file s3://{self.MODEL_BUCKET_NAME}/{prefix} to {local_file_path}")
-                self.s3_client.download_file(self.MODEL_BUCKET_NAME, prefix, local_file_path)
+                self.s3_client.download_file(self.model_bucket_name, prefix, local_file_path)
                 return local_file_path
+        except Exception:
+            pass
 
-        except self.s3_client.exceptions.NoSuchKey:
-            log.info(f"File not found: {prefix}, trying prefix-based folder download. \n\n {message}")
-        except Exception as e:
-                log.error(f"Download error: {e} \n\n {message}")
-                return None
-
-        # Directory download fallback
         try:
             downloaded_files = []
             paginator = self.s3_client.get_paginator('list_objects_v2')
-            pages = paginator.paginate(Bucket=self.MODEL_BUCKET_NAME, Prefix=prefix)
+            pages = paginator.paginate(Bucket=self.model_bucket_name, Prefix=prefix)
 
             for page in pages:
                 for obj in page.get('Contents', []):
                     s3_key = obj['Key']
                     if s3_key.endswith('/'):
-                        continue  # Skip empty directory markers
+                        continue
 
                     relative_path = s3_key[len(prefix):] if is_dir else s3_key
                     local_file_path = os.path.join(local_dir, relative_path)
@@ -84,30 +66,24 @@ class BucketHandler:
 
                     if os.path.exists(local_file_path):
                         os.remove(local_file_path)
-                    self.s3_client.download_file(self.MODEL_BUCKET_NAME, s3_key, local_file_path)
+                    self.s3_client.download_file(self.model_bucket_name, s3_key, local_file_path)
                     downloaded_files.append(local_file_path)
 
             if downloaded_files:
-                log.info(f"Successfully {message}")
                 return local_dir if len(downloaded_files) > 1 else downloaded_files[0]
-            else:
-                log.critical_error(f"No files found for prefix: {prefix}: Failes {message}")
-                return None
+            return None
 
         except Exception as e:
-            log.error(f"Error downloading from prefix '{prefix}': {e}")
+            log.error(str(e))
             return None
 
     async def store_query_data(self, response: str, token: str = None, query: str = None) -> bool:
-    
         try:
             if not self.s3_client:
-                log.critical_error("S3 client not initialized. Skipping query data storage.")
                 return False
 
             now = datetime.utcnow()
             timestamp = now.isoformat()
-
             year = now.strftime("%Y")
             month = now.strftime("%m")
             day = now.strftime("%d")
@@ -123,16 +99,17 @@ class BucketHandler:
                 "response": response
             }
 
-            self.s3_client.put_object(
-                Bucket=self.QUERIES_BUCKET_NAME,
-                Key=s3_key,
-                Body=json.dumps(payload, ensure_ascii=False),
-                ContentType='application/json'
-            )
+            def _put():
+                self.s3_client.put_object(
+                    Bucket=self.queries_bucket_name,
+                    Key=s3_key,
+                    Body=json.dumps(payload, ensure_ascii=False),
+                    ContentType='application/json'
+                )
 
-            log.info(f"Query data stored at s3://{self.QUERIES_BUCKET_NAME}/{s3_key}")
+            await asyncio.to_thread(_put)
             return True
 
         except Exception as e:
-            log.critical_error(f"Failed to store query data to S3 (non-critical): {e}")
+            log.error(str(e))
             return False

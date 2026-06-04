@@ -1,0 +1,63 @@
+{
+  "nodes": [
+    { "id": "VARIANT",        "label": "Variant",        "tier": 1, "x": 380,  "color": "brand-300" },
+    { "id": "GENE",           "label": "Gene",           "tier": 1, "x": 820,  "color": "leaf-600" },
+
+    { "id": "ORGANISM",       "label": "Organism",       "tier": 2, "x": 160,  "color": "leaf-400" },
+    { "id": "PDB_STRUCTURE",  "label": "PDB Structure",  "tier": 2, "x": 460,  "color": "brand-700" },
+    { "id": "PROTEIN",        "label": "Protein",        "tier": 2, "x": 760,  "color": "brand-900" },
+    { "id": "TISSUE",         "label": "Tissue",         "tier": 2, "x": 1060, "color": "leaf-200" },
+
+    { "id": "PATHWAY",        "label": "Pathway",        "tier": 3, "x": 160,  "color": "leaf-600" },
+    { "id": "PHENOTYPE",      "label": "Phenotype",      "tier": 3, "x": 380,  "color": "leaf-400" },
+    { "id": "DISEASE",        "label": "Disease",        "tier": 3, "x": 560,  "color": "danger"   },
+    { "id": "CHEMICAL",       "label": "Chemical",       "tier": 3, "x": 760,  "color": "brand-500" },
+    { "id": "ATC_CLASS",      "label": "ATC Class",      "tier": 3, "x": 1060, "color": "brand-300" },
+
+    { "id": "CLINICAL_TRIAL", "label": "Clinical Trial", "tier": 4, "x": 160,  "color": "brand-700" },
+    { "id": "ADVERSE_EVENT",  "label": "Adverse Event",  "tier": 4, "x": 460,  "color": "danger"   },
+    { "id": "ONTOLOGY_TERM",  "label": "Ontology Term",  "tier": 4, "x": 760,  "color": "ink-3"    },
+    { "id": "PUBLICATION",    "label": "Publication",    "tier": 4, "x": 1060, "color": "ink-4"    }
+  ],
+  "edges": [
+    { "from": "CHEMICAL",       "to": "ADVERSE_EVENT", "label": "causes_ae" },
+    { "from": "CHEMICAL",       "to": "ADVERSE_EVENT", "label": "predicted_ae" },
+    { "from": "CHEMICAL",       "to": "ATC_CLASS",     "label": "classified_as" },
+    { "from": "CHEMICAL",       "to": "DISEASE",       "label": "ctd_associated_with" },
+    { "from": "CHEMICAL",       "to": "DISEASE",       "label": "indicated_for" },
+    { "from": "CHEMICAL",       "to": "GENE",          "label": "interacts_gene" },
+    { "from": "CHEMICAL",       "to": "PROTEIN",       "label": "binds_to" },
+    { "from": "CHEMICAL",       "to": "PROTEIN",       "label": "drugbank_targets" },
+    { "from": "CHEMICAL",       "to": "PROTEIN",       "label": "mechanism" },
+    { "from": "CHEMICAL",       "to": "PROTEIN",       "label": "predicted_binds" },
+    { "from": "CHEMICAL",       "to": "PUBLICATION",   "label": "cited_in" },
+
+    { "from": "CLINICAL_TRIAL", "to": "CHEMICAL",      "label": "uses" },
+    { "from": "CLINICAL_TRIAL", "to": "DISEASE",       "label": "studies" },
+
+    { "from": "DISEASE",        "to": "GENE",          "label": "inferred_by_go" },
+    { "from": "DISEASE",        "to": "ONTOLOGY_TERM", "label": "maps_to_concept" },
+    { "from": "DISEASE",        "to": "PHENOTYPE",     "label": "has_phenotype" },
+    { "from": "DISEASE",        "to": "PUBLICATION",   "label": "cited_in" },
+
+    { "from": "GENE",           "to": "DISEASE",       "label": "associated_with" },
+    { "from": "GENE",           "to": "PATHWAY",       "label": "in_pathway" },
+    { "from": "GENE",           "to": "PHENOTYPE",     "label": "disgenet_gene_phenotype" },
+    { "from": "GENE",           "to": "PROTEIN",       "label": "encodes" },
+    { "from": "GENE",           "to": "PUBLICATION",   "label": "cited_in" },
+    { "from": "GENE",           "to": "TISSUE",        "label": "expressed_in" },
+
+    { "from": "ONTOLOGY_TERM",  "to": "ONTOLOGY_TERM", "label": "is_a", "selfLoop": true },
+    { "from": "PHENOTYPE",      "to": "ONTOLOGY_TERM", "label": "maps_to_concept" },
+
+    { "from": "PROTEIN",        "to": "ORGANISM",      "label": "belongs_to" },
+    { "from": "PROTEIN",        "to": "PATHWAY",       "label": "protein_in_pathway" },
+    { "from": "PROTEIN",        "to": "PDB_STRUCTURE", "label": "has_structure" },
+    { "from": "PROTEIN",        "to": "PROTEIN",       "label": "interacts_with", "selfLoop": true },
+
+    { "from": "VARIANT",        "to": "DISEASE",       "label": "linked_to" },
+    { "from": "VARIANT",        "to": "DISEASE",       "label": "linked_to_omim" },
+    { "from": "VARIANT",        "to": "GENE",          "label": "eqtl_target" },
+    { "from": "VARIANT",        "to": "GENE",          "label": "in_gene" }
+  ]
+}

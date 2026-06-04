@@ -3,10 +3,12 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { getFoodNutrients } from "@/lib/foods-api";
 import { cacheManager } from "@/utils/cache-wroker";
 import { processFoodNutrients } from "@/utils/food-woker";
+import { useIsClient } from "@/hooks/useIsClient";
 
 const FoodContext = createContext();
 
 export const FoodProvider = ({ children }) => {
+  const isClient = useIsClient();
   const [foodNutrients, setFoodNutrients] = useState(null);
   const [nutrientsFoods, setNutrientsFoods] = useState(null);
   const [foodsData, setFoodsData] = useState(null);
@@ -16,6 +18,8 @@ export const FoodProvider = ({ children }) => {
     useState(true);
 
   useEffect(() => {
+    if (!isClient) return;
+
     setFoodNutrientsDataLoading(true);
     const cached = cacheManager.multiGet([
       "foodNutrients",
@@ -31,7 +35,7 @@ export const FoodProvider = ({ children }) => {
     if (cached.foodNutriscoreData)
       setFoodNutriscoreData(cached.foodNutriscoreData);
     setFoodNutrientsDataLoading(false);
-  }, []);
+  }, [isClient]);
 
   const fetchFoodNutrients = async () => {
     setFoodNutrientsDataLoading(true);

@@ -59,15 +59,17 @@ const AuthComponent = () => {
 
   const handleAuthenticate = async (fields, apiOption) => {
     setLoading(true);
-    const { data, message: authMessage } = await authenticate(fields, apiOption);
-  
+    const { data, message: authMessage } = await authenticate(
+      fields,
+      apiOption
+    );
+
     if (authMessage) {
       setMessage(authMessage);
     } else if (data) {
-      handleAuthResponse(data)
-      
+      handleAuthResponse(data);
     }
-    
+
     setLoading(false);
   };
 

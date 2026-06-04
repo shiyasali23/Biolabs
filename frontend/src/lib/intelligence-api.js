@@ -1,13 +1,12 @@
-const INTELLIGENCE_API_URL = "http://127.0.0.1:8003/intelligence";
+import { cacheManager } from "@/utils/cache-wroker";
+
+const INTELLIGENCE_API_URL = process.env.NEXT_PUBLIC_INTELLIGENCE_API_URL || "/intelligence";
 
 // List of intro phrases a user might say
 const INTRO_INPUTS = ["hi", "hello", "hey"];
 
 // List of possible replies to any of the intro inputs
-const INTRO_REPLIES = [
-  "Hi, How can i help you?",
-  "Hey! What's on your mind?",
-];
+const INTRO_REPLIES = ["Hi, How can i help you?", "Hey! What's on your mind?"];
 
 // Session tracker to avoid repeating the same reply
 let lastIntroReply = null;
@@ -25,13 +24,7 @@ function getRandomIntroReply() {
 export const inference = async (inputData) => {
   console.log("Sending inference request with data:", inputData);
 
-  let token = null;
-
-  try {
-    token = localStorage.getItem("token");
-  } catch (error) {
-    console.warn("localStorage not available:", error);
-  }
+  let token = cacheManager.get("token");
 
   const query = (inputData?.text ?? "").toString().trim().toLowerCase();
 
