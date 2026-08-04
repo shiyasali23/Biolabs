@@ -17,5 +17,9 @@ COPY . .
 RUN find /usr/local -depth \( -name '*.egg-info' -o -name '*.dist-info' \) -exec rm -rf {} + && \
     find /usr/local -type d -name 'tests' -exec rm -rf {} +
 
+# Security: run as non-root
+RUN addgroup -S app && adduser -S app -G app && chown -R app:app /app
+USER app
+
 EXPOSE 8000
 CMD ["gunicorn", "backend.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "2"]
