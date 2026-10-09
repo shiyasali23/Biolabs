@@ -1,60 +1,26 @@
-import React from "react";
+"use client";
 
-import { AiOutlineCloseSquare } from "react-icons/ai";
+import { X } from "lucide-react";
+import { useModalA11y } from "@/hooks/useModalA11y";
 import BiochemicalsBarGraph from "./BiochemicalsBarGraph";
-const BiometricsEntryModal = ({ isOpen, onClose, selectedBiometricEntry }) => {
+
+export default function BiometricsEntryModal({ isOpen, onClose, selectedBiometricEntry }) {
+  useModalA11y(isOpen, onClose);
   if (!isOpen || !selectedBiometricEntry) return null;
-  console.log("selectedBiometricEntry in modal", selectedBiometricEntry);
-
+  const dateValue = selectedBiometricEntry.created ?? selectedBiometricEntry.created_at;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="relative bg-white shadow-lg  w-[98vw] p-2 overflow-y-scroll">
-        <AiOutlineCloseSquare
-          className="absolute right-5 top-1 cursor-pointer text-3xl bg-black text-white hover:scale-110 transition duration-150"
-          onClick={onClose}
-        />
-
-        <div className="flex flex-col gap-1 animate-dropdown">
-          <h1 className="text-sm   font-bold my-1 w-full text-center ">
-            Registered on:{" "}
-            {new Date(selectedBiometricEntry.created).toLocaleDateString()}
-          </h1>
-          <div className=" flex flex-col xl:flex-row  h-[88vh] w-full gap-2 px-2">
-            {selectedBiometricEntry.healthy && (
-              <div className="w-full h-full">
-                <BiochemicalsBarGraph
-                  biochemicalsArray={selectedBiometricEntry.healthy}
-                  isHealthy={true}
-                  isHyper={null}
-                />
-              </div>
-            )}
-            <div className="w-full h-full flex flex-col gap-2">
-              {selectedBiometricEntry.hyperBiochemicals && (
-                <div className="w-full h-1/2">
-                  <BiochemicalsBarGraph
-                    biochemicalsArray={selectedBiometricEntry.hyperBiochemicals}
-                    isHyper={true}
-                    isHealthy={false}
-                  />
-                </div>
-              )}
-
-              {selectedBiometricEntry.hypoBiochemicals && (
-                <div className="w-full h-1/2">
-                  <BiochemicalsBarGraph
-                    biochemicalsArray={selectedBiometricEntry.hypoBiochemicals}
-                    isHyper={false}
-                    isHealthy={false}
-                  />
-                </div>
-              )}
-            </div>
+    <div className="bio-modal-overlay" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+      <section className="bio-modal max-w-7xl" role="dialog" aria-modal="true" aria-labelledby="entry-title">
+        <button type="button" className="bio-icon-button absolute right-4 top-4" onClick={onClose} aria-label="Close record"><X aria-hidden="true" size={18} /></button>
+        <div className="mb-7 pr-14"><p className="bio-eyebrow !mb-2">Historical Record</p><h2 id="entry-title" className="bio-subtitle">Registered {new Date(dateValue).toLocaleDateString()}</h2></div>
+        <div className="grid min-h-[520px] gap-5 lg:grid-cols-2">
+          {selectedBiometricEntry.healthy?.length > 0 && <BiochemicalsBarGraph biochemicalsArray={selectedBiometricEntry.healthy} isHealthy isHyper={null} />}
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-1">
+            {selectedBiometricEntry.hyperBiochemicals?.length > 0 && <BiochemicalsBarGraph biochemicalsArray={selectedBiometricEntry.hyperBiochemicals} isHealthy={false} isHyper />}
+            {selectedBiometricEntry.hypoBiochemicals?.length > 0 && <BiochemicalsBarGraph biochemicalsArray={selectedBiometricEntry.hypoBiochemicals} isHealthy={false} isHyper={false} />}
           </div>
         </div>
-      </div>
+      </section>
     </div>
   );
-};
-
-export default BiometricsEntryModal;
+}

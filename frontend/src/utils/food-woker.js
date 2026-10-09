@@ -1,6 +1,6 @@
 export const processFoodNutrients = (rawData) => {
   // Handle null or empty data case
-  if (!rawData || rawData.length === 0) {
+  if (!Array.isArray(rawData) || rawData.length === 0) {
     return {
       foodNutrients: null,
       nutrientsFoods: null,
@@ -18,7 +18,8 @@ export const processFoodNutrients = (rawData) => {
 
   // Single pass over the raw data
   for (const entry of rawData) {
-    const { food, nutrient, value } = entry;
+    const { food, nutrient, value } = entry || {};
+    if (!food?.name || !nutrient?.name) continue;
     const foodName = food.name;
     const nutrientName = nutrient.name;
     const category = food.category;
@@ -99,20 +100,24 @@ export const processFoodsScore = (scoredData, mapData) => {
   
   // Parse scoredData if it's a string
   if (typeof scoredData === "string") {
-      scoredData = JSON.parse(scoredData);
+    try { scoredData = JSON.parse(scoredData); } catch { return []; }
   }
+  if (!scoredData || typeof scoredData !== "object" || !Array.isArray(mapData)) return [];
 
   // Convert mapData into a Map for O(1) lookup
   const nameToCategory = new Map(mapData.map(({ name, category }) => [name, category]));
 
-  // Sort the entries in ascending order
-  const sortedEntries = Object.entries(scoredData).sort((a, b) => a[1] - b[1]);
+  // Keep backend scores intact; rank foods from highest to lowest.
+  const sortedEntries = Object.entries(scoredData)
+    .filter(([, value]) => value !== null && value !== "" && Number.isFinite(Number(value)))
+    .sort((a, b) => Number(b[1]) - Number(a[1]));
 
   // Construct the result array in a single loop (O(n))
-  return sortedEntries.map(([name], index) => ({
+  return sortedEntries.map(([name, value], index) => ({
       name,
       category: nameToCategory.get(name) || "unknown",
-      value: index + 1
+      value: Number(value),
+      rank: index + 1
   }));
 };
 

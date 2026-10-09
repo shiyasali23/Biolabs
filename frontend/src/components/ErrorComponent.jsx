@@ -1,15 +1,3 @@
-import React from "react";
-import CustomButton from "@/components/CustomButton";
-
-const ErrorComponent = ({heading = "Something Went Wrong",buttonText="Try Again",handleTryAgain}) => {
-  return (
-    <div className="w-full h-full  m-auto flex flex-col items-center justify-center gap-8 ">
-      <h1 className="w-full  text-center text-3xl font-semibold">
-        {heading} 
-      </h1>
-      <CustomButton onClick={() => handleTryAgain} text={buttonText} />
-    </div>
-  );
-};
-
-export default ErrorComponent;
+import { headingCase } from "@/lib/heading-case";
+import { AlertTriangle } from "lucide-react";
+export default function ErrorComponent({ heading = "Something Went Wrong", buttonText = "Try again", handleTryAgain }) { return <div className="flex min-h-72 w-full flex-col items-center justify-center gap-5 p-8 text-center" role="alert"><span className="grid h-12 w-12 place-items-center rounded-full bg-[var(--biolabs-danger-bg)] text-[var(--biolabs-danger)]"><AlertTriangle size={22} /></span><div><h2 className="text-xl font-semibold">{headingCase(heading)}</h2><p className="mt-2 text-sm text-[var(--biolabs-slate)]">We could not complete this request. Your existing data has not been changed.</p></div>{handleTryAgain && <button type="button" className="bio-button-secondary" onClick={handleTryAgain}>{buttonText}</button>}</div>; }

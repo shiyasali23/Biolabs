@@ -1,7 +1,9 @@
 // utils/biometrics-worker.js
 import { getConditions } from "@/lib/biochemicals-api";
 
-export const processBiometricData = async (biometricsEntries) => {
+export const processBiometricData = async (rawEntries) => {
+  // Ignore malformed entries so one bad record cannot break the whole page.
+  const biometricsEntries = (Array.isArray(rawEntries) ? rawEntries : []).filter((entry) => entry && Array.isArray(entry.biometrics));
   // Process health score entries.
   const healthScore = biometricsEntries
     .map((entry) => ({

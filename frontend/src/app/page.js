@@ -1,102 +1,41 @@
-"use client";
-
-import Link from "next/link";
+import WorkspaceEntry from "@/components/WorkspaceEntry";
+import { ArrowRight } from "lucide-react";
 import ServicesComponent from "@/components/ServicesComponet";
-import { useUser } from "@/contexts/userContext";
-import NoDataFound from "@/components/NoDataFound";
-import { useState } from "react";
+import HeroOrb from "@/components/HeroOrb";
+import ProductsSection from "@/components/ProductsSection";
 
 export default function Home() {
-  const [noDataFoundModalOpen, setNoDataFoundModalOpen] = useState(false);
-  const { isLogined } = useUser();
-
-  const handleScanClick = (event) => {
-    event.preventDefault();
-    document.getElementById("services-section").scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-    });
-    if (!isLogined) {
-      setNoDataFoundModalOpen(true);
-    }
-  };
-
   return (
-    <main className="w-full" style={{ scrollBehavior: "smooth" }}>
-      <section className="h-[70vh] xl:h-[88vh] flex flex-col items-center justify-center xl:px-32 border-gray-300 bg-white relative overflow-hidden">
-        <div className="w-full max-w-6xl mx-auto flex flex-col justify-center items-center text-right gap-5 lg:gap-10">
-          <h1 className="text-5xl lg:text-9xl w-full text-center font-semibold ">
-            {Array.from("WHO ARE WE?").map((char, i) => (
-              <span
-                key={i}
-                className="animate-char-reveal text-white"
-                style={{ animationDelay: `${i * 70}ms` }}
-              >
-                {char}
+    <main className="bio-page home-landing home-restored overflow-hidden">
+      <section className="restored-hero" aria-labelledby="home-hero-title">
+        <div className="bio-container restored-hero-layout">
+          <div className="restored-hero-copy">
+            <h1 id="home-hero-title">
+              Connecting<br />Biology And<br />Machines.
+            </h1>
+            <p className="restored-hero-subtitle">Personalized Health &amp; Biotech</p>
+            <WorkspaceEntry className="restored-try">
+              <span>Your Health</span>
+              <span className="restored-try-icon" aria-hidden="true">
+                <ArrowRight size={17} strokeWidth={1.7} />
               </span>
-            ))}
-          </h1>
+            </WorkspaceEntry>
+          </div>
 
-          <h2 className="w-full text-sm  lg:text-2xl  text-center font-medium">
-            {Array.from("Platform for humans to stay healthy. ").map(
-              (char, i) => (
-                <span
-                  key={i}
-                  className="animate-char-reveal text-white"
-                  style={{ animationDelay: `${i * 20 + 10}ms` }}
-                >
-                  {char}
-                </span>
-              )
-            )}
-            <Link href="/info">
-              {Array.from("Know More").map((char, i) => (
-                <span
-                  key={i}
-                  className="animate-char-reveal  lg:text-3xl underline  text-white "
-                  style={{ animationDelay: `${i * 20 + 10}ms` }}
-                >
-                  {char}
-                </span>
-              ))}
-            </Link>
-          </h2>
-
-          <h3 className="text-md lg:text-xl flex items-center gap-1  text-center font-medium">
-            {Array.from("Get Started").map((char, i) => (
-              <span
-                key={i}
-                className="animate-char-reveal text-white"
-                style={{ animationDelay: `${i * 50 + 100}ms` }}
-              >
-                {char}
-              </span>
-            ))}
-            <span
-              onClick={handleScanClick}
-              className="relative align-end px-3 py-1.5 sm:px-4 sm:py-2 bg-black text-white text-sm sm:text-base  cursor-pointer overflow-hidden group border border-2 border-black ml-2"
-            >
-              <span className="absolute inset-0 bg-white transform translate-x-full group-hover:translate-x-0 transition-transform duration-500 ease-out"></span>
-              <span className="relative group-hover:text-black transition-colors duration-500 ease-out">
-                Try Now
-              </span>
-            </span>
-          </h3>
+          <HeroOrb />
         </div>
       </section>
 
-      <section id="services-section">
-        <ServicesComponent />
+      <ProductsSection />
+
+      <ServicesComponent />
+
+      <section className="restored-cta" aria-labelledby="restored-cta-title">
+        <div className="bio-container restored-cta-inner">
+          <div><h2 id="restored-cta-title">See The Data.<br />Find The Context.</h2><p className="restored-cta-description">Start with a sample workspace of records, measurements and health trends.</p></div>
+          <WorkspaceEntry className="restored-cta-action"><span>Your Health</span><ArrowRight size={20} aria-hidden="true" /></WorkspaceEntry>
+        </div>
       </section>
-      {noDataFoundModalOpen && (
-        <NoDataFound
-          isOpen={noDataFoundModalOpen}
-          onClose={() => setNoDataFoundModalOpen(false)}
-          isModal={true}
-          handleButtonClick={() => router.push("/info")}
-          route={"/"}
-        />
-      )}
     </main>
   );
 }

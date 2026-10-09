@@ -47,3 +47,14 @@ intelligence/dataset/
 intelligence/database/
 intelligence/modal/
 intelligence/*.modal
+
+ai_agent_files/*
+ai_agent_files/
+
+# scratch / abandoned copies (not part of the product)
+ai_egent_files/
+frontend_v2/
+
+# local build output and tooling dirs that must never be committed
+.next-*/
+.impeccable/

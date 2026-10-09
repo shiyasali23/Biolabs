@@ -1,0 +1,234 @@
+{
+  "Blood Glucose": {
+    "unit": "mg/dL",
+    "category": "Carbohydrates"
+  },
+  "Hemoglobin A1c": {
+    "unit": "%",
+    "category": "Carbohydrates"
+  },
+  "Glycated Albumin": {
+    "unit": "%",
+    "category": "Carbohydrates"
+  },
+  "Total Cholesterol": {
+    "unit": "mg/dL",
+    "category": "Lipids"
+  },
+  "LDL Cholesterol": {
+    "unit": "mg/dL",
+    "category": "Lipids"
+  },
+  "HDL Cholesterol": {
+    "unit": "mg/dL",
+    "category": "Lipids"
+  },
+  "Triglycerides": {
+    "unit": "mg/dL",
+    "category": "Lipids"
+  },
+  "Apolipoprotein A1": {
+    "unit": "mg/dL",
+    "category": "Lipids"
+  },
+  "Apolipoprotein B": {
+    "unit": "mg/dL",
+    "category": "Lipids"
+  },
+  "Vitamin D": {
+    "unit": "ng/mL",
+    "category": "Vitamins"
+  },
+  "Vitamin C": {
+    "unit": "mg/L",
+    "category": "Vitamins"
+  },
+  "Vitamin K": {
+    "unit": "ng/mL",
+    "category": "Vitamins"
+  },
+  "Vitamin B6 (Pyridoxine)": {
+    "unit": "ng/mL",
+    "category": "Vitamins"
+  },
+  "Vitamin B1 (Thiamine)": {
+    "unit": "nmol/L",
+    "category": "Vitamins"
+  },
+  "Vitamin B2 (Riboflavin)": {
+    "unit": "nmol/L",
+    "category": "Vitamins"
+  },
+  "Vitamin B3 (Niacin)": {
+    "unit": "\u00b5g/L",
+    "category": "Vitamins"
+  },
+  "Vitamin B5 (Pantothenic Acid)": {
+    "unit": "\u00b5g/L",
+    "category": "Vitamins"
+  },
+  "Vitamin B7 (Biotin)": {
+    "unit": "ng/L",
+    "category": "Vitamins"
+  },
+  "Vitamin B9 (Folate)": {
+    "unit": "ng/mL",
+    "category": "Vitamins"
+  },
+  "Vitamin B12 (Cobalamin)": {
+    "unit": "pg/mL",
+    "category": "Vitamins"
+  },
+  "Vitamin A": {
+    "unit": "\u00b5g/dL",
+    "category": "Vitamins"
+  },
+  "Creatinine": {
+    "unit": "mg/dL",
+    "category": "Kidney Function"
+  },
+  "Uric Acid": {
+    "unit": "mg/dL",
+    "category": "Kidney Function"
+  },
+  "Blood Urea Nitrogen": {
+    "unit": "mg/dL",
+    "category": "Kidney Function"
+  },
+  "Cystatin C": {
+    "unit": "mg/L",
+    "category": "Kidney Function"
+  },
+  "Sodium": {
+    "unit": "mEq/L",
+    "category": "Minerals"
+  },
+  "Potassium": {
+    "unit": "mEq/L",
+    "category": "Minerals"
+  },
+  "Calcium": {
+    "unit": "mg/dL",
+    "category": "Minerals"
+  },
+  "Magnesium": {
+    "unit": "mg/dL",
+    "category": "Minerals"
+  },
+  "Phosphate": {
+    "unit": "mg/dL",
+    "category": "Minerals"
+  },
+  "Chloride": {
+    "unit": "mEq/L",
+    "category": "Minerals"
+  },
+  "Bicarbonate": {
+    "unit": "mEq/L",
+    "category": "Minerals"
+  },
+  "Iron": {
+    "unit": "\u00b5g/dL",
+    "category": "Minerals"
+  },
+  "Globulin": {
+    "unit": "g/dL",
+    "category": "Proteins"
+  },
+  "Albumin": {
+    "unit": "g/dL",
+    "category": "Proteins"
+  },
+  "Total Protein": {
+    "unit": "g/dL",
+    "category": "Proteins"
+  },
+  "Albumin/Globulin Ratio": {
+    "unit": "ratio",
+    "category": "Proteins"
+  },
+  "C-Reactive Protein": {
+    "unit": "mg/L",
+    "category": "Proteins"
+  },
+  "Haptoglobin": {
+    "unit": "mg/dL",
+    "category": "Proteins"
+  },
+  "Transferrin": {
+    "unit": "mg/dL",
+    "category": "Proteins"
+  },
+  "C-Peptide": {
+    "unit": "ng/mL",
+    "category": "Hormones"
+  },
+  "Testosterone": {
+    "unit": "ng/dL",
+    "category": "Hormones"
+  },
+  "Estrogen": {
+    "unit": "pg/mL",
+    "category": "Hormones"
+  },
+  "Progesterone": {
+    "unit": "ng/mL",
+    "category": "Hormones"
+  },
+  "Cortisol": {
+    "unit": "\u00b5g/dL",
+    "category": "Hormones"
+  },
+  "Aldosterone": {
+    "unit": "ng/dL",
+    "category": "Hormones"
+  },
+  "Thyroid-Stimulating Hormone (TSH)": {
+    "unit": "mIU/L",
+    "category": "Hormones"
+  },
+  "Free Thyroxine (Free T4)": {
+    "unit": "ng/dL",
+    "category": "Hormones"
+  },
+  "Free Triiodothyronine (Free T3)": {
+    "unit": "pg/mL",
+    "category": "Hormones"
+  },
+  "Aspartate Aminotransferase": {
+    "unit": "U/L",
+    "category": "Liver Function"
+  },
+  "Alanine Aminotransferase": {
+    "unit": "U/L",
+    "category": "Liver Function"
+  },
+  "Alkaline Phosphatase": {
+    "unit": "U/L",
+    "category": "Liver Function"
+  },
+  "Gamma-Glutamyl Transferase": {
+    "unit": "U/L",
+    "category": "Liver Function"
+  },
+  "Bilirubin": {
+    "unit": "mg/dL",
+    "category": "Liver Function"
+  },
+  "Lactate Dehydrogenase": {
+    "unit": "U/L",
+    "category": "Liver Function"
+  },
+  "Prothrombin Time": {
+    "unit": "seconds",
+    "category": "Coagulation"
+  },
+  "Partial Thromboplastin Time": {
+    "unit": "seconds",
+    "category": "Coagulation"
+  },
+  "Fibrinogen": {
+    "unit": "mg/dL",
+    "category": "Coagulation"
+  }
+}

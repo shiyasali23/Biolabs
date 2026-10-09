@@ -2,15 +2,18 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { processBiometricData } from "@/utils/biometrics-worker";
 import { cacheManager } from "@/utils/cache-wroker";
-import dummyUserData from "@/jsons/dummy-user-data.json";
 import { processDummyUserData } from "@/utils/dummy-data-worker";
 import { useIsClient } from "@/hooks/useIsClient";
 
 const UserContext = createContext();
 
+// Per-user cache entries; reference data (biochemicals, foods) is shared and kept.
+const USER_CACHE_KEYS = ["userData", "healthScore", "biometrics", "latestBiometrics", "hyperBiochemicals", "hypoBiochemicals", "biometricsEntries", "foodsScore", "records"];
+
 export const UserProvider = ({ children }) => {
   const isClient = useIsClient();
   const [isLogined, setIsLogined] = useState(false);
+  const [isSample, setIsSample] = useState(false);
   const [userData, setUserData] = useState(null);
   const [healthScore, setHealthScore] = useState(null);
   const [biometrics, setBiometrics] = useState(null);
@@ -22,10 +25,18 @@ export const UserProvider = ({ children }) => {
 
   const [foodsScore, setFoodsScore] = useState(null);
 
-  useEffect(() => {
-    if (!isClient) return;
+  const clearUserState = () => {
+    setHealthScore(null);
+    setBiometrics(null);
+    setLatestBiometrics(null);
+    setHyperBiochemicals(null);
+    setHypoBiochemicals(null);
+    setUserData(null);
+    setBiometricsEntries(null);
+    setFoodsScore(null);
+  };
 
-    setUserDataLoading(true);
+  const restoreFromCache = () => {
     const cachedData = cacheManager.multiGet([
       "token",
       "userData",
@@ -50,14 +61,28 @@ export const UserProvider = ({ children }) => {
       setHypoBiochemicals(cachedData.hypoBiochemicals);
 
       setFoodsScore(cachedData.foodsScore);
+      return true;
     }
+    return false;
+  };
+
+  useEffect(() => {
+    if (!isClient) return;
+    setUserDataLoading(true);
+    restoreFromCache();
     setUserDataLoading(false);
+    // restoreFromCache only reads storage and calls state setters.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isClient]);
 
   const handleAuthResponse = async (data) => {
     setUserDataLoading(true);
 
     if (data.token && data.user) {
+      // A new session must never inherit sample data or a previous user's records.
+      setIsSample(false);
+      clearUserState();
+      USER_CACHE_KEYS.forEach((key) => cacheManager.clear(key));
       cacheManager.multiSet({
         token: data.token,
         userData: data.user,
@@ -110,24 +135,33 @@ export const UserProvider = ({ children }) => {
   const handleUserdata = (data) => {
     setUserDataLoading(true);
     setUserData(data);
-    cacheManager.set("userData", data);
+    // Sample edits stay in memory and are never written to the signed-in user's cache.
+    if (!isSample) cacheManager.set("userData", data);
     setUserDataLoading(false);
   };
 
   const logOutUser = () => {
+    setIsSample(false);
     setIsLogined(false);
-    setHealthScore(null);
-    setBiometrics(null);
-    setLatestBiometrics(null);
-    setHyperBiochemicals(null);
-    setHypoBiochemicals(null);
-    setUserData(null);
-    setBiometricsEntries(null);
-    setFoodsScore(null);
+    clearUserState();
     cacheManager.clearAll();
   };
 
+  // Leaving the sample returns a signed-in user to their own data instead of signing them out.
+  const exitSample = () => {
+    setIsSample(false);
+    clearUserState();
+    if (!restoreFromCache()) setIsLogined(false);
+  };
+
+  // Sample workspace edits update the in-memory record only.
+  const applySampleValues = (values) => {
+    setLatestBiometrics((current) => current?.map((item) => values[item.id] !== undefined ? { ...item, value: values[item.id] } : item) ?? current);
+  };
+
   const loadDummyUserData = async () => {
+    // Loaded on demand so the sample dataset is not shipped with every page.
+    const { default: dummyUserData } = await import("@/jsons/dummy-user-data.json");
     if (!dummyUserData) return false;
 
     if (!dummyUserData.user) return false;
@@ -154,10 +188,10 @@ export const UserProvider = ({ children }) => {
     if (latestBiometrics) setLatestBiometrics(latestBiometrics);
     if (hyperBiochemicals) setHyperBiochemicals(hyperBiochemicals);
     if (hypoBiochemicals) setHypoBiochemicals(hypoBiochemicals);
-    setBiometricsEntries(dummyUserData.biometrics_entries);
+    setBiometricsEntries(processedDummyData);
     setUserData(dummyUserData.user);
     setFoodsScore(dummyUserData.foods_score.foods_score);
-    setIsLogined(true);
+    setIsSample(true);
     return true;
   };
 
@@ -166,15 +200,18 @@ export const UserProvider = ({ children }) => {
       value={{
         handleAuthResponse,
         logOutUser,
+        exitSample,
         setUserDataLoading,
         handleUserdata,
         loadDummyUserData,
         isLogined,
+        isSample,
         healthScore,
         userData,
         biometrics,
         biometricsEntries,
         latestBiometrics,
+        applySampleValues,
         hyperBiochemicals,
         hypoBiochemicals,
 

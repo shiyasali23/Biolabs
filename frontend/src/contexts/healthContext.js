@@ -9,7 +9,7 @@ export const HealthProvider = ({ children }) => {
   const questionsArray = [
     {
       question: "Mental Health",
-      input: ["Depression", "Anxity", "Normal"],
+      input: ["Depression", "Anxiety", "Neither"],
     },
     {
       question: "Gender",
@@ -36,21 +36,21 @@ export const HealthProvider = ({ children }) => {
       },
     },
     {
-      question: "Clean Food",
+      question: "Nutritional quality",
       input: ["Poor", "Average", "Good", "Excellent"],
     },
     {
       question: "Stress",
-      input: ["Everytime", "Sometimes", "Never"],
+      input: ["Most of the time", "Sometimes", "Rarely"],
       followup: {
         question: "Job satisfaction",
-        input: ["Hate it", "Its ok", "Love it"],
+        input: ["Dissatisfied", "Neutral", "Satisfied"],
         skippable: true,
       },
     },
     {
-      question: "Satiscation with people around you",
-      input: ["Sad", "Not good", "Happy"],
+      question: "Social wellbeing",
+      input: ["Low", "Moderate", "Strong"],
     },
     {
       question: "Fatigue",
@@ -58,16 +58,16 @@ export const HealthProvider = ({ children }) => {
       input: ["Always", "Sometimes", "No"],
     },
     {
-      question: "Finantial stability",
+      question: "Financial stability",
       skippable: true,
-      input: ["Poor", "Its ok", "Stable"],
+      input: ["Low", "Moderate", "Stable"],
     },
     {
-      question: "Maried",
+      question: "Relationship status",
       skippable: true,
       input: ["Yes", "No"],
       followup: {
-        question: "Satisfaction on matertial life",
+        question: "Relationship satisfaction",
         skippable: true,
         input: [ "Average", "Good", "Excellent"],
       },

@@ -1,210 +1,103 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import React, { useState, useEffect } from "react";
-import CommingSoon from "./CommingSoon";
-import NoDataFound from "./NoDataFound";
-import DiagnosisModal from "./DiagnosisModal";
-import DiseaseDetectionModal from "./DiseaseDetectionModal";
+import Link from "next/link";
+import { ArrowRight, Globe2, HeartPulse, Network, Stethoscope } from "lucide-react";
 import { useData } from "@/contexts/dataContext";
-import Intelligence from "./Intelligence";
-import { useServiceHandler } from "@/utils/serviceHandler";
 
-const AboutUs = ({ isLogined }) => {
+const releases = [
+  { version: "v1.0.0", date: "04 Oct 2024", status: "Released", indices: [0, 1, 2, 3] },
+  { version: "v2.0.0", date: "18 Jun 2025", status: "Released", indices: [4, 5] },
+  { version: "v3.0.0", date: "Product roadmap", status: "Upcoming", indices: [6, 7, 8] },
+];
+
+export default function AboutUs({ isLogined }) {
   const { servicesArray } = useData();
-  const router = useRouter();
-  const [diseaseDetectionModalOpen, setDiseaseDetectionModalOpen] =
-    useState(false);
-  const [diagnosisModalOpen, setDiagnosisModalOpen] = useState(false);
-  const [noDataFoundModalOpen, setNoDataFoundModalOpen] = useState(false);
-  const [commingSoonModalOpen, setCommingSoonModalOpen] = useState(false);
-  const [intelligenceOpen, setIntelligenceOpen] = useState(false);
-  const [commingSoonIndex, setCommingSoonIndex] = useState(null);
-
-  const { handleServiceClick, checkIntelligenceParam, closeIntelligenceModal } =
-    useServiceHandler();
-
-  // Check for intelligence parameter on component mount
-  useEffect(() => {
-    checkIntelligenceParam(setIntelligenceOpen);
-  }, []);
-
-  const versionGroups = [
-    {
-      date: "Oct 4, 2024",
-      version: "v1.0.0",
-      status: "Released",
-      indices: [0, 1, 2, 3],
-    },
-    {
-      date: "Jun 18, 2025",
-      version: "v2.0.0",
-      status: "Released",
-      indices: [4, 5],
-    },
-    {
-      date: "Mar 20, 2025",
-      version: "v3.0.0",
-      status: "Upcoming",
-      indices: [6, 7],
-    },
-  ];
-
-  const onServiceClick = (index) => {
-    handleServiceClick(
-      index,
-      isLogined,
-      setDiseaseDetectionModalOpen,
-      setDiagnosisModalOpen,
-      setNoDataFoundModalOpen,
-      setCommingSoonModalOpen,
-      setIntelligenceOpen,
-      setCommingSoonIndex
-    );
-  };
 
   return (
-    <div className="w-full h-full my-20">
-      <div className="w-full px-10 xl:px-32 py-5 gap-16 flex flex-col">
-        <h1 className="text-base leading-[2rem] font-medium tracking-wide">
-          <span className=" text-3xl mr-2">Biolabs</span>an
-          organization founded on October 4th of 2024, designed to keeping
-          humans healthy. Built on top of the most advanced, cutting-edge
-          technologies and backed by the world's elite medical experts and
-          healthcare professionals.Our architecture extent from individuals
-          users to every insitution that can contiribute to our vision.
-        </h1>
+    <div className="bio-container pb-24 pt-10 sm:pb-28 sm:pt-16">
+      <section className="grid gap-10 border-b pb-16 lg:grid-cols-[.72fr_1.28fr] lg:gap-24 lg:pb-24" aria-labelledby="about-biolabs-heading">
+        <div>
+          <p className="bio-eyebrow">About Biolabs</p>
+          <h1 id="about-biolabs-heading" className="bio-title max-w-lg">Built To Help People Understand And Protect Their Health.</h1>
+        </div>
+        <div className="space-y-6 text-lg leading-8 text-[var(--biolabs-slate)]">
+          <p>Biolabs was founded on October 4, 2024, with a clear purpose: to help keep people healthy through understandable, connected clinical intelligence.</p>
+          <p>The platform is built on advanced technology and informed by medical expertise. It brings biochemical analysis, clinical records, disease-detection tools, nutrition information, and personalized intelligence into one coherent health workspace.</p>
+          <p>Its architecture is designed to serve individuals as well as hospitals, laboratories, healthcare providers, and other institutions that can contribute to a more connected health ecosystem.</p>
+          <Link href={isLogined ? "/workspace/analytics" : "/#solutions"} className="bio-link">{isLogined ? "Open your analytics" : "Explore the platform"}<ArrowRight aria-hidden="true" size={16} /></Link>
+        </div>
+      </section>
 
-        {/* Version Release Table */}
-        <div className="flex flex-col gap-5">
-          <h1 className="text-2xl font-light">Release Notes:</h1>
-          <table className="w-full">
-            <tbody>
-              {versionGroups.map((group, groupIndex) => (
-                <tr
-                  key={groupIndex}
-                  className="border-b  flex items-center gap-16 p-3"
-                >
-                  <td className=" font-semibold h-full w-[5%]">
-                    {groupIndex == versionGroups.length - 1
-                      ? "Upcoming"
-                      : group.date}{" "}
-                    <span className="text-xs text-gray-500">
-                      ({group.version})
-                    </span>
-                  </td>
+      <section className="grid gap-8 border-y bg-[var(--biolabs-porcelain)] px-5 py-10 sm:px-10 sm:py-16 lg:grid-cols-[.72fr_1.28fr] lg:gap-24 lg:px-14" aria-labelledby="vision-heading">
+        <div>
+          <span className="grid h-12 w-12 place-items-center rounded-lg bg-white text-[var(--biolabs-teal)]"><Globe2 aria-hidden="true" size={22} /></span>
+          <p className="bio-eyebrow !mb-3 mt-7">Our Vision</p>
+          <h2 id="vision-heading" className="text-3xl font-medium tracking-[-.035em]">Essential Health Insight Should Not Depend On Geography Or Income.</h2>
+        </div>
+        <div className="space-y-6 self-center text-lg leading-8 text-[var(--biolabs-slate)]">
+          <p>Health is one of the most valuable parts of a human life. Our vision is a world where every individual, regardless of location, has access to essential tools and resources for maintaining their wellbeing.</p>
+          <p>We want to reduce barriers for communities in remote regions with limited healthcare facilities by providing useful medical insight without creating additional financial strain. Geographic isolation and economic constraints should not prevent anyone from pursuing their fullest health potential.</p>
+        </div>
+      </section>
 
-                  <td className=" ml-2">
-                    {group.indices.map((serviceIndex) => {
-                      const service = servicesArray[serviceIndex];
-                      return (
-                        <div
-                          key={serviceIndex}
-                          className="flex flex-col  mb-10"
-                        >
-                          <h1
-                            key={serviceIndex}
-                            className="hover:cursor-pointer hover:text-blue-600 mb-1 font-semibold text-lg  leading-[2rem] tracking-normal"
-                            onClick={() => onServiceClick(serviceIndex)}
-                          >
-                            {service[1]}
-                          </h1>
-                          <h1
-                            key={serviceIndex + 1}
-                            className="hover:cursor-pointer   ml-5 text-sm leading-[2rem] font-medium tracking-normal"
-                            onClick={() => onServiceClick(serviceIndex)}
-                          >
-                            {service[2]}
-                          </h1>
-                        </div>
-                      );
-                    })}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      <section className="py-16 sm:py-24" aria-labelledby="capabilities-heading">
+        <div className="max-w-2xl">
+          <p className="bio-eyebrow">What Biolabs Is Capable Of</p>
+          <h2 id="capabilities-heading" className="bio-title">Intelligence For Personal Care And The Wider Healthcare System.</h2>
+        </div>
+        <div className="mt-10 grid gap-5 lg:grid-cols-2">
+          <article className="bio-card p-5 sm:p-9">
+            <span className="grid h-12 w-12 place-items-center rounded-lg bg-[var(--biolabs-aqua)] text-[var(--biolabs-teal)]"><Stethoscope aria-hidden="true" size={22} /></span>
+            <h3 className="mt-7 text-2xl font-medium tracking-[-.025em]">Personalized And Provider-Connected Care</h3>
+            <p className="mt-5 text-base leading-7 text-[var(--biolabs-slate)]">Biolabs can work as a personalized health assistant shaped around each user. It can also connect with healthcare providers such as hospitals and laboratories, learn from local health patterns, and give doctors, nurses, and other professionals clearer context for treatment and diagnostic workflows.</p>
+          </article>
+          <article className="bio-card p-5 sm:p-9">
+            <span className="grid h-12 w-12 place-items-center rounded-lg bg-[var(--biolabs-aqua)] text-[var(--biolabs-teal)]"><Network aria-hidden="true" size={22} /></span>
+            <h3 className="mt-7 text-2xl font-medium tracking-[-.025em]">A Connected Global Health Foundation</h3>
+            <p className="mt-5 text-base leading-7 text-[var(--biolabs-slate)]">Connecting healthcare information worldwide can bring knowledge under one umbrella. That foundation can reveal emerging health trends, guide medication development and delivery, identify regions with healthcare-worker shortages, and expose gaps in medical equipment or pharmaceutical availability.</p>
+          </article>
+        </div>
+      </section>
+
+      <section className="grid gap-6 border bg-white p-5 sm:p-10 lg:grid-cols-[auto_1fr] lg:items-center lg:gap-8" aria-labelledby="responsibility-heading">
+        <span className="grid h-14 w-14 place-items-center rounded-lg bg-[var(--biolabs-aqua)] text-[var(--biolabs-teal)]"><HeartPulse aria-hidden="true" size={25} /></span>
+        <div><p className="bio-eyebrow !mb-2">Clinical Responsibility</p><h2 id="responsibility-heading" className="text-2xl font-medium">Decision Support, With Professional Judgment Kept At The Center.</h2><p className="bio-body mt-3 max-w-4xl">Biolabs is designed to reduce fragmentation and support more informed decisions. It does not replace qualified medical professionals, independent clinical judgment, or appropriate medical care.</p></div>
+      </section>
+      <section className="py-16 sm:py-24" aria-labelledby="release-notes-heading">
+        <div className="mb-10 max-w-2xl">
+          <p className="bio-eyebrow">Release Notes</p>
+          <h2 id="release-notes-heading" className="bio-title">How The Platform Has Evolved.</h2>
+          <p className="bio-body mt-5">Each release expands the clinical information Biolabs can organize, analyze, and make easier to understand.</p>
         </div>
 
-        
-
-        <div className="flex flex-col gap-5">
-          <h1 className="text-3xl w-full text-center font-bold">Vision</h1>
-          <h1 className="text-sm leading-[2rem] font-medium">
-            For the time beigh of a human lives health is the most valuable
-            thing.Our vision is a world where every individual, regardless of
-            location, has access to essential tools and resources for
-            maintaining optimal wellbeing. We're committed to eliminating
-            barriers for communities in remote regions with limited healthcare
-            facilities, offering innovative solutions that provide valuable
-            medical insights without financial strain. Through our approach,
-            we're building a future where geographic isolation and economic
-            constraints no longer prevent anyone from achieving their fullest
-            health potential.
-          </h1>
+        <div className="space-y-5">
+          {releases.map((release) => (
+            <article key={release.version} className="bio-card overflow-hidden">
+              <header className="flex flex-col gap-5 border-b bg-[var(--biolabs-mist)] p-5 sm:flex-row sm:items-center sm:justify-between sm:p-7">
+                <div className="flex items-center gap-5">
+                  <span className="font-mono text-xs font-semibold text-[var(--biolabs-teal)]">{release.date}</span>
+                  <span className="h-5 w-px bg-[var(--biolabs-cloud)]" aria-hidden="true" />
+                  <h3 className="text-xl font-medium">{release.version}</h3>
+                </div>
+                <span className={release.status === "Released" ? "bio-status-normal" : "bio-status-warning"}>{release.status}</span>
+              </header>
+              <div className="grid border-t divide-y bg-white md:grid-cols-2">
+                {release.indices.map((serviceIndex) => {
+                  const service = servicesArray[serviceIndex];
+                  if (!service) return null;
+                  return (
+                    <div key={serviceIndex} className="bg-white p-5 sm:p-7">
+                      <p className="text-lg font-semibold text-[var(--biolabs-ink)]">{service[1]}</p>
+                      <p className="mt-3 text-sm leading-6 text-[var(--biolabs-slate)]">{service[2]}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </article>
+          ))}
         </div>
+      </section>
 
-        <div className="flex flex-col gap-5">
-          <h1 className="text-3xl w-full text-center font-bold">Capable Of</h1>
-          <h1 className="text-sm leading-[2rem] font-medium">
-            Our platform can be used as a personalized healthcare assistance
-            shaped for each users.Also can be connect with any health care
-            providers like hospitals. Wich can learns from local health patterns
-            to offer helpful insights, making it easier for doctors, nurses or
-            any other proffesional to make better treatment and automate
-            dignosis.
-          </h1>
-          <h1 className="text-sm leading-[2rem] font-medium">
-            Imagine connecting each and every healthcare information worldwide
-            to bringing global health knowledge under one umbrella. The true
-            power of our solution emerges. We can identify emerging health
-            trends, guide the development and delivery of new medications,
-            pinpoint regions with healthcare worker shortages, and discover gaps
-            in medical equipment and pharmaceutical availability. This
-            comprehensive approach doesn't just improve individual care wich
-            strengthens the entire healthcare ecosystem by creating a foundation
-            for more targeted and effective medical innovations.
-          </h1>
-        </div>
-      </div>
-
-      {/* Modals remain unchanged */}
-      {diseaseDetectionModalOpen && (
-        <DiseaseDetectionModal
-          isOpen={diseaseDetectionModalOpen}
-          onClose={() => setDiseaseDetectionModalOpen(false)}
-        />
-      )}
-      {diagnosisModalOpen && (
-        <DiagnosisModal
-          isOpen={diagnosisModalOpen}
-          onClose={() => setDiagnosisModalOpen(false)}
-        />
-      )}
-      {noDataFoundModalOpen && (
-        <NoDataFound
-          isOpen={noDataFoundModalOpen}
-          onClose={() => setNoDataFoundModalOpen(false)}
-          isModal={true}
-          handleButtonClick={() => router.push("/info")}
-          route={"analytics"}
-        />
-      )}
-      {commingSoonModalOpen && (
-        <CommingSoon
-          isOpen={commingSoonModalOpen}
-          onClose={() => setCommingSoonModalOpen(false)}
-          commingSoonIndex={commingSoonIndex}
-        />
-      )}
-      {intelligenceOpen && (
-        <Intelligence
-          isOpen={intelligenceOpen}
-          onClose={() => closeIntelligenceModal(setIntelligenceOpen)}
-        />
-      )}
     </div>
   );
-};
-
-export default AboutUs;
+}

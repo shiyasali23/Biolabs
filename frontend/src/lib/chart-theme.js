@@ -1,0 +1,18 @@
+export const CHART_COLORS = Object.freeze({
+  white: "#FFFFFF",
+  ink: "#0B1739",
+  slate: "#536078",
+  muted: "#7D899C",
+  cloud: "#E4E9EC",
+  teal: "#087F7A",
+  tealDark: "#066762",
+  tealWash: "rgba(8, 127, 122, 0.08)",
+  success: "#187A55",
+  successFill: "rgba(24, 122, 85, 0.78)",
+  successWash: "rgba(24, 122, 85, 0.12)",
+  warning: "#9A6412",
+  warningFill: "rgba(154, 100, 18, 0.78)",
+  danger: "#B33A45",
+  dangerFill: "rgba(179, 58, 69, 0.78)",
+  dangerWash: "rgba(179, 58, 69, 0.12)",
+});

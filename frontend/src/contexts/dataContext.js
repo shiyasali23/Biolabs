@@ -15,49 +15,49 @@ export const DataProvider = ({ children }) => {
     [
       "Detect Diseases With Biochemicals",
       "Diseases Detections",
-      "By analysing various biometrics and biochemicals, multiple systems is created that can detect various kinds of diseases in very high accuracy. Helps to get an early notice about the diseases that can be cause, without get into time consuming lab tests..",
+      "Analyze biochemical and biometric inputs with focused screening models designed to surface patterns that may warrant further clinical review.",
       <FaMicroscope key="diseases-detections" />
 
     ],
     [
       "Feeling Any kind of Symptoms?",
       "Diagnostics Center",
-      "A usual dignosis procedures, the system is capable to percive symptoms and provide an assumption assistance, also provide Medications, Precausions and Diets that can be considered. Also can be served as an assiatnce for doctors to get an second opinion for their findings.",
+      "Structure reported symptoms and generate an informational model result with supporting precautions, nutrition considerations, and care context.",
       <FaStethoscope key="diagnostics-center" />
 
     ],
     [
       "Get Suggestions Of Foods For You",
       "Food Recommendation",
-      "Considering health metrics and biochemical levels, reccommends optimal food choices. It also functions as a virtual dietitian, offering detailed nutritional information on a wide range of food items. Access how each food and nutrients couples each other with precise data.",
+      "Explore nutritional data and personalized food recommendations informed by available health metrics and biochemical measurements.",
       <IoFastFood key="food-recommendation" />
 
     ],
     [
       "Monitoring Health And Biochemicals",
       "Analytics Platform",
-      "Meaningful dashboards to provide maximum insights into the biochemicals. Determine from normal to abnormal values. To understand potential health condition that fall outside the healthy range. Tracking system for biochemical parameters over time to catch anomalies.",
+      "Monitor biochemical measurements over time, compare results with reference ranges, and review associated clinical context.",
       <FaChartLine key="analytics-platform" />
 
     ],
     [
       "Personalized Artificial Intelligence",
       "Intelligence",
-      "Personalized health assistant powered by artificial intelligence seamlessly integrated with all of our services. Designed to provide every possible comprehensive health insights and expert level guidance empowering to make informed decisions.",
+      "A connected health assistant that can review questions, document extracts, and available biometrics to provide general informational support.",
       <AiFillSlackCircle key="intelligence" />
 
     ],
     [
       "Archive Medical Records And Insight",
       "Vault",
-      "Secure space that allows to store any kind of medical informations digitally. From reports and prescriptions to personal health notes and observations. That can be also shared with trusted individuals. To gain insights, track conditions to make informed decisions.",
+      "Organize medical-report extracts, personal notes, and health observations in a private authenticated workspace.",
       <RiHealthBookFill key="vault" />
 
     ],
     [
       "Create Biology Specific Medicines",
       "Fold",
-      "Using advanced protein folding and molecular docking to design custom medications that perfectly matches unique biology. Through quantum-enhanced computational models, simulate how compounds interact with specific cellular receptors at the molecular level.To boost therapeutic outcomes by ensuring optimal drug-target interactions while minimizing adverse effects.",
+      "Explore biology-specific medicine research through protein structures, molecular interactions, and computational analysis.",
       <SiMatomo key="fold" />
 
 
@@ -65,7 +65,7 @@ export const DataProvider = ({ children }) => {
     [
       "Helps for psychological states",
       "Mind",
-      "AI-driven interventions to assess, stabilize, and enhance psychological well-being. Delivers personalized mental health strategies—from stress resilience protocols to neurofeedback training. Integrates with wearable data for real-time mood regulation and long-term brain health optimization",
+      "Structured tools for reviewing psychological wellbeing and supporting informed conversations about mental health.",
       <RiMentalHealthFill key="mind" />
 
 
@@ -73,7 +73,7 @@ export const DataProvider = ({ children }) => {
     [
       "Analysis And Report Over DNA Sequences",
       "Genes",
-      "Genetic analysis to identify inherited health risks by comparing DNA with similar profiles. Advanced algorithms detect subtle genetic variations that traditional tests miss, enabling early intervention before symptoms appear wich shifts healthcare from reactive to preventative.",
+      "Genetic-data analysis designed to organize sequence information and surface patterns for qualified clinical interpretation.",
       <PiDnaFill key="genes" />
 
     ]
@@ -81,8 +81,8 @@ export const DataProvider = ({ children }) => {
 
   const [diseaseDetectionModals, setDiseaseDetectionModals] = useState([]);
   const [diagnosisModel, setDiagnosisModel] = useState([]);
-  const dignosisModelsTypes = ["diagnosis_model", "disease_detections"];
-  const authApiOPtions = ["authenticate", "signup"];
+  const diagnosisModelTypes = ["diagnosis_model", "disease_detections"];
+  const authApiOptions = ["authenticate", "signup"];
 
   return (
     <DataContext.Provider
@@ -93,8 +93,8 @@ export const DataProvider = ({ children }) => {
         setDiseaseDetectionModals,
         diagnosisModel,
         setDiagnosisModel,
-        dignosisModelsTypes,
-        authApiOPtions,
+        diagnosisModelTypes,
+        authApiOptions,
       }}
     >
       {children}

@@ -1,35 +1,18 @@
-import React from "react";
-import { AiOutlineCloseSquare } from "react-icons/ai";
+"use client";
+
+import { X } from "lucide-react";
+import { useModalA11y } from "@/hooks/useModalA11y";
 import BiochemicalLineGraph from "./BiochemicalLineGraph";
 
-const BiochemicalLineGraphModal = ({
-  isOpen,
-  onClose,
-  selectedBiochemical,
-}) => {
+export default function BiochemicalLineGraphModal({ isOpen, onClose, selectedBiochemical }) {
+  useModalA11y(isOpen, onClose);
   if (!isOpen || !selectedBiochemical) return null;
-
-  const name = selectedBiochemical?.name || "";
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="relative bg-white shadow-lg  p-6 flex w-[98vw] xl:w-[50vw]">
-        <AiOutlineCloseSquare
-          className="absolute right-5 top-2 cursor-pointer text-3xl bg-black text-white hover:scale-110 transition duration-150"
-          onClick={onClose}
-        />
-
-        {selectedBiochemical && name && (
-          <div className="mt-10 h-full w-full mx-auto">
-            <BiochemicalLineGraph
-              biochemical={selectedBiochemical}
-              name={name}
-            />
-          </div>
-        )}
-      </div>
+    <div className="bio-modal-overlay" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+      <section className="bio-modal max-w-3xl" role="dialog" aria-modal="true" aria-label={`${selectedBiochemical.name} trend`}>
+        <button type="button" className="bio-icon-button absolute right-4 top-4 z-10" onClick={onClose} aria-label="Close trend"><X aria-hidden="true" size={18} /></button>
+        <div className="mt-12"><BiochemicalLineGraph biochemical={selectedBiochemical} name={selectedBiochemical.name} /></div>
+      </section>
     </div>
   );
-};
-
-export default BiochemicalLineGraphModal;
+}

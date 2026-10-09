@@ -1,3 +1,4 @@
+import { readJson } from "./http.js";
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL || '/backend';
 
 export const getBiochemicals = async () => {
@@ -16,8 +17,8 @@ export const getBiochemicals = async () => {
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
 
-    const result = await response.json();
-    return result.response || null;
+    const result = await readJson(response);
+    return result?.response || null;
   } catch (error) {
     console.error("Error fetching biochemicals:", error.message);
     return null;
@@ -28,6 +29,8 @@ export const getBiochemicals = async () => {
 
 
 export const getConditions = async (conditionsIds) => {
+  if (Array.isArray(conditionsIds) && conditionsIds.length === 0) return [];
+
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 10000);
 
@@ -39,12 +42,17 @@ export const getConditions = async (conditionsIds) => {
       body: JSON.stringify({ data: conditionsIds }),
     });
 
+    if (response.status === 404) {
+      const result = await readJson(response);
+      if (result?.message === "No conditions found for the ids.") return [];
+    }
+
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
 
-    const result = await response.json();
-    return result.response || null;
+    const result = await readJson(response);
+    return result?.response || null;
   } catch (error) {
     console.error("Error fetching conditions:", error.message);
     return null;

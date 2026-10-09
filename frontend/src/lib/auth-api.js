@@ -1,3 +1,4 @@
+import { readJson } from "./http.js";
 // utils/DiagnosisDetectionUtils.js
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL || '/backend';
 
@@ -14,7 +15,7 @@ export const authenticate = async (inputFields, type) => {
         body: JSON.stringify({ data: inputFields }),
       });
   
-      const result = await response.json();
+      const result = await readJson(response);
   
       if (!response.ok) {
         const errorMessage =
@@ -26,7 +27,7 @@ export const authenticate = async (inputFields, type) => {
         return { data: null, message: errorMessage };
       }
   
-      return { data: result.response || null, message: null };
+      return { data: result?.response || null, message: null };
     } catch (error) {
       console.error("Authentication error:", error);
       return { data: null, message: "Something went wrong" };

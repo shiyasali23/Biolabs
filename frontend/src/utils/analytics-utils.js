@@ -1,7 +1,8 @@
   export const getBiometricEntry = (biometricMap, timeStamp) => {
     const entry = biometricMap.get(timeStamp);
     if (!entry) return null;
-    const { created_at: created, biometrics } = entry;
+    const { created_at: created } = entry;
+    const biometrics = Array.isArray(entry.biometrics) ? entry.biometrics : [];
     return {
       created,
       hyperBiochemicals: biometrics.filter(b => b.is_hyper === true),

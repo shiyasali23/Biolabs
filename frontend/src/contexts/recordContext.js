@@ -1,5 +1,5 @@
 "use client";
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { getRecords, registerRecords } from "@/lib/vault-api";
 import { cacheManager } from "@/utils/cache-wroker";
 import dummyRecordsData from "@/jsons/dummy-records-data.json";
@@ -12,15 +12,15 @@ export const RecordProvider = ({ children }) => {
   const [recordsArray, setrecordsArray] = useState(null);
   const [recordsLoading, setRecordsLoading] = useState(false);
 
-  const fetchRecords = async () => {
+  const fetchRecords = useCallback(async () => {
     setRecordsLoading(true);
-    const records = await getRecords();
-    if (records) {
+    const records = await getRecords().catch(() => null);
+    if (Array.isArray(records)) {
       setrecordsArray(records);
       cacheManager.set("records", records);
     }
     setRecordsLoading(false);
-  };
+  }, []);
 
   useEffect(() => {
     if (!isClient) return;
@@ -42,7 +42,7 @@ export const RecordProvider = ({ children }) => {
 
       if (updatedRecord) {
         setrecordsArray((prevRecords) => {
-          const updatedArray = [updatedRecord, ...prevRecords];
+          const updatedArray = [updatedRecord, ...(prevRecords ?? [])];
           cacheManager.set("records", updatedArray);
           return updatedArray;
         });
@@ -57,6 +57,9 @@ export const RecordProvider = ({ children }) => {
     }
   };
 
+  // Drop records held in memory when the session changes.
+  const resetRecords = useCallback(() => setrecordsArray(null), []);
+
   const loadDummyRecords = async () => {
     if (!dummyRecordsData) return false;
     setrecordsArray([dummyRecordsData]);
@@ -69,9 +72,9 @@ export const RecordProvider = ({ children }) => {
         recordsArray,
         recordsLoading,
         updateRecord,
-        fetchRecords,
         loadDummyRecords,
         fetchRecords,
+        resetRecords,
       }}
     >
       {children}

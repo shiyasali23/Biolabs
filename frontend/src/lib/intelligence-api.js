@@ -1,3 +1,4 @@
+import { readJson } from "./http.js";
 import { cacheManager } from "@/utils/cache-wroker";
 
 const INTELLIGENCE_API_URL = process.env.NEXT_PUBLIC_INTELLIGENCE_API_URL || "/intelligence";
@@ -22,8 +23,6 @@ function getRandomIntroReply() {
 }
 
 export const inference = async (inputData) => {
-  console.log("Sending inference request with data:", inputData);
-
   let token = cacheManager.get("token");
 
   const query = (inputData?.text ?? "").toString().trim().toLowerCase();
@@ -40,33 +39,34 @@ export const inference = async (inputData) => {
   try {
     const response = await fetch(`${INTELLIGENCE_API_URL}/inference`, {
       method: "POST",
+      signal: AbortSignal.timeout(60000),
       body: JSON.stringify({ data: payload }),
       headers: {
         "Content-Type": "application/json",
       },
     });
 
-    const result = await response.json();
+    const result = await readJson(response);
 
     if (!response.ok) {
       // Handle specific error cases
       if (response.status === 404) {
         return {
-          response: "Topic is out of scope",
-          message: null,
+          response: null,
+          message: "Intelligence is unavailable for this request.",
         };
       }
 
       // Handle other HTTP errors
       return {
-        response: result.error || "Something went wrong",
-        message: result.message || null,
+        response: result?.error || "Something went wrong",
+        message: result?.message || "The request failed. Please retry.",
       };
     }
 
     // Handle successful response
     return {
-      response: result.response,
+      response: result?.response,
       message: null,
     };
   } catch (error) {

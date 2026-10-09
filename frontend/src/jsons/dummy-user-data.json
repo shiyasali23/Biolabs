@@ -4,7 +4,9 @@
     "email": "jhnoe@example.com",
     "first_name": "John",
     "last_name": "Doe",
-    "gender": "female"
+    "gender": "female",
+    "age": 46,
+    "bmi": 24.8
   },
   "biometrics_entries": [
     {

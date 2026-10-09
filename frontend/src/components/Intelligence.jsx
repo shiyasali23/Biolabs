@@ -1,134 +1,16 @@
 "use client";
-import React, { useState, useEffect, useCallback, useRef } from "react";
-import { FaTimes } from "react-icons/fa";
+import { useEffect,useRef,useState } from "react";
+import { Dialog,DialogContent,DialogTitle } from "@/components/ui/dialog";
 import { useUser } from "@/contexts/userContext";
-import HealthInputPanel from "@/components/HealthInputPanel";
-import ChatSection from "@/components/ChatSection";
 import { inference } from "@/lib/intelligence-api";
-
-const Intelligence = ({
-  isOpen,
-  onClose,
-  text = "",
-  extractedTexts = [],
-  setMessage,
-}) => {
-  const { isLogined } = useUser();
-
-  const [promt, setPromt] = useState("");
-  const [extractedPromts, setExtractedPromts] = useState([]);
-  const [chatArray, setChatArray] = useState([]);
-  const [chatLoading, setChatLoading] = useState(false);
-  const [shouldAnimate, setShouldAnimate] = useState(false);
-
-  useEffect(() => {
-    if (isOpen) {
-      setPromt(text);
-      if (extractedTexts.length > 0) {
-        setExtractedPromts(extractedTexts.slice(0, 2));
-      }
-
-      if (chatArray.length === 0) {
-        setChatArray([
-          {
-            promt: "",
-            response:
-              "Hi! What's your health concern today? should i need to review any documents?",
-          },
-        ]);
-        setShouldAnimate(false);
-      }
-    }
-  }, [isOpen, text, extractedTexts]);
-
-  // Trigger animation when chat array grows
-  useEffect(() => {
-    if (chatArray.length > 1) {
-      setShouldAnimate(true);
-    }
-  }, [chatArray.length]);
-
-  const getGeratedTexts = useCallback(async (inputData) => {
-    setChatLoading(true);
-    console.log("inputData data from intelligence:", inputData);
-
-    try {
-      const result = await inference(inputData);
-      if (result && result.response) {
-        setChatArray((prev) => [
-          ...prev,
-          { promt: inputData.text, response: result.response },
-        ]);
-      } else {
-        setChatArray((prev) => [
-          ...prev,
-          { promt: inputData.text, response: "Something went wrong" },
-        ]);
-      }
-      setPromt("");
-      setExtractedPromts([]);
-    } catch (error) {
-      console.error("Generation error:", error);
-    } finally {
-      setChatLoading(false);
-    }
-  }, []);
-
-  const handleClose = useCallback(() => {
-    setChatLoading(false);
-    setChatArray([]);
-    setPromt("");
-    setExtractedPromts([]);
-    setShouldAnimate(false);
-
-    onClose();
-  }, [onClose]);
-
-  const isInitialState = chatArray.length <= 1;
-
-  return (
-    <div
-      className={`fixed top-0 rounded-2xl right-0 w-screen xl:w-[50vw] h-full my-auto bg-white shadow-lg transform transition-transform duration-300 z-50 ${
-        isOpen ? "translate-x-0" : "translate-x-full"
-      }`}
-    >
-      <div className="relative w-full h-[5vh] flex items-center justify-end pr-5 xl:pr-10">
-        <FaTimes
-          className="cursor-pointer text-2xl hover:text-gray-600 transition-colors"
-          onClick={handleClose}
-        />
-      </div>
-
-      <div className="flex-1 h-full flex flex-col relative">
-        {/* Chat Section */}
-        <div className="flex-1 overflow-hidden">
-          <ChatSection chatArray={chatArray} isLoading={chatLoading} />
-        </div>
-
-        {/* Health Input Panel */}
-        <div
-          className={`
-            ${isInitialState 
-              ? "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full px-4 max-w-2xl"
-              : "px-2 mb-9 xl:mb-12"
-            }
-            ${shouldAnimate && !isInitialState ? "animate-slide-to-bottom" : ""}
-          `}
-        >
-          <HealthInputPanel
-            isIntelligence={true}
-            isLogined={isLogined}
-            getGeratedTexts={getGeratedTexts}
-            promt={promt}
-            setPromt={setPromt}
-            extractedPromts={extractedPromts}
-            setExtractedPromts={setExtractedPromts}
-            setMessage={setMessage}
-          />
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default React.memo(Intelligence);
+import ChatSection from "./ChatSection";
+import HealthInputPanel from "./HealthInputPanel";
+const INTRO={promt:"",response:"What would you like to understand? Ask a question, or attach a report to review its extracted text."};
+export default function Intelligence({isOpen,onClose,text="",extractedTexts=[]}) {
+ const {isLogined,isSample}=useUser(); const [promt,setPromt]=useState("");const [extractedPromts,setExtractedPromts]=useState([]);const [chatArray,setChatArray]=useState([INTRO]);const [loading,setLoading]=useState(false);const [message,setMessage]=useState("");const [retry,setRetry]=useState(null); const busy=useRef(false);const seed=useRef("");
+ useEffect(()=>{const key=JSON.stringify([text,extractedTexts]);if(isOpen&&key!==seed.current&&(text||extractedTexts.length)){setPromt(text);setExtractedPromts(extractedTexts.slice(0,2));seed.current=key;}},[isOpen,text,extractedTexts]);
+ useEffect(()=>{setChatArray([INTRO]);setPromt("");setExtractedPromts([]);setMessage("");setRetry(null);},[isLogined,isSample]);
+ const send=async(input,retrying=false)=>{if(busy.current)return;busy.current=true;setLoading(true);setMessage("");setRetry(null);if(!retrying){setChatArray(current=>[...current,{promt:input.text||"Review attached document text",response:""}]);setPromt("");setExtractedPromts([]);}try{const result=await inference(input);if(!result?.response||result?.message)throw new Error();setChatArray(current=>current.map((item,index)=>index===current.length-1?{...item,response:result.response}:item));}catch{setMessage("Intelligence couldn’t respond. Your question is retained; you can retry.");setRetry(input);}finally{busy.current=false;setLoading(false);}};
+ const close=()=>onClose();
+ return <Dialog open={isOpen} onOpenChange={open=>{if(!open)close();}}><DialogContent className="bio-redesign assistant-panel !left-auto !right-0 !top-0 !translate-x-0 !translate-y-0 !w-full !max-w-2xl !rounded-none !p-0 !gap-0 !flex !flex-col [&>button]:!bg-transparent" aria-describedby={undefined} onInteractOutside={event=>event.preventDefault()}><DialogTitle className="sr-only">Clinical Intelligence</DialogTitle><div className="min-h-0 flex-1 bg-[var(--biolabs-porcelain)]"><ChatSection chatArray={chatArray} isLoading={loading}/></div><div className="border-t bg-white p-3 sm:p-5">{chatArray.length===1&&!promt&&<div className="flex flex-wrap gap-2 mb-3">{["Help me understand my laboratory report","What should I ask my clinician?"].map(value=><button key={value} className="border rounded-lg px-3 py-2 text-sm text-left min-h-11" onClick={()=>setPromt(value)}>{value}</button>)}</div>}{message&&<div role="alert" className="mb-3 text-sm text-[var(--biolabs-danger)]"><p>{message}</p>{retry&&<button className="bio-button-secondary mt-2" disabled={loading} onClick={()=>send(retry,true)}>Retry response</button>}</div>}<HealthInputPanel isIntelligence isLogined={isLogined} getGeratedTexts={send} promt={promt} setPromt={setPromt} extractedPromts={extractedPromts} setExtractedPromts={setExtractedPromts} setMessage={setMessage} isSubmitting={loading}/><p className="legal-note mt-3 text-[var(--biolabs-slate)]">Informational support, not a diagnosis. Conversation is kept only for this session.</p></div></DialogContent></Dialog>;
+}

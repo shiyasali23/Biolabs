@@ -1,37 +1,8 @@
-import React, { useMemo } from "react";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { headingCase } from "@/lib/heading-case";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import BiochemicalLineGraph from "./BiochemicalLineGraph";
 
-const BiometricsAccordion = ({biometrics}) => {
-  
-
-  const categories = useMemo(() => biometrics ? Object.keys(biometrics) : [], [biometrics]);
-
-  return (
-    <div className="w-full h-full">
-      {biometrics && (
-        <Accordion type="single" collapsible className="border ">
-          {categories.map((category) => (
-            <AccordionItem key={category} value={category}>
-              <AccordionTrigger className="ml-7  font-semibold text-sm">{category}</AccordionTrigger>
-              <AccordionContent className="grid  grid-cols-1 md:grid-cols-2 gap-2 list-disc px-2">
-                {useMemo(() => 
-                  Object.entries(biometrics[category]).map(([name, biochemical]) => (
-                    <BiochemicalLineGraph key={name} name={name} biochemical={biochemical} />
-                  )), 
-                [biometrics[category]])}
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
-      )}
-    </div>
-  );
-};
-
-export default BiometricsAccordion;
+export default function BiometricsAccordion({ biometrics }) {
+  const categories = biometrics ? Object.keys(biometrics) : [];
+  return <Accordion type="single" collapsible className="overflow-hidden border bg-white" style={{ borderColor: "var(--biolabs-cloud)", borderRadius: "var(--radius)" }}>{categories.map((category) => <AccordionItem key={category} value={category}><AccordionTrigger className="px-5 text-sm font-semibold hover:no-underline sm:px-7">{headingCase(category)}<span className="ml-auto mr-5 text-xs font-normal text-[var(--biolabs-slate)]">{Object.keys(biometrics[category]).length} markers</span></AccordionTrigger><AccordionContent className="grid grid-cols-2 gap-2 bg-[var(--biolabs-porcelain)] p-2 sm:gap-4 sm:p-4"><>{Object.entries(biometrics[category]).map(([name, biochemical]) => <BiochemicalLineGraph key={name} name={name} biochemical={biochemical}/>)}</></AccordionContent></AccordionItem>)}</Accordion>;
+}

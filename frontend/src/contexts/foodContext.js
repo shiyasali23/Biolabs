@@ -1,5 +1,5 @@
 "use client";
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useCallback, useContext, useState, useEffect } from "react";
 import { getFoodNutrients } from "@/lib/foods-api";
 import { cacheManager } from "@/utils/cache-wroker";
 import { processFoodNutrients } from "@/utils/food-woker";
@@ -37,7 +37,7 @@ export const FoodProvider = ({ children }) => {
     setFoodNutrientsDataLoading(false);
   }, [isClient]);
 
-  const fetchFoodNutrients = async () => {
+  const fetchFoodNutrients = useCallback(async () => {
     setFoodNutrientsDataLoading(true);
     const foodNutrientsData = await getFoodNutrients();
     if (foodNutrientsData) {
@@ -64,7 +64,7 @@ export const FoodProvider = ({ children }) => {
       setFoodNutriscoreData(foodNutriscoreData);
     }
     setFoodNutrientsDataLoading(false);
-  };
+  }, []);
 
   return (
     <FoodContext.Provider

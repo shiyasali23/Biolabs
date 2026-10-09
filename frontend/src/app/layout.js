@@ -1,20 +1,50 @@
-import { Inter } from "next/font/google";
-
 import { BiochemicalProvider } from "@/contexts/biochemicalContext";
 import "./globals.css";
+import "./homepage.css";
 import { DataProvider } from "@/contexts/dataContext";
 import { UserProvider } from "@/contexts/userContext";
 import { FoodProvider } from "@/contexts/foodContext";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import { RecordProvider } from "@/contexts/recordContext";
 import { IntelligenceProvider } from "@/contexts/intelligenceContext";
 import { HealthProvider } from "@/contexts/healthContext";
+import AppShell from "@/components/AppShell";
+import { IBM_Plex_Sans, Inter, Manrope } from "next/font/google";
+const inter = Inter({ subsets: ["latin"], display: "swap", variable: "--font-inter" });
+const plex = IBM_Plex_Sans({ subsets: ["latin"], weight: ["400", "500", "600"], display: "swap", variable: "--font-plex" });
+const manrope = Manrope({ subsets: ["latin"], display: "swap", variable: "--font-manrope" });
+
+const siteTitle = "Biolabs — Personalized Health & Biotech";
+const siteDescription = "Connecting biology and machines: clinical workspaces, personalized health insight and computational biotech research.";
 
 export const metadata = {
-  title: "Biolabs",
-  description:
-    "An organization founded on October 4th of 2024, designed to keeping humans healthy. Built on top of the most advanced, cutting-edge technologies and backed by the world's elite medical experts and healthcare professionals",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://biolabsltd.com"),
+  title: {
+    default: siteTitle,
+    template: "%s | Biolabs",
+  },
+  description: siteDescription,
+  applicationName: "Biolabs",
+  manifest: "/site.webmanifest",
+  icons: {
+    icon: [
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon-192x192.png", sizes: "192x192", type: "image/png" },
+      { url: "/images/logo.svg", type: "image/svg+xml" },
+    ],
+    shortcut: "/favicon-32x32.png",
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
+  },
+  openGraph: {
+    type: "website",
+    siteName: "Biolabs",
+    title: siteTitle,
+    description: siteDescription,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: siteTitle,
+    description: siteDescription,
+  },
   appleWebApp: {
     capable: "yes",
     statusBarStyle: "black-translucent",
@@ -28,73 +58,10 @@ export const viewport = {
   viewportFit: "cover",
 };
 
-const inter = Inter({
-  subsets: ["latin"],
-  weight: ["400", "700"], // regular and bold
-  variable: "--font-inter", // optional for custom CSS use
-});
-
-export default function RootLayout({ children }) {
+export default function RootLayout({ children, tools }) {
   return (
-    <html lang="en" className={inter.className}>
-      <head>
-        {/* Basic favicon */}
-        <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-
-        {/* PNG favicons for different sizes */}
-        <link
-          rel="icon"
-          type="image/png"
-          href="/favicon-16x16.png"
-          sizes="16x16"
-        />
-        <link
-          rel="icon"
-          type="image/png"
-          href="/favicon-32x32.png"
-          sizes="32x32"
-        />
-        <link
-          rel="icon"
-          type="image/png"
-          href="/favicon-180x180.png"
-          sizes="180x180"
-        />
-        <link
-          rel="icon"
-          type="image/png"
-          href="/favicon-192x192.png"
-          sizes="192x192"
-        />
-        <link
-          rel="icon"
-          type="image/png"
-          href="/favicon-256x256.png"
-          sizes="256x256"
-        />
-        <link
-          rel="icon"
-          type="image/png"
-          href="/favicon-512x512.png"
-          sizes="512x512"
-        />
-
-        {/* Apple Touch Icon */}
-        <link
-          rel="apple-touch-icon"
-          href="/apple-touch-icon.png"
-          sizes="180x180"
-        />
-
-        {/* Web App Manifest */}
-        <link rel="manifest" href="/site.webmanifest" />
-
-        {/* Microsoft Tile Color */}
-        <meta name="msapplication-TileColor" content="#ffffff" />
-
-        {/* Theme Color */}
-        <meta name="theme-color" content="#ffffff" />
-      </head>
+    <html lang="en" className={`${inter.variable} ${plex.variable} ${manrope.variable}`}>
+      <head><meta name="msapplication-TileColor" content="#ffffff" /><meta name="theme-color" content="#ffffff" /></head>
       <body>
         <BiochemicalProvider>
           <FoodProvider>
@@ -103,9 +70,7 @@ export default function RootLayout({ children }) {
                 <RecordProvider>
                   <IntelligenceProvider>
                     <UserProvider>
-                      <Header />
-                      {children}
-                      <Footer />
+                      <AppShell modal={tools} fontClass={`${inter.variable} ${plex.variable} ${manrope.variable}`}>{children}</AppShell>
                     </UserProvider>
                   </IntelligenceProvider>
                 </RecordProvider>

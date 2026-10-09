@@ -23,3 +23,5 @@
 **/jest.config.js
 **/tsconfig*.json
 **/next-env.d.ts
+**/.next
+**/.next-*

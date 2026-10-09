@@ -1,70 +1,19 @@
 "use client";
-
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
-
+import { useMemo, useState } from "react";
+import Link from "next/link";
 import { useUser } from "@/contexts/userContext";
-
-import ErrorComponent from "./ErrorComponent";
-import LoadingComponent from "./LoadingComponent";
-import NoDataFound from "./NoDataFound";
 import FoodsScoreBarGraph from "./FoodsScoreBarGraph";
-import CustomButton from "./CustomButton";
-
-const FoodsScores = ({ processedFoodsScore, handleSelectedItem }) => {
-  const { latestBiometrics, userDataLoading, isLogined, handleAuthResponse } =
-    useUser();
-  const router = useRouter();
-  const now = new Date();
-
-  const currentDate = new Date().toISOString();
-
-  const [expiredBiometrics,setExpiredBiometrics] = useState(latestBiometrics?.filter(({ expiryDate }) => expiryDate < currentDate) ||
-  null);
-    
-
-  return (
-    <div className="flex justify-center items-center min-h-[20vh] h-full w-full">
-      {userDataLoading ? (
-        <LoadingComponent />
-      ) : !isLogined ? (
-        <NoDataFound isOpen={true} isModal={false} route={"food"} />
-      ) : !processedFoodsScore ? (
-        <ErrorComponent
-          heading={"Get Personalized Food Recommendations"}
-          buttonText={"Update Biochemicals"}
-          handleTryAgain={() => router.push("/profile")}
-        />
-      ) : (
-        <div className="flex w-full h-full">
-          {!expiredBiometrics ? (
-            <FoodsScoreBarGraph
-              data={processedFoodsScore}
-              handleSelectedItem={handleSelectedItem}
-              expiredBiometrics={expiredBiometrics}
-            />
-          ) : (
-            <div className=" h-full w-full flex items-center justify-center flex-col gap-3">
-              <h1 className="text-center text-3xl font-semibold mb-10">Foods Scores Expired</h1>
-              <CustomButton
-                text={"Show Expired Foods Scores"}
-                onClick={() =>
-                  setExpiredBiometrics(null)
-                }
-              />
-              <h1 className="text-center text-xl font-semibold">Or</h1>
-              <CustomButton
-                text={"Update Biochemicals"}
-                onClick={() =>
-                  router.push("/profile")
-                }
-              />
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-};
-
-export default FoodsScores;
+import styles from "./nutrition/nutrition.module.css";
+export default function FoodsScores({ processedFoodsScore, handleSelectedItem }) {
+  const {latestBiometrics,userDataLoading,isLogined,isSample,loadDummyUserData}=useUser();
+  const [showExpired,setShowExpired]=useState(false);
+  const [loading,setLoading]=useState(false);
+  const [error,setError]=useState("");
+  const expired=useMemo(()=>latestBiometrics?.filter(({expiryDate})=>new Date(expiryDate)<new Date()) || [],[latestBiometrics]);
+  const sample=async()=>{setLoading(true);setError("");try {if(!await loadDummyUserData()) throw new Error();}catch{setError("Sample recommendations could not be loaded. Try again.");}finally{setLoading(false);}};
+  if(userDataLoading||loading)return <p role="status" className="bio-caption">Loading recommendations…</p>;
+  if(!isLogined&&!isSample)return <div className={styles.notice}><div><h2>Recommended Foods</h2><p>Sign in for personalized rankings, or try sample data.</p>{error&&<p role="alert">{error}</p>}</div><div className={styles.actions}><Link className="bio-button-secondary" href="/sign-in?next=/workspace/food">Sign in</Link><button className="bio-button-primary" onClick={sample}>Try sample data</button></div></div>;
+  if(!processedFoodsScore)return <div className={styles.notice}><div><h2>Recommended Foods</h2><p>Add measurements to get your rankings.</p></div><Link className="bio-button-secondary" href="/profile?tab=measurements">Add measurements</Link></div>;
+  if(expired.length&&!showExpired)return <div className={styles.notice}><div><h2>Recommended Foods</h2><p>Some measurements have expired.</p></div><div className={styles.actions}><button className="bio-button-secondary" onClick={()=>setShowExpired(true)}>Review rankings</button><Link className="bio-button-primary" href="/profile?tab=measurements">Update measurements</Link></div></div>;
+  return <FoodsScoreBarGraph data={processedFoodsScore} handleSelectedItem={handleSelectedItem} expiredBiometrics={expired}/>;
+}

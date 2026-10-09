@@ -1,3 +1,4 @@
+import { readJson } from "./http.js";
 import { cacheManager } from "@/utils/cache-wroker";
 
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL || "/backend";
@@ -17,8 +18,8 @@ export const getFoodNutrients = async () => {
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
 
-    const result = await response.json();
-    return result.response || null;
+    const result = await readJson(response);
+    return result?.response || null;
   } catch (error) {
     console.error("Error fetching food nutrients:", error.message);
     return null;
@@ -50,8 +51,8 @@ export const createFoodsscore = async (unExpiredBiometricsData) => {
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
 
-    const result = await response.json();
-    return result.response || null;
+    const result = await readJson(response);
+    return result?.response || null;
   } catch (error) {
     console.error("Error creaating foods score:", error);
     return null;
@@ -86,12 +87,12 @@ export const detectFood = async (file) => {
       throw new Error(`Error detecting food: ${response.status}`);
     }
 
-    const result = await response.json();
+    const result = await readJson(response);
 
-    if (result.response == null) {
+    if (result?.response == null) {
       return { detectedFoods: null, message: "No Food Detected. Try New" };
     }
-    return { detectedFoods: result.response, message: null };
+    return { detectedFoods: result?.response, message: null };
   } catch (error) {
     console.error("Error detecting food:", error.message);
     return { detectedFoods: null, message: "Something went wrong" };

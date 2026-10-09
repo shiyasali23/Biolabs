@@ -1,0 +1,72 @@
+{
+  "source": "Synthetic sample data evaluated once against the local disease-detection service.",
+  "models": [
+    {
+      "id": "fgfdsz45667hfzd",
+      "name": "Diabetes",
+      "accuracy": 0.9798994974874372,
+      "feature_category": null,
+      "feature_names": "[\"Gender\", \"Age\", \"Blood Urea Nitrogen\", \"Creatinine\", \"Hemoglobin A1c\", \"Total Cholesterol\", \"Triglycerides\", \"HDL Cholesterol\", \"LDL Cholesterol\", \"Very Low-Density Lipoprotein\", \"BMI\"]",
+      "output_maps": "{\"Negative\": 0, \"Positive\": 1}",
+      "feature_maps": "{\"Gender\": {\"male\": 0, \"female\": 1}}",
+      "max_feature_impact": "Hemoglobin A1c",
+      "sample": {
+        "inputs": {
+          "Gender": "female",
+          "Age": 46,
+          "Blood Urea Nitrogen": 13.8,
+          "Creatinine": 0.83,
+          "Hemoglobin A1c": 5.4,
+          "Total Cholesterol": 198.3,
+          "Triglycerides": 168.9,
+          "HDL Cholesterol": 53.7,
+          "LDL Cholesterol": 142.4,
+          "Very Low-Density Lipoprotein": 33.8,
+          "BMI": 24.8
+        },
+        "result": {
+          "prediction": "Positive",
+          "probabilities": {
+            "Negative": 35.29,
+            "Positive": 64.71
+          }
+        }
+      }
+    },
+    {
+      "id": "gvghvg56456gfcf",
+      "name": "Liver Condition",
+      "accuracy": 0.9830508474576272,
+      "feature_category": null,
+      "feature_names": "[\"Age\", \"Gender\", \"Albumin\", \"Alkaline Phosphatase\", \"Alanine Aminotransferase\", \"Aspartate Aminotransferase\", \"Bilirubin\", \"Cholinesterase\", \"Total Cholesterol\", \"Creatinine\", \"Gamma-Glutamyl Transferase\", \"Total Protein\"]",
+      "output_maps": "{\"Healthy\": 0, \"Hepatitis\": 1, \"Fibrosis\": 2, \"Cirrhosis\": 3}",
+      "feature_maps": "{\"Gender\": {\"male\": 0, \"female\": 1}}",
+      "max_feature_impact": "Aspartate Aminotransferase",
+      "sample": {
+        "inputs": {
+          "Age": 46,
+          "Gender": "female",
+          "Albumin": 4.0,
+          "Alkaline Phosphatase": 94.3,
+          "Alanine Aminotransferase": 31.9,
+          "Aspartate Aminotransferase": 30.2,
+          "Bilirubin": 0.8,
+          "Cholinesterase": 7.4,
+          "Total Cholesterol": 198.3,
+          "Creatinine": 0.83,
+          "Gamma-Glutamyl Transferase": 34.7,
+          "Total Protein": 7.0
+        },
+        "result": {
+          "prediction": "Healthy",
+          "probabilities": {
+            "Healthy": 52.32,
+            "Hepatitis": 36.83,
+            "Fibrosis": 9.22,
+            "Cirrhosis": 1.63
+          }
+        }
+      }
+    }
+  ]
+}

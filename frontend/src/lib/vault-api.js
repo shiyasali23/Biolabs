@@ -1,3 +1,4 @@
+import { readJson } from "./http.js";
 import { cacheManager } from "@/utils/cache-wroker";
 
 //utils/DiagnosisDetectionUtils.js
@@ -26,8 +27,8 @@ export const getRecords = async () => {
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
 
-    const result = await response.json();
-    return result.response || null;
+    const result = await readJson(response);
+    return result?.response || null;
   } catch (error) {
     console.error("Error getting records:", error.message);
     return null;
@@ -59,8 +60,8 @@ export const registerRecords = async (recordsData) => {
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
 
-    const result = await response.json();
-    return result.response || null;
+    const result = await readJson(response);
+    return result?.response || null;
   } catch (error) {
     console.error("Error updating user records:", error.message);
     return null;

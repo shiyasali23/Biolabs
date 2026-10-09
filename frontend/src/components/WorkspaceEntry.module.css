@@ -1,0 +1,30 @@
+.overlay { position:fixed; inset:0; z-index:100; background:rgb(15 32 24 / .35); backdrop-filter:blur(3px); }
+.dialog { position:fixed; z-index:101; left:50%; top:50%; transform:translate(-50%,-50%); width:min(460px,calc(100vw - 32px)); max-height:calc(100dvh - 40px); overflow-y:auto; border:1px solid #dce5dc; border-radius:18px; background:#fff; box-shadow:0 24px 80px rgb(17 41 28 / .18); }
+.panel { padding:36px 28px 28px; color:#203c30; font-family:var(--font-plex),sans-serif; }
+.title { max-width:calc(100% - 36px); margin:0; font:600 25px/1.25 var(--font-manrope),sans-serif; letter-spacing:-.035em; }
+.subtitle { margin:10px 0 26px; color:#52665a; font-size:14px; line-height:1.5; }
+.close { position:absolute; right:16px; top:16px; display:grid; place-items:center; width:36px; height:36px; border:1px solid #e1e7df; border-radius:50%; background:#fff; color:#203c30; cursor:pointer; }
+.file { display:none; }
+.upload { display:flex; align-items:center; gap:16px; width:100%; padding:20px; border:1px solid #c7d6c8; border-radius:12px; background:#f4f7f1; color:#203c30; text-align:left; cursor:pointer; transition:background .16s,border-color .16s; }
+.upload:hover:not(:disabled) { border-color:#6d8c75; background:#edf3e9; }
+.uploadIcon { display:grid; place-items:center; width:44px; height:44px; flex-shrink:0; border:1px solid #d4e0d0; border-radius:10px; background:#fff; }
+.upload>span:nth-child(2) { flex:1; min-width:0; }
+.upload strong { display:block; font-size:16px; font-weight:600; }
+.upload small { display:block; margin-top:5px; color:#52665a; font-size:12px; }
+.pdfNote { margin:12px 0 24px; font-size:12px; line-height:1.55; color:#5a6c60; }
+.actions { display:flex; flex-direction:column; gap:10px; }
+.sample,.login { display:flex; align-items:center; justify-content:center; gap:12px; min-height:48px; padding:12px 16px; border:1px solid #203c30; border-radius:8px; font:500 14px/1.4 var(--font-plex),sans-serif; text-decoration:none; cursor:pointer; }
+.sample { background:#203c30; color:#fff; }
+.sample:hover:not(:disabled) { background:#315641; }
+.login { border-color:#d9e2d7; background:#fff; color:#203c30; }
+.login:hover { background:#f5f7f2; }
+.panel button:disabled { opacity:.6; cursor:wait; }
+.panel :focus-visible,.close:focus-visible { outline:2px solid #467154; outline-offset:3px; }
+.account { margin:22px 0 0; color:#596c5e; font-size:12px; text-align:center; }
+.account a { color:#203c30; text-decoration:underline; text-underline-offset:3px; }
+.status,.error { margin:14px 0 0; font-size:13px; line-height:1.5; overflow-wrap:anywhere; }
+.error { color:#a13339; }
+.spinner { animation:spin 1s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+@media(max-width:420px) { .panel { padding:30px 20px 24px; } .title { font-size:23px; } .upload { padding:16px; gap:12px; } }
+@media(prefers-reduced-motion:reduce) { .upload { transition:none; } .spinner { animation:none; } }

@@ -5,9 +5,11 @@
  * If a match is found, the original value (with its case) is returned.
  */
 export const mapDetectedFoods = (detectedFoods, dataset, scoreKey) => {
+  if (!Array.isArray(detectedFoods) || !Array.isArray(dataset)) return { mappedPredictedFoods: null, maxFood: null };
   const mappedPredictedFoods = detectedFoods
     .map((detected) => {
-      const food = dataset.find((item) => item.name.toLowerCase() === detected.toLowerCase());
+      if (typeof detected !== "string") return null;
+      const food = dataset.find((item) => item?.name?.toLowerCase() === detected.toLowerCase());
       return food ? { name: food.name, score: food[scoreKey] } : null;
     })
     .filter(Boolean); // Remove null values

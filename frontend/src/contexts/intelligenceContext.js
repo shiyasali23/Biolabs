@@ -1,48 +1,56 @@
 "use client";
-import { usePathname, useRouter } from "next/navigation";
-import React, { createContext, useContext, useEffect, useState } from "react";
+
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
 
 const IntelligenceContext = createContext();
 
+const hasIntelligenceParam = () => {
+  if (typeof window === "undefined") return false;
+  return new URLSearchParams(window.location.search).get("intelligence") === "true";
+};
+
+const updateIntelligenceParam = (open) => {
+  if (typeof window === "undefined") return;
+  const url = new URL(window.location.href);
+  if (open) url.searchParams.set("intelligence", "true");
+  else url.searchParams.delete("intelligence");
+  window.history.pushState({}, "", url);
+  window.dispatchEvent(new Event("biolabs:intelligence-state"));
+};
+
 export const IntelligenceProvider = ({ children }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const pathname = usePathname();
-  const router = useRouter();
+  const [intelligenceSeed, setIntelligenceSeed] = useState({ text: "", extractedTexts: [] });
 
   useEffect(() => {
-    if (pathname.includes("intelligence-open=True")) {
-      setIsOpen(true);
-    }
-  }, [pathname]);
+    const syncFromUrl = () => setIsOpen(hasIntelligenceParam());
+    syncFromUrl();
+    window.addEventListener("popstate", syncFromUrl);
+    window.addEventListener("biolabs:intelligence-state", syncFromUrl);
+    return () => {
+      window.removeEventListener("popstate", syncFromUrl);
+      window.removeEventListener("biolabs:intelligence-state", syncFromUrl);
+    };
+  }, []);
 
-  const openIntelligence = () => {
-    const newPath = pathname.endsWith("/")
-      ? `${pathname}intelligence-open=True`
-      : `${pathname}/intelligence-open=True`;
-    router.push(newPath);
+  const openIntelligence = useCallback((options = {}) => {
+    const seed = options && typeof options === "object" ? options : {};
+    setIntelligenceSeed({
+      text: seed.text ?? "",
+      extractedTexts: Array.isArray(seed.extractedTexts) ? seed.extractedTexts.slice(0, 2) : [],
+    });
+    updateIntelligenceParam(true);
     setIsOpen(true);
-  };
+  }, []);
 
-  const closeIntelligence = () => {
-    const cleanPath = pathname.replace("/intelligence-open=True", "");
-    router.push(cleanPath || "/");
+  const closeIntelligence = useCallback(() => {
+    updateIntelligenceParam(false);
     setIsOpen(false);
-  };
-
-  const getGeratedTexts = async (reportData) => {
-    console.log("reportData", reportData);
-    // Use your API call here
-  };
+    setIntelligenceSeed({ text: "", extractedTexts: [] });
+  }, []);
 
   return (
-    <IntelligenceContext.Provider
-      value={{
-        isOpen,
-        openIntelligence,
-        closeIntelligence,
-        getGeratedTexts,
-      }}
-    >
+    <IntelligenceContext.Provider value={{ isOpen, intelligenceSeed, openIntelligence, closeIntelligence }}>
       {children}
     </IntelligenceContext.Provider>
   );
@@ -50,8 +58,6 @@ export const IntelligenceProvider = ({ children }) => {
 
 export const useIntelligence = () => {
   const context = useContext(IntelligenceContext);
-  if (!context) {
-    throw new Error("useIntelligence must be used within an IntelligenceProvider");
-  }
+  if (!context) throw new Error("useIntelligence must be used within an IntelligenceProvider");
   return context;
 };

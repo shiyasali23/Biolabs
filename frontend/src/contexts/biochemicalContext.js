@@ -1,5 +1,5 @@
 "use client";
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useCallback, useContext, useState, useEffect } from "react";
 import { getBiochemicals } from "@/lib/biochemicals-api";
 import { cacheManager } from "@/utils/cache-wroker";
 import { processBiochemicals } from "@/utils/biochemical-worker";
@@ -23,7 +23,7 @@ export const BiochemicalProvider = ({ children }) => {
     setBiochemicalDataLoading(false);
   }, [isClient]);
 
-  const fetchBiochemicals = async () => {
+  const fetchBiochemicals = useCallback(async () => {
     setBiochemicalDataLoading(true);
     const biochemicals = await getBiochemicals();
     if (biochemicals) {
@@ -34,7 +34,7 @@ export const BiochemicalProvider = ({ children }) => {
       }
     }
     setBiochemicalDataLoading(false);
-  };
+  }, []);
 
   return (
     <BiochemicalContext.Provider

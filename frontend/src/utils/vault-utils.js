@@ -1,8 +1,8 @@
 // src/utils/vault-utils.js
 
-import { createWorker } from "tesseract.js";
-
 export const extractTextFromImage = async (imageFile) => {
+  // OCR is loaded only when an image is attached.
+  const { createWorker } = await import("tesseract.js");
   const worker = await createWorker("eng");
   try {
     const {

@@ -1,4 +1,5 @@
 "use client";
+import { headingCase } from "@/lib/heading-case";
 import React, { useMemo } from "react";
 import {
   Accordion,
@@ -7,30 +8,30 @@ import {
   AccordionContent,
 } from "@/components/ui/accordion";
 
-const FoodNutrientList = ({ itemsArray, selectedItem, handleSelectedItem, isFood }) => {
+const FoodNutrientList = ({ itemsArray, selectedItem, handleSelectedItem, isFood, groupByCategory = false }) => {
   // Group items by category (or subCategory if available)
   const categorizedItems = useMemo(() => {
     return itemsArray.reduce((acc, { category, subCategory, name }) => {
-      const categoryKey = subCategory || category;
+      const categoryKey = groupByCategory ? category : subCategory || category;
       if (!acc[categoryKey]) {
         acc[categoryKey] = [];
       }
       acc[categoryKey].push(name);
       return acc;
     }, {});
-  }, [itemsArray]);
+  }, [itemsArray, groupByCategory]);
 
   // Compute the default open accordion based on selectedItem
   const defaultAccordionValue = useMemo(() => {
-    if (!selectedItem) return undefined;
+    if (groupByCategory || !selectedItem) return undefined;
     for (const [category, items] of Object.entries(categorizedItems)) {
       if (items.includes(selectedItem)) return category;
     }
     return undefined;
-  }, [categorizedItems, selectedItem]);
+  }, [categorizedItems, selectedItem, groupByCategory]);
 
   return (
-    <div className="w-full  flex flex-col h-full overflow-y-scroll  p-2  border">
+    <div className="w-full bg-white">
       <Accordion 
         type="single" 
         defaultValue={defaultAccordionValue} 
@@ -40,16 +41,17 @@ const FoodNutrientList = ({ itemsArray, selectedItem, handleSelectedItem, isFood
       >
         {Object.entries(categorizedItems).map(([category, items]) => (
           <AccordionItem key={category} value={category}>
-            <AccordionTrigger className="  text-xs font-bold text-center w-full">
-              {category}
+            <AccordionTrigger className="w-full px-0 py-3 text-left text-sm font-medium hover:no-underline">
+              {headingCase(category)}
             </AccordionTrigger>
-            <AccordionContent className="flex flex-col gap-2">
+            <AccordionContent className={isFood ? "grid grid-cols-1 gap-1 px-0 sm:grid-cols-2" : "flex flex-col gap-1 px-0"}>
               {items.map((item) => (
                 <button
+                  type="button"
                   onClick={() => handleSelectedItem(item, isFood)}
                   key={item}
-                  className={`border border-dashed border-gray-300 text-xs py-1 w-full mt-2 font-semibold ${
-                    item === selectedItem ? "bg-gray-800 text-white border-none" : ""
+                  className={`w-full rounded-md border px-3 py-2 text-left text-xs font-medium transition ${
+                    item === selectedItem ? "border-[var(--biolabs-teal)] bg-[var(--biolabs-aqua)] text-[var(--biolabs-teal-dark)]" : "border-transparent hover:bg-[var(--biolabs-porcelain)]"
                   }`}
                 >
                   {item}

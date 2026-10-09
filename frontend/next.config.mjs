@@ -8,8 +8,20 @@ export default {
   poweredByHeader: false,
   reactStrictMode: true,
   compress: true,
+  images: {
+    // WebP only: AVIF encoding is too CPU/memory-heavy for the production host.
+    formats: ["image/webp"],
+    qualities: [75, 100],
+  },
   serverExternalPackages: [],
   experimental: {},
+  redirects() {
+    return ["food", "analytics", "vault"].map(page => ({
+      source: `/${page}`,
+      destination: `/workspace/${page}`,
+      permanent: true,
+    }));
+  },
   headers() {
     return [
       {

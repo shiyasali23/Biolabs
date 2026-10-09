@@ -1,3 +1,4 @@
+import { readJson } from "./http.js";
 import { cacheManager } from "@/utils/cache-wroker";
 
 // utils/DiagnosisDetectionUtils.js
@@ -21,7 +22,7 @@ export const getModels = async (type) => {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const data = await response.json();
+    const data = await readJson(response);
 
     if (!Array.isArray(data?.response)) {
       throw new Error("Invalid API response structure");
@@ -36,9 +37,8 @@ export const getModels = async (type) => {
   }
 };
 
-export const getDiseasePredictions = async (modelId, inputValues) => {
-  console.log(inputValues);
-  const token = cacheManager.get("token");
+export const getDiseasePredictions = async (modelId, inputValues, { sample = false } = {}) => {
+  const token = sample ? null : cacheManager.get("token");
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 10000);
 
@@ -60,7 +60,7 @@ export const getDiseasePredictions = async (modelId, inputValues) => {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const data = await response.json();
+    const data = await readJson(response);
 
     if (!data?.response || typeof data.response !== "object") {
       throw new Error("Invalid API response structure");
@@ -75,10 +75,8 @@ export const getDiseasePredictions = async (modelId, inputValues) => {
   }
 };
 
-export const getDiagnosisPrediction = async (modelId, inputValues) => {
-  console.log(inputValues);
-
-  const token = cacheManager.get("token");
+export const getDiagnosisPrediction = async (modelId, inputValues, { sample = false } = {}) => {
+  const token = sample ? null : cacheManager.get("token");
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 10000);
 
@@ -101,7 +99,7 @@ export const getDiagnosisPrediction = async (modelId, inputValues) => {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const data = await response.json();
+    const data = await readJson(response);
 
     if (!data?.response || typeof data.response !== "object") {
       throw new Error("Invalid API response structure");
@@ -149,7 +147,7 @@ export const getDiagnosisReport = async (disease) => {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const data = await response.json();
+    const data = await readJson(response);
 
     if (!data?.response || typeof data.response !== "object") {
       throw new Error("Invalid API response structure");

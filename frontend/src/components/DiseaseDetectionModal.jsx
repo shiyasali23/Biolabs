@@ -1,507 +1,201 @@
-import React, { useEffect, useState, useCallback, useMemo } from "react";
-import LoadingComponent from "./LoadingComponent";
-import ErrorComponent from "./ErrorComponent";
-import { getModels, getDiseasePredictions } from "@/lib/diagnosis-api";
+"use client";
+
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Activity, AlertTriangle, Beaker, CheckCircle2, Clock3, Droplets, Loader2, ShieldAlert, Sparkles, X } from "lucide-react";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useData } from "@/contexts/dataContext";
-
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "@/components/ui/select";
-import { Loader } from "lucide-react";
 import { useUser } from "@/contexts/userContext";
-import { FaTimes } from "react-icons/fa";
+import { getDiseasePredictions, getModels } from "@/lib/diagnosis-api";
+import sampleDetectionData from "@/jsons/dummy-disease-detection-data.json";
+import ErrorComponent from "./ErrorComponent";
+import LoadingComponent from "./LoadingComponent";
 
-const DiseaseDetectionModal = ({ isOpen, onClose }) => {
-  const {
-    diseaseDetectionModals,
-    setDiseaseDetectionModals,
-    dignosisModelsTypes,
-  } = useData();
-  const { userData, latestBiometrics } = useUser();
+const UPCOMING_MODELS = ["Alzheimer’s detection", "Kidney function", "Cancer prediction"];
+const parseJson = (value, fallback) => { try { return value ? JSON.parse(value) : fallback; } catch { return fallback; } };
+
+export default function DiseaseDetectionModal({ isOpen, onClose, embedded = false, customerView = false }) {
+  const { diseaseDetectionModals, setDiseaseDetectionModals, diagnosisModelTypes } = useData();
+  const { userData, latestBiometrics, isSample } = useUser();
   const [loading, setLoading] = useState(false);
-  const [predictionLoading, setPredictionLoading] = useState(false);
-  const [openAcc, setOpenAcc] = useState(null);
+  const [predictionLoading, setPredictionLoading] = useState(null);
+  const [openAcc, setOpenAcc] = useState("");
   const [inputValuesArray, setInputValuesArray] = useState([]);
   const [errorsDict, setErrorsDict] = useState({});
   const [predictionsDict, setPredictionsDict] = useState({});
+  const [editedModels, setEditedModels] = useState({});
+  const [liveResults, setLiveResults] = useState({});
+  const autoLoadAttemptedRef = useRef(false);
+  const requestInFlightRef = useRef(false);
+  const modelType = diagnosisModelTypes[1];
 
-  const UpCommingModelsArray = useMemo(
-    () => ["Alzheimers Detection", "Kidney Function", "Cancer Prediction"],
-    []
-  );
-
-  const isModelValid = useCallback(
-    (modelId) => {
-      const currentItem = inputValuesArray.find((item) => item.id === modelId);
-      if (!currentItem) return false;
-  
-      for (const key in currentItem.features) {
-        if (!currentItem.features[key]) {
-          return false;
-        }
-      }
-      return currentItem.features;
-    },
-    [inputValuesArray]
-  );
-
-  const initializeErrorsDict = useCallback((models) => {
-    setErrorsDict(
-      models.reduce((acc, model) => {
-        acc[model.id] = "All fields are required";
-        return acc;
-      }, {})
-    );
-  }, []);
-
-  // Simplified function to pre-populate values from userData and latestBiometrics
-  const updateInputValuesArray = useCallback(
-    (models) => {
-      if (!models.length) {
-        setInputValuesArray([]);
-        return;
-      }
-
-      setInputValuesArray(
-        models.map((model) => {
-          const featureNames = JSON.parse(model.feature_names);
-
-          // Initialize features with empty values
-          const features = featureNames.reduce((acc, feature) => {
-            acc[feature] = "";
-            return acc;
-          }, {});
-
-          // Populate from userData if key exists
-          if (userData) {
-            Object.keys(features).forEach((feature) => {
-              // Use Map for case-insensitive key lookup
-              const userDataLowerCase = new Map(
-                Object.entries(userData).map(([k, v]) => [k.toLowerCase(), v])
-              );
-              const lowerFeature = feature.toLowerCase();
-
-              if (
-                userDataLowerCase.has(lowerFeature) &&
-                userDataLowerCase.get(lowerFeature) !== null
-              ) {
-                features[feature] = userDataLowerCase
-                  .get(lowerFeature)
-                  .toString();
-              }
-            });
-          }
-
-          // Populate from latestBiometrics if name matches
-          if (latestBiometrics?.length) {
-            // Create a Map for O(1) lookups
-            const biometricsMap = new Map(
-              latestBiometrics.map((biometric) => [
-                biometric.name.toLowerCase(),
-                biometric,
-              ])
-            );
-
-            Object.keys(features).forEach((feature) => {
-              const biometric = biometricsMap.get(feature.toLowerCase());
-              if (biometric?.value !== null) {
-                features[feature] = biometric?.value;
-              }
-            });
-          }
-
-          return {
-            id: model.id,
-            features,
-          };
-        })
-      );
-    },
-    [userData, latestBiometrics]
-  );
-
-  // Helper function to check if a date is expired
-  const isExpired = useCallback((expiryDate) => {
-    if (!expiryDate) return false;
-    const expiry = new Date(expiryDate);
-    const today = new Date();
-    return expiry < today;
-  }, []);
-
-  // Find biometric expiry date - memoized for performance
-  const biometricExpiryDates = useMemo(() => {
-    if (!latestBiometrics?.length) return new Map();
-    return new Map(
-      latestBiometrics.map((b) => [b.name.toLowerCase(), b.expiryDate])
-    );
-  }, [latestBiometrics]);
-
-  const getBiometricExpiryDate = useCallback(
-    (featureName) => {
-      return biometricExpiryDates.get(featureName.toLowerCase()) || null;
-    },
-    [biometricExpiryDates]
-  );
+  const initializeModels = useCallback((models) => {
+    const userValues = new Map(Object.entries(userData ?? {}).map(([key, value]) => [key.toLowerCase(), value]));
+    const biometricValues = new Map((latestBiometrics ?? []).map((item) => [item.name.toLowerCase(), item]));
+    setInputValuesArray(models.map((model) => {
+      const featureNames = parseJson(model.feature_names, []);
+      const sampleInputs = isSample ? model.sample?.inputs : null;
+      const features = featureNames.reduce((result, feature) => {
+        const accountValue = userValues.get(feature.toLowerCase());
+        const biometricValue = biometricValues.get(feature.toLowerCase())?.value;
+        result[feature] = sampleInputs?.[feature] ?? biometricValue ?? accountValue ?? "";
+        return result;
+      }, {});
+      return { id: model.id, features };
+    }));
+    setErrorsDict({});
+    setEditedModels({});
+    setLiveResults({});
+    setPredictionsDict(isSample ? Object.fromEntries(models.filter((model) => model.sample?.result).map((model) => [model.id, model.sample.result])) : {});
+    if (isSample && models[0] && !customerView) setOpenAcc(String(models[0].id));
+    if (customerView) setOpenAcc("");
+  }, [customerView, isSample, latestBiometrics, userData]);
 
   const loadModels = useCallback(async () => {
+    if (requestInFlightRef.current) return;
+    requestInFlightRef.current = true;
     setLoading(true);
-    const models = await getModels(dignosisModelsTypes[1]);
-    setDiseaseDetectionModals(models);
-    updateInputValuesArray(models);
-    initializeErrorsDict(models);
-    setLoading(false);
-  }, [
-    setDiseaseDetectionModals,
-    dignosisModelsTypes,
-    updateInputValuesArray,
-    initializeErrorsDict,
-  ]);
-
-  const handleValuesChange = useCallback((modelId, feature, value) => {
-    setInputValuesArray((prev) => {
-      const index = prev.findIndex((item) => item.id === modelId);
-      if (index === -1) return prev;
-
-      // Create a new array with just the updated item changed
-      const updated = [...prev];
-      updated[index] = {
-        ...updated[index],
-        features: {
-          ...updated[index].features,
-          [feature]: value,
-        },
-      };
-
-      // Check if all fields are filled
-      const valid = Object.values(updated[index].features).every(
-        (val) => val !== ""
-      );
-
-      // Update errors dictionary
-      setErrorsDict((prevErrors) => ({
-        ...prevErrors,
-        [modelId]: valid ? "" : "All fields are required",
-      }));
-
-      return updated;
-    });
-  }, []);
-
-  const handlePredict = useCallback(
-    (modelId) => {
-      // First check if the model is valid
-      const features = isModelValid(modelId);
-      
-      // If not valid, show error and open accordion
-      if (!features) {
-        setOpenAcc(modelId);
-        setErrorsDict((prev) => ({
-          ...prev,
-          [modelId]: "All fields are required",
-        }));
-        return; // Important! Exit the function here if validation fails
-      }
-      
-      // Only proceed with API call if validation passes
-      handlePredictRequest(modelId, features);
-    },
-    [isModelValid]
-  );
-
-  const handlePredictRequest = useCallback(async (modelId, featuresDict) => {
-    // Double-check validation before API call
-    if (!featuresDict || Object.values(featuresDict).some(value => value === "")) {
-      setErrorsDict((prev) => ({
-        ...prev,
-        [modelId]: "All fields are required",
-      }));
-      return; // Exit if validation fails
-    }
-    
     try {
-      setPredictionLoading(true);
-      setErrorsDict((prev) => ({ ...prev, [modelId]: "" }));
-
-      const predictions = await getDiseasePredictions(modelId, featuresDict);
-      if (predictions) {
-        setPredictionsDict((prev) => ({ ...prev, [modelId]: predictions }));
-      } else {
-        setErrorsDict((prev) => ({
-          ...prev,
-          [modelId]: "Something went wrong",
-        }));
+      const models = isSample ? sampleDetectionData.models : await getModels(modelType);
+      if (models.length) {
+        setDiseaseDetectionModals(models);
+        initializeModels(models);
       }
-    } catch (error) {
-      setErrorsDict((prev) => ({ ...prev, [modelId]: "An error occurred" }));
-      console.error("Prediction error:", error);
     } finally {
-      setOpenAcc(modelId);
-      setPredictionLoading(false);
+      requestInFlightRef.current = false;
+      setLoading(false);
     }
-  }, []);
+  }, [initializeModels, isSample, modelType, setDiseaseDetectionModals]);
 
-  // Memoize important impact checks to avoid recalculation
-  const impactFeatures = useMemo(() => {
-    if (!diseaseDetectionModals.length) return {};
-    return diseaseDetectionModals.reduce((acc, model) => {
-      acc[model.id] = model.max_feature_impact;
-      return acc;
-    }, {});
-  }, [diseaseDetectionModals]);
-
-  const checkIsMostImpacted = useCallback(
-    (feature, modelId) => {
-      if (!predictionsDict[modelId]) return false;
-      return impactFeatures[modelId] === feature;
-    },
-    [impactFeatures, predictionsDict]
-  );
-
-  // Initialize data when component mounts
   useEffect(() => {
-    if (isOpen && !diseaseDetectionModals.length) {
-      loadModels();
+    if (!isOpen) return;
+    if (isSample) {
+      setDiseaseDetectionModals(sampleDetectionData.models);
+      initializeModels(sampleDetectionData.models);
+    } else if (!diseaseDetectionModals.length && !autoLoadAttemptedRef.current) {
+      autoLoadAttemptedRef.current = true;
+      void loadModels();
     }
-  }, []);
+    else initializeModels(diseaseDetectionModals);
+  }, [diseaseDetectionModals, initializeModels, isOpen, loadModels]);
 
-  // Reset or initialize input values when modal opens with existing data
   useEffect(() => {
-    if (isOpen && diseaseDetectionModals.length > 0) {
-      updateInputValuesArray(diseaseDetectionModals);
-      initializeErrorsDict(diseaseDetectionModals);
-    }
-  }, [
-    isOpen,
-    diseaseDetectionModals,
-    updateInputValuesArray,
-    initializeErrorsDict,
-  ]);
+    if (!isOpen || embedded) return undefined;
+    const closeOnEscape = (event) => { if (event.key === "Escape") onClose(); };
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.addEventListener("keydown", closeOnEscape);
+    return () => { document.body.style.overflow = previousOverflow; document.removeEventListener("keydown", closeOnEscape); };
+  }, [isOpen, onClose, embedded]);
 
-  // Cleanup when modal closes
-  useEffect(() => {
-    if (!isOpen) {
-      setPredictionsDict({});
-      setOpenAcc(null);
-    }
-  }, [isOpen]);
+  const inputForModel = useCallback((modelId) => inputValuesArray.find((item) => item.id === modelId)?.features ?? {}, [inputValuesArray]);
+  const handleValuesChange = (modelId, feature, value) => {
+    setInputValuesArray((current) => current.map((item) => item.id === modelId ? { ...item, features: { ...item.features, [feature]: value } } : item));
+    setErrorsDict((current) => ({ ...current, [modelId]: "" }));
+    setEditedModels((current) => ({ ...current, [modelId]: true }));
+    setLiveResults((current) => {
+      const next = { ...current };
+      delete next[modelId];
+      return next;
+    });
+    setPredictionsDict((current) => {
+      const next = { ...current };
+      delete next[modelId];
+      return next;
+    });
+  };
 
+  const handlePredict = async (modelId) => {
+    const features = inputForModel(modelId);
+    if (!Object.keys(features).length || Object.values(features).some((value) => value === "" || value == null)) {
+      setOpenAcc(String(modelId));
+      setErrorsDict((current) => ({ ...current, [modelId]: "Complete every required field before running detection." }));
+      return;
+    }
+    setPredictionLoading(modelId);
+    setErrorsDict((current) => ({ ...current, [modelId]: "" }));
+    try {
+      const prediction = await getDiseasePredictions(modelId, features);
+      if (prediction) {
+        setPredictionsDict((current) => ({ ...current, [modelId]: prediction }));
+        setLiveResults((current) => ({ ...current, [modelId]: true }));
+      }
+      else setErrorsDict((current) => ({ ...current, [modelId]: "A result could not be generated. Please try again." }));
+    } catch {
+      setErrorsDict((current) => ({ ...current, [modelId]: "Detection is temporarily unavailable." }));
+    } finally {
+      setOpenAcc(String(modelId));
+      setPredictionLoading(null);
+    }
+  };
+
+  const expiryByName = useMemo(() => new Map((latestBiometrics ?? []).map((item) => [item.name.toLowerCase(), item.expiryDate])), [latestBiometrics]);
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="relative bg-white shadow-lg w-[95vw] min-w-[300px] max-w-2xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl 2xl:max-w-6xl p-6 transition-all duration-300 max-h-[90vh] overflow-y-auto">
-                <FaTimes className="cursor-pointer text-2xl right-5 top-5 absolute" onClick={onClose} />
-        
+    <div className={embedded ? "clinical-tool" : "bio-modal-overlay"} onMouseDown={(event) => { if (!embedded && event.target === event.currentTarget) onClose(); }}>
+      <section className={embedded ? "clinical-tool-content" : "bio-modal max-w-6xl !p-0"} role={embedded ? undefined : "dialog"} aria-modal={embedded ? undefined : true} aria-labelledby={customerView ? undefined : "detection-title"} aria-label={customerView ? "Disease prediction models" : undefined}>
+        {!customerView && <header className="sticky top-0 z-10 flex items-start justify-between gap-5 border-b bg-white/95 p-5 backdrop-blur sm:p-7">
+          <div className="flex items-start gap-4">
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-[var(--biolabs-aqua)] text-[var(--biolabs-teal)]"><Beaker aria-hidden="true" size={21} /></span>
+            <div><p className="bio-eyebrow !mb-1">Biochemical Models</p><h2 id="detection-title" className="text-2xl font-medium tracking-[-.03em]">Disease Pattern Detection</h2><p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--biolabs-slate)]">{isSample ? "Explore validated sample outputs, or edit any input to run a live calculation." : "Review prefilled health data, complete any missing fields, and run a selected model."}</p></div>
+          </div>
+          {!embedded && <button type="button" className="bio-icon-button shrink-0" aria-label="Close disease detection" onClick={onClose}><X aria-hidden="true" size={18} /></button>}
+        </header>}
 
-        <div className="flex flex-col gap-3 animate-dropdown">
-          {loading ? (
-            <LoadingComponent  />
-          ) : !diseaseDetectionModals.length ? (
-            <ErrorComponent handleTryAgain={loadModels} />
-          ) : (
-            <Accordion
-              type="single"
-              value={openAcc}
-              collapsible
-              onValueChange={setOpenAcc}
-              className="mt-5"
-            >
+        <div className="p-5 sm:p-7">
+          {loading ? <LoadingComponent text="Loading detection models" /> : !diseaseDetectionModals.length ? <ErrorComponent heading="Detection Models Are Unavailable" buttonText="Try again" handleTryAgain={loadModels} /> : (
+            <Accordion type="single" value={openAcc} collapsible onValueChange={setOpenAcc} className={customerView ? "grid grid-cols-1 items-start gap-4 sm:grid-cols-2" : "space-y-4"}>
               {diseaseDetectionModals.map((model) => {
-                const features = JSON.parse(model.feature_names);
-                const featureMaps = model.feature_maps
-                  ? JSON.parse(model.feature_maps)
-                  : {};
+                const features = parseJson(model.feature_names, []);
+                const featureMaps = parseJson(model.feature_maps, {});
+                const outputLabels = Object.keys(parseJson(model.output_maps, {}));
+                const prediction = predictionsDict[model.id];
+                const ModelIcon = model.name === "Diabetes" ? Droplets : Activity;
                 return (
-                  <AccordionItem
-                    key={model.id}
-                    value={model.id}
-                    className="mb-5"
-                  >
-                    <AccordionTrigger className="hover:no-underline px-4">
-                      <div className="flex w-full items-center justify-between">
-                        <div className="flex flex-col gap-2">
-                          <div className="flex items-center gap-2">
-                            <h1 className="text-3xl font-semibold">
-                              {model.name}
-                            </h1>
-                            <p className="text-sm text-muted-foreground">
-                              ({(model.accuracy * 100).toFixed(2)}%)
-                            </p>
-                          </div>
-                        </div>
-                      </div>
+                  <AccordionItem key={model.id} value={String(model.id)} className={`min-w-0 overflow-hidden rounded-xl px-0 ${customerView ? "border-0 bg-white shadow-[0_10px_30px_rgba(11,23,57,0.09)] transition-shadow hover:shadow-[0_14px_36px_rgba(11,23,57,0.13)] motion-reduce:transition-none data-[state=open]:sm:col-span-2" : "border"}`}>
+                    <AccordionTrigger className={`${customerView ? "items-start px-4 py-5 sm:px-5" : "px-5 py-5 sm:px-6"} text-left hover:no-underline`}>
+                      {customerView ? <span className="flex min-w-0 flex-1 flex-col pr-2">
+                        <span className="flex items-center gap-3"><span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[var(--biolabs-aqua)] text-[var(--biolabs-teal)]"><ModelIcon aria-hidden="true" size={18} /></span><span className="text-lg font-semibold leading-6">{model.name}</span></span>
+                        {prediction ? <span className="mt-5 grid grid-cols-2 gap-2.5">{outputLabels.map((label) => { const active = prediction.prediction === label; const probability = Number(prediction.probabilities?.[label]); return <span key={label} className={`min-w-0 rounded-xl px-3 py-3 ${active ? "bg-[var(--biolabs-teal)] text-white shadow-[0_6px_16px_rgba(8,127,122,0.22)]" : "bg-[var(--biolabs-porcelain)] text-[var(--biolabs-ink)]"}`}><span className={`block truncate text-[11px] font-semibold leading-4 ${active ? "text-white" : "text-[var(--biolabs-slate)]"}`}>{label}</span><span className="mt-1 block text-lg font-medium tabular-nums">{probability.toFixed(1)}%</span><span className={`mt-2 block h-1 overflow-hidden rounded-full ${active ? "bg-white/30" : "bg-[var(--biolabs-cloud)]"}`}><span className={`block h-full rounded-full ${active ? "bg-white" : "bg-[var(--biolabs-teal)]"}`} style={{ width: `${probability}%` }} /></span></span>; })}</span> : <span className="mt-5 text-sm text-[var(--biolabs-slate)]">Awaiting calculation</span>}
+                        <span className="mt-5 text-xs font-semibold text-[var(--biolabs-teal)]">View inputs</span>
+                      </span> : <span className="flex w-full flex-col justify-between gap-2 pr-3 sm:flex-row sm:items-center">
+                        <span className="block text-lg font-semibold">{model.name}</span>
+                        <span className="flex flex-wrap items-center gap-2">{isSample && editedModels[model.id] && !liveResults[model.id] && <span className="rounded-md bg-[var(--biolabs-warning-bg)] px-3 py-2 text-xs font-semibold text-[var(--biolabs-warning)]">Edited · live calculation required</span>}{isSample && liveResults[model.id] && <span className="bio-status-normal"><CheckCircle2 aria-hidden="true" size={12} />Live result</span>}{model.accuracy != null && <span className="bio-status-normal"><CheckCircle2 aria-hidden="true" size={12} />Reported model accuracy {(Number(model.accuracy) * 100).toFixed(1)}%</span>}</span>
+                      </span>}
                     </AccordionTrigger>
-                    <AccordionContent>
-                      {errorsDict[model.id] && (
-                        <p className="text-md font-semibold ml-4 text-red-500 my-3">
-                          {errorsDict[model.id]}
-                        </p>
-                      )}
-                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 p-4">
+                    <AccordionContent className={`${customerView ? "border-t bg-white px-3 pb-5 pt-4 sm:px-4" : "border-t px-5 pb-6 pt-5 sm:px-6"}`}>
+                      {errorsDict[model.id] && <p role="alert" className="mb-5 rounded-md bg-[var(--biolabs-danger-bg)] px-4 py-3 text-sm font-semibold text-[var(--biolabs-danger)]">{errorsDict[model.id]}</p>}
+                      <div className={`grid gap-3 ${customerView ? "grid-cols-1 xl:grid-cols-2" : "sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"}`}>
                         {features.map((feature) => {
-                          const expiryDate = getBiometricExpiryDate(feature);
-                          const expired = isExpired(expiryDate);
-                          const isMostImpacted = checkIsMostImpacted(
-                            feature,
-                            model.id
-                          );
-                          const inputValue =
-                            inputValuesArray.find(
-                              (item) => item.id === model.id
-                            )?.features[feature] || "";
-
+                          const expiry = expiryByName.get(feature.toLowerCase());
+                          const expired = !isSample && expiry && new Date(expiry) < new Date();
+                          const mostImpacted = prediction && model.max_feature_impact === feature;
+                          const value = inputForModel(model.id)[feature] ?? "";
                           return (
-                            <div key={feature} className="space-y-1">
-                              <Label
-                                className={`text-xs truncate block ${
-                                  isMostImpacted ? "text-red-500" : ""
-                                }`}
-                              >
-                                {isMostImpacted ? "* " : ""}
-                                {feature}
-                              </Label>
-
-                              {expiryDate && expired && (
-                                <p className="text-xs text-red-800">
-                                  Expired on:{" "}
-                                  {new Date(expiryDate).toLocaleDateString()}
-                                </p>
-                              )}
-
-                              {featureMaps[feature] ? (
-                                <Select
-                                  onValueChange={(val) =>
-                                    handleValuesChange(model.id, feature, val)
-                                  }
-                                  value={inputValue}
-                                >
-                                  <SelectTrigger
-                                    className={`rounded-none ${
-                                      isMostImpacted
-                                        ? "border-2 border-red-500 text-red-500"
-                                        : ""
-                                    } ${expired ? "border-amber-500" : ""}`}
-                                  >
-                                    <SelectValue
-                                      placeholder={`Select ${feature}`}
-                                      className={
-                                        isMostImpacted ? "text-red-500" : ""
-                                      }
-                                    />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {Object.keys(featureMaps[feature]).map(
-                                      (key) => (
-                                        <SelectItem key={key} value={key}>
-                                          {key}
-                                        </SelectItem>
-                                      )
-                                    )}
-                                  </SelectContent>
-                                </Select>
-                              ) : (
-                                <Input
-                                  type="number"
-                                  value={inputValue}
-                                  onChange={(e) =>
-                                    handleValuesChange(
-                                      model.id,
-                                      feature,
-                                      e.target.value
-                                    )
-                                  }
-                                  className={`rounded-none ${
-                                    isMostImpacted
-                                      ? "border-2 border-red-500 text-red-500"
-                                      : ""
-                                  } ${expired ? "border-amber-500" : ""}`}
-                                />
-                              )}
-                            </div>
+                            <label key={feature} className={`rounded-lg border p-3 ${mostImpacted ? "border-[var(--biolabs-teal)] bg-[var(--biolabs-aqua)]" : "bg-white"}`}>
+                              <span className="bio-label flex items-center justify-between gap-2"><span className="truncate">{feature}</span>{mostImpacted && <Sparkles aria-label="Most influential input" className="shrink-0 text-[var(--biolabs-teal)]" size={13} />}</span>
+                              {featureMaps[feature] ? <select className="bio-input" value={value} onChange={(event) => handleValuesChange(model.id, feature, event.target.value)}><option value="">Select a value</option>{Object.keys(featureMaps[feature]).map((option) => <option key={option} value={option}>{option}</option>)}</select> : <input className="bio-input" type="number" step="any" value={value} placeholder="Enter value" onChange={(event) => handleValuesChange(model.id, feature, event.target.value)} />}
+                              {expired && <span className="mt-2 flex items-center gap-1 text-[10px] font-semibold text-[var(--biolabs-warning)]"><Clock3 aria-hidden="true" size={11} />Expired {new Date(expiry).toLocaleDateString()}</span>}
+                            </label>
                           );
                         })}
                       </div>
-                    </AccordionContent>
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 my-5 px-5">
-                      <div className="grid grid-cols-2 sm:flex sm:flex-row gap-4 w-full">
-                        {Object.entries(JSON.parse(model.output_maps)).map(
-                          ([label], idx) => {
-                            const prediction = predictionsDict[model.id];
-                            const isActive = prediction?.prediction === label;
-                            const probability =
-                              prediction?.probabilities?.[label];
-
-                            return (
-                              <Button
-                                key={idx}
-                                variant={isActive ? "destructive" : "secondary"}
-                                className="w-full sm:w-auto sm:min-w-[120px] rounded-none"
-                              >
-                                {label}{" "}
-                                {probability !== undefined
-                                  ? `(${probability.toFixed(1)}%)`
-                                  : ""}
-                              </Button>
-                            );
-                          }
-                        )}
-                        {predictionsDict[model.id] && (
-                          <p className="text-gray-500 text-xs">
-                            *most impacted
-                          </p>
-                        )}
+                      <div className="mt-6 flex flex-col justify-between gap-5 border-t pt-5 lg:flex-row lg:items-center">
+                        <div className="flex flex-wrap gap-2">{outputLabels.map((label) => { const active = prediction?.prediction === label; const probability = prediction?.probabilities?.[label]; return <span key={label} className={`rounded-md border px-3 py-2 text-xs font-semibold ${active ? "border-[var(--biolabs-teal)] bg-[var(--biolabs-aqua)] text-[var(--biolabs-teal-dark)]" : "bg-[var(--biolabs-mist)] text-[var(--biolabs-slate)]"}`}>{label}{probability != null ? ` · ${Number(probability).toFixed(1)}%` : ""}</span>; })}</div>
+                        <button type="button" className="bio-button-primary w-full lg:w-auto" disabled={predictionLoading != null || (isSample && !editedModels[model.id])} onClick={() => handlePredict(model.id)}>{predictionLoading === model.id ? <><Loader2 aria-hidden="true" className="animate-spin" size={16} />Running model</> : isSample && !editedModels[model.id] ? "Sample result loaded" : liveResults[model.id] ? "Recalculate" : isSample ? "Run live detection" : "Run detection"}</button>
                       </div>
-                      <Button
-                        variant="default"
-                        size="lg"
-                        className="mr-10 w-1/2 xl:w-1/4 rounded-none"
-                        disabled={predictionLoading}
-                        onClick={() => handlePredict(model.id)}
-                      >
-                        {predictionLoading ? (
-                          <Loader className="animate-spin" />
-                        ) : (
-                          "Predict"
-                        )}
-                      </Button>
-                    </div>
+                      {prediction && <p className="mt-4 flex items-start gap-2 text-xs leading-5 text-[var(--biolabs-slate)]"><AlertTriangle aria-hidden="true" className="mt-0.5 shrink-0" size={13} />{isSample && !editedModels[model.id] ? "This is a stored result from synthetic demonstration data. Edit an input to calculate a new result using the live service." : "The highlighted input had the greatest influence on this model output."}</p>}
+                    </AccordionContent>
                   </AccordionItem>
                 );
               })}
             </Accordion>
           )}
-          <h1 className="text-xl w-full text-center font-semibold ml-4 underline underline-offset-4 ">
-            Upcomming Models
-          </h1>
-          <div className="flex flex-wrap justify-center gap-4 mt-5">
-            {UpCommingModelsArray.map((model) => (
-              <div
-                key={model}
-                className="group bg-card/80 backdrop-blur-sm p-4 shadow-md border border-border/30"
-              >
-                <p className="text-sm flex items-center justify-center font-semibold">
-                  {model}
-                </p>
-              </div>
-            ))}
-          </div>
+
+          {!customerView && <section className="mt-10 border-t pt-7" aria-labelledby="upcoming-models-heading"><p className="bio-eyebrow !mb-2">Research Pipeline</p><h3 id="upcoming-models-heading" className="font-semibold">Upcoming Models</h3><div className="mt-4 grid gap-3 sm:grid-cols-3">{UPCOMING_MODELS.map((model) => <div key={model} className="bio-panel p-4 text-sm font-semibold text-[var(--biolabs-slate)]">{model}</div>)}</div></section>}
+          {!customerView && <p className="mt-7 flex items-start gap-2 rounded-lg bg-[var(--biolabs-warning-bg)] p-4 text-xs leading-5 text-[var(--biolabs-warning)]"><ShieldAlert aria-hidden="true" className="mt-0.5 shrink-0" size={14} />Model outputs are informational screening signals and must not be treated as a confirmed diagnosis. Consult a qualified clinician.</p>}
         </div>
-      </div>
+      </section>
     </div>
   );
-};
-
-export default DiseaseDetectionModal;
+}

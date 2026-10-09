@@ -9,6 +9,7 @@ import {
   Legend,
 } from "chart.js";
 import { Bar } from "react-chartjs-2";
+import { CHART_COLORS } from "@/lib/chart-theme";
 
 ChartJS.register(
   CategoryScale,
@@ -25,9 +26,9 @@ const BiochemicalsBarGraph = ({ biochemicalsArray, isHyper, isHealthy }) => {
   }
 
   // Set the appropriate title based on the parameters
-  let graphTitle = "Minimum Range <= Normal Biochemicals => Maximum Range";
+  let graphTitle = "Measurements within reference range";
   if (!isHealthy) {
-    graphTitle = isHyper ? "Hyper Biochemicals" : "Hypo Biochemicals";
+    graphTitle = isHyper ? "Measurements above range" : "Measurements below range";
   }
 
   // Determine if we should use horizontal bars:
@@ -46,8 +47,8 @@ const BiochemicalsBarGraph = ({ biochemicalsArray, isHyper, isHealthy }) => {
 
   // Determine bar color based on status
   const barColor = isHealthy
-    ? "rgba(75, 192, 75, 0.8)"
-    : "rgba(255, 99, 132, 0.8)";
+    ? CHART_COLORS.successFill
+    : isHyper ? CHART_COLORS.dangerFill : CHART_COLORS.warningFill;
 
   const data = {
     labels: labels,
@@ -55,9 +56,7 @@ const BiochemicalsBarGraph = ({ biochemicalsArray, isHyper, isHealthy }) => {
       {
         data: values,
         backgroundColor: barColor,
-        borderColor: isHealthy
-          ? "rgba(75, 192, 75, 1)"
-          : "rgba(255, 99, 132, 1)",
+        borderColor: isHealthy ? CHART_COLORS.success : isHyper ? CHART_COLORS.danger : CHART_COLORS.warning,
         borderWidth: 1,
         barPercentage: isHorizontal ? 0.5 : 0.3,
         categoryPercentage: isHorizontal ? 0.7 : 0.6,
@@ -103,7 +102,7 @@ const BiochemicalsBarGraph = ({ biochemicalsArray, isHyper, isHealthy }) => {
           // For horizontal charts, the y-axis grid lines (horizontal lines) remain.
           // For vertical charts, they are horizontal grid lines.
           display: true,
-          color: "#e0e0e0",
+          color: CHART_COLORS.cloud,
           drawBorder: false,
         },
         ticks: {
@@ -111,7 +110,7 @@ const BiochemicalsBarGraph = ({ biochemicalsArray, isHyper, isHealthy }) => {
           // For horizontal charts, the y-axis shows categories so display them.
           display: isHorizontal ? true : false,
           autoSkip: false,
-          color: "#333",
+          color: CHART_COLORS.slate,
           font: {
             size: 7,
           },
@@ -158,7 +157,7 @@ const BiochemicalsBarGraph = ({ biochemicalsArray, isHyper, isHealthy }) => {
   };
 
   return (
-    <div className={`${isHorizontal ? "h-[75vh] " : "h-[40vh] "} xl:h-full w-full shadow-[0_0_8px_2px_rgba(0,0,0,0.05)] rounded`}>
+    <div className={`${isHorizontal ? "min-h-[520px]" : "min-h-[250px]"} bio-panel w-full p-3`}>
       <Bar data={data} options={options} />
     </div>
   );

@@ -1,37 +1,6 @@
-import React from "react";
 import ConditionsTree from "./ConditionsTree";
 
-const HyperHypoConditions = ({ hyperBiochemicals, hypoBiochemicals }) => {
-   
-
-  const noBiochemicals = (type) => {
-    return <h1 className="text-center text-gray-500">No {type} Biochemicals</h1>;
-  };
-
-  return (
-    <div className="w-full h-full">
-      <h1 className="text-2xl font-bold w-full text-center my-5">
-        Conditions May Have
-      </h1>
-      <div className="w-full flex flex-col gap-10">
-        <div className="w-full">
-          {(!hyperBiochemicals || hyperBiochemicals.length === 0) 
-            ? noBiochemicals("Hyper") 
-            : (<ConditionsTree biochemicalsArray={hyperBiochemicals} isHyper={true}/>)}
-        </div>
-        <div className="w-full">
-          {(!hypoBiochemicals || hypoBiochemicals.length === 0) 
-            ? noBiochemicals("Hypo") 
-            : (<ConditionsTree biochemicalsArray={hypoBiochemicals} isHyper={false}/>)}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default HyperHypoConditions;
-
-
-  
-  
-  
+export default function HyperHypoConditions({ hyperBiochemicals, hypoBiochemicals }) {
+  const empty = (label) => <div className="grid min-h-28 place-items-center bg-[var(--biolabs-porcelain)] p-5 text-center text-sm text-[var(--biolabs-slate)]">No {label.toLowerCase()} biochemical values.</div>;
+  return <div className="grid items-start gap-6 lg:grid-cols-2"><section><div className="mb-3 flex items-center justify-between"><h3 className="font-semibold">Above Range</h3><span className="bio-status-danger">Elevated</span></div>{!hyperBiochemicals?.length ? empty("Elevated") : <ConditionsTree biochemicalsArray={hyperBiochemicals} isHyper/>}</section><section><div className="mb-3 flex items-center justify-between"><h3 className="font-semibold">Below Range</h3><span className="bio-status-warning">Reduced</span></div>{!hypoBiochemicals?.length ? empty("Reduced") : <ConditionsTree biochemicalsArray={hypoBiochemicals} isHyper={false}/>}</section></div>;
+}

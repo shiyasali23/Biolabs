@@ -1,281 +1,72 @@
-import React, { useState } from "react";
-import {
-  ChevronUp,
-  ChevronDown,
-  CheckCircle,
-  TrendingDown,
-  TrendingUp,
-  Clock,
-  AlertOctagon,
-} from "lucide-react";
-import BiochemicalLineGraphModal from "./BiochemicalLineGraphModal"; // Ensure this import exists
+"use client";
+import { useMemo, useState } from "react";
+import { ChevronDown, Loader2 } from "lucide-react";
+import BiochemicalLineGraphModal from "./BiochemicalLineGraphModal";
+import { useUser } from "@/contexts/userContext";
+import { updateBiometrics } from "@/lib/user-api";
+import { rangeStatus, statusLabels, statusClasses, formatNumber } from "@/lib/clinical-display";
 
-const LatestBiometricsTable = ({ latestBiometrics, biometrics }) => {
-  const [sortField, setSortField] = useState("category");
-  const [sortDirection, setSortDirection] = useState("asc");
-  const [lineGraphModalOpen, setLineGraphModalOpen] = useState(false);
-  const [selectedBiochemical, setSelectedBiochemical] = useState(null);
+const PREVIEW_COUNT=3;
+const RESULT_GROUPS=[{id:"high",title:"Above range",statuses:["high"]},{id:"low",title:"Below range",statuses:["low"]},{id:"other",title:"Other results",statuses:["normal","unknown"]}];
+const SUMMARY=[["all","Total"],["high","Above"],["low","Below"],["normal","Within"]];
+const keyOf=item=>String(item.id ?? item.name);
 
-  const currentDate = new Date();
+export default function LatestBiometricsTable({ latestBiometrics=[], biometrics, editable=false, showSummary=false }) {
+  const { isSample, handleAuthResponse, applySampleValues } = useUser();
+  const [query,setQuery]=useState(""); const [filter,setFilter]=useState("all"); const [selected,setSelected]=useState(null); const [expanded,setExpanded]=useState(null); const [sort,setSort]=useState("name");
+  const [open3,setOpen3]=useState({});
+  const [drafts,setDrafts]=useState({});
+  const [saving,setSaving]=useState(false);
+  const [message,setMessage]=useState(null);
 
+  const items=latestBiometrics;
+  const rows=useMemo(()=>items.filter(item=>(`${item.name} ${item.category}`).toLowerCase().includes(query.toLowerCase()) && (filter==="all" || rangeStatus(item)===filter)).sort((a,b)=>String(a[sort]??"").localeCompare(String(b[sort]??""),undefined,{numeric:true})),[items,query,filter,sort]);
+  const groups=useMemo(()=>RESULT_GROUPS.map(group=>({...group,items:rows.filter(item=>group.statuses.includes(rangeStatus(item)))})).filter(group=>group.items.length),[rows]);
+  const counts=useMemo(()=>{const c={all:items.length,high:0,low:0,normal:0};items.forEach(item=>{const s=rangeStatus(item);if(s in c)c[s]+=1;});return c;},[items]);
 
-  const handleSort = (field) => {
-    if (sortField === field) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-    } else {
-      setSortField(field);
-      // For the condition column, default to descending so "High" comes first
-      setSortDirection(field === "isHyper" ? "desc" : "asc");
-    }
+  const open=item=>{const full=biometrics?.[item.category]?.[item.name];setSelected(full?{...full,name:item.name,category:item.category}:item);};
+  const live=item=>{const d=drafts[keyOf(item)];return d!==undefined&&d!==""?{...item,value:d}:item;};
+  const status=item=>{const s=rangeStatus(live(item));return <span className={statusClasses[s]}>{statusLabels[s]}</span>;};
+  const range=item=>`${formatNumber(item.healthy_min)}–${formatNumber(item.healthy_max)} ${item.unit||""}`;
+  const edit=(item,value)=>{setMessage(null);setDrafts(current=>{const next={...current};if(value!==""&&Number(value)===Number(item.value))delete next[keyOf(item)];else next[keyOf(item)]=value;return next;});};
+  const changeCount=Object.keys(drafts).length;
+
+  const save=async()=>{
+    const entries=Object.entries(drafts);
+    if(entries.some(([,value])=>value===""||!Number.isFinite(Number(value)))){setMessage({type:"error",text:"Enter a number for each changed value."});return;}
+    // Sample edits stay in this session; signed-in edits come back from the server.
+    if(isSample){applySampleValues(Object.fromEntries(entries.map(([key,value])=>[key,Number(value)])));setDrafts({});setMessage({type:"success",text:"Saved for this sample session."});return;}
+    setSaving(true);
+    try{
+      const now=new Date().toISOString();
+      const unexpired=latestBiometrics.filter(({expiryDate})=>!expiryDate||expiryDate>=now).map(({id,scaledValue})=>({id,value:scaledValue}));
+      const response=await updateBiometrics(entries.map(([id,value])=>({id:Number(id),value:Number(value)})),unexpired);
+      if(!response)throw new Error("update failed");
+      await handleAuthResponse(response);
+      setDrafts({});setMessage({type:"success",text:"Measurements saved."});
+    }catch{setMessage({type:"error",text:"Could not save. Previous values are unchanged."});}
+    finally{setSaving(false);}
   };
 
-  const sortedData = [...latestBiometrics].sort((a, b) => {
-    if (sortField === "isHyper") {
-      // Map isHyper to a rank: High (true)=3, Normal (null)=2, Low (false)=1
-      const rank = (val) => (val === true ? 3 : val === null ? 2 : 1);
-      const rankA = rank(a.isHyper);
-      const rankB = rank(b.isHyper);
-      return sortDirection === "asc" ? rankA - rankB : rankB - rankA;
-    } else {
-      if (a[sortField] < b[sortField]) return sortDirection === "asc" ? -1 : 1;
-      if (a[sortField] > b[sortField]) return sortDirection === "asc" ? 1 : -1;
-      return 0;
-    }
-  });
+  const valueCell=item=>editable
+    ? <span className="result-edit"><input type="number" step="any" inputMode="decimal" className={`result-input${drafts[keyOf(item)]!==undefined?" is-changed":""}`} aria-label={`${item.name} value`} value={drafts[keyOf(item)]??item.value??""} onChange={e=>edit(item,e.target.value)}/><span className="bio-caption">{item.unit}</span></span>
+    : <><strong className="font-medium">{formatNumber(item.value)}</strong> <span className="bio-caption">{item.unit}</span></>;
 
-  const getTimeDiffText = (dateStr) => {
-    const diff = new Date(dateStr) - currentDate;
-    const abs = Math.abs(diff);
-    const days = Math.floor(abs / 86400000);
-    if (days)
-      return diff < 0
-        ? `Expired ${days} day${days > 1 ? "s" : ""} ago`
-        : `Expires in ${days} day${days > 1 ? "s" : ""}`;
-    const hours = Math.floor(abs / 3600000);
-    if (hours)
-      return diff < 0
-        ? `Expired ${hours} hour${hours > 1 ? "s" : ""} ago`
-        : `Expires in ${hours} hour${hours > 1 ? "s" : ""}`;
-    const minutes = Math.floor(abs / 60000);
-    return diff < 0
-      ? `Expired ${minutes} minute${minutes > 1 ? "s" : ""} ago`
-      : `Expires in ${minutes} minute${minutes > 1 ? "s" : ""}`;
-  };
-
-  const headers = [
-    { field: "category", label: "Category" },
-    { field: "name", label: "Name" },
-    { field: "value", label: "Value" },
-    { field: "isHyper", label: "Condition" },
-  ];
-
-  // When a row is clicked, use its category and name to retrieve the full object from `biometrics`
-  const handleRowClick = (item) => {
-    const { category, name } = item;
-    const biochemicalData = biometrics?.[category]?.[name];
-    // Attach name and category if needed
-    setSelectedBiochemical(biochemicalData ? { ...biochemicalData, name, category } : item);
-    setLineGraphModalOpen(true);
-  };
-
-  
-
-  return (
-    <div className="h-[100vh] overflow-y-auto w-full overflow-hidden flex flex-col bg-white  ">
-      <div className="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
-        <div className="flex items-center gap-6">
-          <div className="flex  items-center gap-2">
-            <TrendingUp size={16} className="text-red-500" />
-            <span className="text-xs text-gray-600">
-              Value Above Range
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <TrendingDown size={16} className="text-red-500" />
-            <span className="text-xs text-gray-600">
-              Value Below Range
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <CheckCircle size={16} className="text-green-500" />
-            <span className="text-xs text-gray-600">
-              Within Normal Range
-            </span>
-          </div>
-        </div>
+  return <>
+    {showSummary&&<div className="result-summary" role="group" aria-label="Filter by range">{SUMMARY.map(([value,label])=><button key={value} type="button" aria-pressed={filter===value} className={`result-summary-item result-summary-${value}`} onClick={()=>setFilter(filter===value&&value!=="all"?"all":value)}><strong>{counts[value]}</strong><span>{label}</span></button>)}</div>}
+    <div className="result-tools"><input aria-label="Search measurements" className="bio-input" placeholder="Search a marker or category" value={query} onChange={e=>setQuery(e.target.value)}/><select aria-label="Filter by reference range" className="bio-input" value={filter} onChange={e=>setFilter(e.target.value)}><option value="all">All results</option>{Object.entries(statusLabels).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select><select aria-label="Sort measurements" className="bio-input" value={sort} onChange={e=>setSort(e.target.value)}><option value="name">Sort by marker</option><option value="category">Sort by category</option><option value="value">Sort by value</option></select></div>
+    {!showSummary&&!editable&&<p className="bio-caption mb-3" aria-live="polite">{rows.length} measurements</p>}
+    {message&&<p role={message.type==="error"?"alert":"status"} className={`result-message result-message-${message.type}`}>{message.text}</p>}
+    {groups.map(group=>{const showAll=open3[group.id];const visible=showAll?group.items:group.items.slice(0,PREVIEW_COUNT);const hidden=group.items.length-PREVIEW_COUNT;const listId=`results-${group.id}`;return <section key={group.id} className="result-group" aria-labelledby={`${listId}-title`}>
+      <header className="result-group-head"><h3 id={`${listId}-title`}><span className={`result-group-dot result-group-dot-${group.id}`} aria-hidden="true"/>{group.title}</h3><span className="bio-caption">{group.items.length}</span></header>
+      <div id={listId}>
+        <div className="bio-table-shell desktop-results"><table className="result-table"><caption className="sr-only">{group.title} measurements</caption><thead><tr><th>Marker</th><th>Result</th><th>Reference range</th><th>Status</th><th><span className="sr-only">History</span></th></tr></thead><tbody>{visible.map(item=><tr key={keyOf(item)}><td><strong className="font-medium">{item.name}</strong><span className="block bio-caption mt-1">{item.category}</span></td><td>{valueCell(item)}</td><td>{range(item)}</td><td>{status(item)}</td><td><button className="bio-icon-button" aria-label={`View ${item.name} history`} onClick={()=>open(item)}>↗</button></td></tr>)}</tbody></table></div>
+        <div className="mobile-results">{visible.map(item=>{const k=keyOf(item);return <article className="mobile-result" key={k}><div className="mobile-result-main"><strong className="font-medium">{item.name}</strong>{editable?valueCell(item):<span className="result-value">{formatNumber(item.value)} <span className="font-normal">{item.unit}</span></span>}<span>{status(item)}</span><button type="button" className="mobile-result-toggle" aria-expanded={expanded===k} aria-label={`${expanded===k?"Hide":"Show"} ${item.name} details`} onClick={()=>setExpanded(expanded===k?null:k)}>{expanded===k?"−":"+"}</button></div>{expanded===k&&<div className="result-range"><p>{item.category} · Reference {range(item)}</p><button className="bio-button-secondary mt-3" onClick={()=>open(item)}>View history →</button></div>}</article>;})}</div>
       </div>
-
-      <div className="overflow-auto flex-1">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50 sticky top-0">
-            <tr>
-              {headers.map(({ field, label }) => (
-                <th
-                  key={field}
-                  onClick={() => handleSort(field)}
-                  className="px-6 py-3 text-left text-xs text-gray-500 uppercase tracking-wider cursor-pointer "
-                >
-                  <div className="flex items-center space-x-1">
-                    <span>{label}</span>
-                    {sortField === field &&
-                      (sortDirection === "asc" ? (
-                        <ChevronUp size={16} />
-                      ) : (
-                        <ChevronDown size={16} />
-                      ))}
-                  </div>
-                </th>
-              ))}
-              <th className="px-6 py-3 text-left text-xs text-gray-500 uppercase tracking-wider">
-                Range
-              </th>
-              <th
-                onClick={() => handleSort("expiryDate")}
-                className="px-6 py-3 text-left text-xs text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-              >
-                <div className="flex items-center space-x-1">
-                  <span>Expiry Status</span>
-                  {sortField === "expiryDate" &&
-                    (sortDirection === "asc" ? (
-                      <ChevronUp size={16} />
-                    ) : (
-                      <ChevronDown size={16} />
-                    ))}
-                </div>
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {sortedData.map(
-              (
-                {
-                  id,
-                  category,
-                  name,
-                  value,
-                  unit,
-                  isHyper,
-                  healthy_min,
-                  healthy_max,
-                  expiryDate,
-                },
-                index
-              ) => (
-                <tr
-                  key={id || index}
-                  onClick={() => handleRowClick({ category, name, value, unit, isHyper, healthy_min, healthy_max, expiryDate })}
-                  className={`${
-                    isHyper === null ? "bg-gray-100" : "bg-red-50"
-                  } hover:bg-gray-50 transition-colors cursor-pointer`}
-                >
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-xs text-gray-900">{category}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-xs text-gray-900">{name}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-xs text-gray-900">
-                      {value} {unit}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center space-x-2">
-                      {isHyper === null ? (
-                        <CheckCircle className="text-green-500" size={18} />
-                      ) : isHyper ? (
-                        <TrendingUp className="text-red-500" size={18} />
-                      ) : (
-                        <TrendingDown className="text-red-500" size={18} />
-                      )}
-                      <span
-                        className={`text-xs ${
-                          isHyper === null ? "text-green-700" : "text-red-700"
-                        }`}
-                      >
-                        {isHyper === null ? "Normal" : isHyper ? "High" : "Low"}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center space-x-3">
-                      <span
-                        className={`px-2 py-1 rounded-md text-xs ${
-                          isHyper === false
-                            ? "bg-red-200 text-red-800"
-                            : "bg-gray-200 text-gray-800"
-                        }`}
-                      >
-                        Min: {healthy_min}
-                      </span>
-                      <div className="w-20 h-2 bg-gray-200  overflow-hidden">
-                        <div
-                          className={`h-full ${
-                            isHyper === null ? "bg-green-500" : "bg-red-500"
-                          }`}
-                          style={{
-                            width: `${Math.min(
-                              100,
-                              Math.max(
-                                0,
-                                ((value - healthy_min) /
-                                  (healthy_max - healthy_min)) *
-                                  100
-                              )
-                            )}%`,
-                            maxWidth: "100%",
-                          }}
-                        />
-                      </div>
-                      <span
-                        className={`px-2 py-1 rounded-md text-xs ${
-                          isHyper === true
-                            ? "bg-red-200 text-red-800"
-                            : "bg-gray-200 text-gray-800"
-                        }`}
-                      >
-                        Max: {healthy_max}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center gap-2">
-                      {new Date(expiryDate) < currentDate ? (
-                        <AlertOctagon size={18} className="text-orange-500" />
-                      ) : (
-                        <Clock size={18} className="text-blue-500" />
-                      )}
-                      <div className="flex flex-col">
-                        <span
-                          className={`text-xs ${
-                            new Date(expiryDate) < currentDate
-                              ? "text-orange-700"
-                              : "text-blue-700"
-                          }`}
-                        >
-                          {new Date(expiryDate) < currentDate ? "Expired" : "Valid"}
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          {getTimeDiffText(expiryDate)}
-                        </span>
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-              )
-            )}
-          </tbody>
-        </table>
-      </div>
-      {lineGraphModalOpen && (
-        <BiochemicalLineGraphModal
-          isOpen={lineGraphModalOpen}
-          onClose={() => setLineGraphModalOpen(false)}
-          selectedBiochemical={selectedBiochemical}
-        />
-      )}
-    </div>
-  );
-};
-
-export default LatestBiometricsTable;
+      {hidden>0&&<button type="button" className="result-more" aria-expanded={!!showAll} aria-controls={listId} onClick={()=>setOpen3(state=>({...state,[group.id]:!state[group.id]}))}>{showAll?"Show less":`Show ${hidden} more`}<ChevronDown size={16} aria-hidden="true" className={showAll?"rotate-180":undefined}/></button>}
+    </section>;})}
+    {!rows.length&&<p className="bio-panel p-6">No measurements match your search. Try another marker or range filter.</p>}
+    {editable&&changeCount>0&&<div className="result-savebar" role="region" aria-label="Unsaved changes"><span>{changeCount} {changeCount===1?"change":"changes"}</span><div><button type="button" className="bio-button-secondary" onClick={()=>{setDrafts({});setMessage(null);}} disabled={saving}>Discard</button><button type="button" className="bio-button-primary" onClick={save} disabled={saving}>{saving?<><Loader2 size={16} className="animate-spin" aria-hidden="true"/>Saving</>:"Save"}</button></div></div>}
+    {selected&&<BiochemicalLineGraphModal isOpen onClose={()=>setSelected(null)} selectedBiochemical={selected}/>}
+  </>;
+}

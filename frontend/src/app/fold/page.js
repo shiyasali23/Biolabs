@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import {
   Brain,
   Database,
@@ -19,7 +19,6 @@ import {
 } from "lucide-react";
 
 const BioAIResearchPlatform = () => {
-  const [currentStage, setCurrentStage] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [selectedHypothesis, setSelectedHypothesis] = useState(null);
@@ -143,12 +142,11 @@ const BioAIResearchPlatform = () => {
         requestAnimationFrame(animate);
       } else {
         setIsProcessing(false);
-        setCurrentStage(prev => Math.min(prev + 1, stages.length - 1));
       }
     };
     
     requestAnimationFrame(animate);
-  }, [stages.length]);
+  }, []);
 
   return (
     <div className="min-h-screen bg-slate-900">

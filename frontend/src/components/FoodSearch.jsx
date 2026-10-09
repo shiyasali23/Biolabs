@@ -1,117 +1,12 @@
 "use client";
+import { useState } from "react";
+import { Apple, FlaskConical, Search } from "lucide-react";
 
-import React, { useState, useRef } from "react";
-import { FaHeartbeat, FaSearch } from "react-icons/fa";
-import { FaBowlFood } from "react-icons/fa6";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandItem,
-  CommandList,
-  CommandShortcut,
-} from "@/components/ui/command";
-
-const FoodSearch = ({ nutrientsData, foodsData, handleSelectedItem }) => {
-  const [query, setQuery] = useState("");
-  const searchBoxRef = useRef(null);
-
-  // Function to calculate relevance based on index of the query in the name
-  const getRelevance = (name) =>
-    name.toLowerCase().indexOf(query.toLowerCase());
-
-  // Filter and sort foods based on query relevance
-  const filteredFoods = query
-    ? foodsData
-        .filter((food) => food.name.toLowerCase().includes(query.toLowerCase()))
-        .sort((a, b) => getRelevance(a.name) - getRelevance(b.name))
-    : [];
-
-  // Filter and sort nutrients based on query relevance
-  const filteredNutrients = query
-    ? nutrientsData
-        .filter((nutrient) =>
-          nutrient.name.toLowerCase().includes(query.toLowerCase())
-        )
-        .sort((a, b) => getRelevance(a.name) - getRelevance(b.name))
-    : [];
-
-  const handleSelect = (item, isFood) => {
-    handleSelectedItem(item.name, isFood);
-    setQuery("");
-  };
-
-  return (
-    <div className="w-full xl:w-1/2 mx-auto relative  px-2" ref={searchBoxRef}>
-      <FaSearch className="absolute right-5  text-2xl text-gray-400 top-1/2 transform -translate-y-1/2 text-xl" />
-
-      <input
-        type="text"
-        placeholder="Select a foods or nutrients "
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        className="w-full p-2 text-center border shadow-sm text-gray-800 text-base"
-      />
-
-      {query && (
-        <div className="absolute z-50 w-full  bg-white  border shadow-md">
-          <Command className=" border-0 shadow-none w-full">
-            <CommandList className="max-h-[300px] overflow-y-auto">
-              {filteredFoods.length === 0 && filteredNutrients.length === 0 ? (
-                <CommandEmpty>No results found.</CommandEmpty>
-              ) : (
-                <div>
-                  {filteredFoods.length > 0 && (
-                    <CommandGroup heading="Foods">
-                      {filteredFoods.map((food, index) => (
-                        <CommandItem
-                          key={`food-${index}`}
-                          onSelect={() => handleSelect(food, true)}
-                        >
-                          <FaBowlFood className="text-green-500 mr-2" />
-                          <span className="flex-1 truncate">
-                            {food.name} -{" "}
-                            <span className="text-xs">
-                              ({food.subCategory})
-                            </span>
-                          </span>
-                          <CommandShortcut className={"font-bold text-xs"}>
-                            {food.category}
-                          </CommandShortcut>
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  )}
-
-                  {filteredNutrients.length > 0 && (
-                    <CommandGroup heading="Nutrients">
-                      {filteredNutrients.map((nutrient, index) => (
-                        <CommandItem
-                          key={`nutrient-${index}`}
-                          onSelect={() => handleSelect(nutrient, false)}
-                        >
-                          <FaHeartbeat className="text-red-500 mr-2" />
-                          <span className="flex-1 truncate">
-                            {nutrient.name} -{" "}
-                            <span className="text-xs">
-                              ({nutrient.category})
-                            </span>
-                          </span>
-                          <CommandShortcut className={"font-bold text-xs"}>
-                            Nutrient
-                          </CommandShortcut>
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  )}
-                </div>
-              )}
-            </CommandList>
-          </Command>
-        </div>
-      )}
-    </div>
-  );
-};
-
-export default FoodSearch;
+export default function FoodSearch({ nutrientsData, foodsData, handleSelectedItem }) {
+  const [query,setQuery]=useState(""); const normalized=query.trim().toLowerCase();
+  const rank=(name)=>name.toLowerCase().indexOf(normalized);
+  const foods=normalized?foodsData.filter((item)=>item.name.toLowerCase().includes(normalized)).sort((a,b)=>rank(a.name)-rank(b.name)).slice(0,8):[];
+  const nutrients=normalized?nutrientsData.filter((item)=>item.name.toLowerCase().includes(normalized)).sort((a,b)=>rank(a.name)-rank(b.name)).slice(0,8):[];
+  const choose=(item,isFood)=>{handleSelectedItem(item.name,isFood);setQuery("");};
+  return <div className="relative z-30 w-full"><label htmlFor="nutrition-search" className="sr-only">Search foods and nutrients</label><Search className="pointer-events-none absolute left-4 top-3.5 text-[var(--biolabs-slate)]" size={19}/><input id="nutrition-search" type="search" className="bio-input h-12 pl-12 pr-4" placeholder="Search a food or nutrient" value={query} onChange={(event)=>setQuery(event.target.value)} autoComplete="off" onKeyDown={event=>{if(event.key==="Escape")setQuery("");}} aria-controls="nutrition-results"/>{normalized&&<div id="nutrition-results" className="absolute inset-x-0 top-[calc(100%+8px)] max-h-80 overflow-y-auto border bg-white p-2 shadow-xl" style={{borderColor:"var(--biolabs-cloud)",borderRadius:"var(--radius)"}}>{!foods.length&&!nutrients.length?<p className="p-5 text-center text-sm text-[var(--biolabs-slate)]">No matching foods or nutrients.</p>:<>{foods.length>0&&<div><p className="px-3 pb-2 pt-3 text-[10px] font-bold uppercase tracking-[.18em] text-[var(--biolabs-slate)]">Foods</p>{foods.map((food)=><button type="button" key={food.name} onClick={()=>choose(food,true)} className="flex w-full items-center gap-3 rounded-md px-3 py-3 text-left transition hover:bg-[var(--biolabs-porcelain)]"><Apple size={16} className="text-[var(--biolabs-teal)]"/><span className="flex-1 text-sm font-medium">{food.name}</span><span className="text-xs text-[var(--biolabs-slate)]">{food.subCategory??food.category}</span></button>)}</div>}{nutrients.length>0&&<div><p className="px-3 pb-2 pt-4 text-[10px] font-bold uppercase tracking-[.18em] text-[var(--biolabs-slate)]">Nutrients</p>{nutrients.map((nutrient)=><button type="button" key={nutrient.name} onClick={()=>choose(nutrient,false)} className="flex w-full items-center gap-3 rounded-md px-3 py-3 text-left transition hover:bg-[var(--biolabs-porcelain)]"><FlaskConical size={16} className="text-[var(--biolabs-blue)]"/><span className="flex-1 text-sm font-medium">{nutrient.name}</span><span className="text-xs text-[var(--biolabs-slate)]">{nutrient.category}</span></button>)}</div>}</>}</div>}</div>;
+}
