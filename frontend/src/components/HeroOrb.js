@@ -29,13 +29,13 @@ export default function HeroOrb() {
       <span className="bio-grid-field" aria-hidden="true" />
 
       <span className="bio-orbit bio-orbit-teal" aria-hidden="true">
-        <i />
+        <i><b /></i>
       </span>
       <span className="bio-orbit bio-orbit-gold" aria-hidden="true">
-        <i />
+        <i><b /></i>
       </span>
       <span className="bio-orbit bio-orbit-violet" aria-hidden="true">
-        <i />
+        <i><b /></i>
       </span>
 
       <span className="bio-orbit-field" aria-hidden="true" />

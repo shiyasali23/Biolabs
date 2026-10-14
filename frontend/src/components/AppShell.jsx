@@ -7,9 +7,9 @@ export default function AppShell({ children, fontClass, modal }) {
   const segments = useSelectedLayoutSegments();
   const path = "/" + segments.filter(segment => !segment.startsWith("(")).join("/");
   // Scroll reveal for [data-reveal] sections (styles in globals.css). One observer per route; content that mounts
-  // later (data, dialogs) is picked up by the mutation observer. Skipped entirely under reduced motion.
+  // later (data, dialogs) is picked up by the mutation observer. Under reduced motion the CSS makes it a plain fade.
   useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || !("IntersectionObserver" in window)) return;
+    if (!("IntersectionObserver" in window)) return;
     const reveal = new IntersectionObserver(entries => {
       for (const entry of entries) if (entry.isIntersecting) { entry.target.setAttribute("data-revealed", ""); reveal.unobserve(entry.target); }
     }, { rootMargin: "0px 0px -8% 0px", threshold: 0.12 });

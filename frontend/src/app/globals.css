@@ -278,9 +278,12 @@ button, a { -webkit-tap-highlight-color: transparent; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; animation-delay: 0s !important; transition-duration: .01ms !important; transition-delay: 0s !important; }
+  /* Movement stops, but entrances still fade in place, as the OS setting asks (a dissolve instead of a slide). */
+  .motion-reveal [data-reveal][data-revealed=""] { animation-name: bio-fade !important; animation-duration: var(--motion-reveal) !important; }
 }
+@keyframes bio-fade { from { opacity: 0; } }
 
-/* Scroll reveal. AppShell adds .motion-reveal only when motion is allowed and IntersectionObserver exists;
+/* Scroll reveal. AppShell adds .motion-reveal when IntersectionObserver exists (a fade only under reduced motion);
    elements already on screen at that moment get data-revealed="instant" and never animate, so hydration
    never hides visible content. The animation uses the independent translate property, so components keep
    full control of their own transform, transition and hover styles. */

@@ -82,11 +82,18 @@
 .signal-path-violet { stroke: url(#signal-violet); }
 .signal-nodes { fill: #fff; stroke: #698f86; stroke-width: 1.3; vector-effect: non-scaling-stroke; }
 .bio-orbit { --orbit-color: #4aa99b; position: absolute; top: 50%; left: 50%; z-index: 4; width: 92%; height: 48%; border: 1px solid rgb(74 140 128 / .38); border-color: color-mix(in srgb,var(--orbit-color) 44%,transparent); border-radius: 50%; pointer-events: none; transform: translate(-50%,-50%) rotate(var(--orbit-angle)); }
-.bio-orbit i { position: absolute; width: 10px; height: 10px; border: 2px solid #fff; border-radius: 50%; background: var(--orbit-color); box-shadow: 0 3px 12px color-mix(in srgb,var(--orbit-color) 48%,transparent); offset-path: ellipse(49% 46% at 50% 50%); offset-distance: var(--orbit-start); animation: hero-orbit var(--orbit-speed) linear infinite; animation-play-state: paused; }
-.restored-hero-orbit.is-orbiting .bio-orbit i { animation-play-state: running; }
-.bio-orbit-teal { --orbit-color: #3fa596; --orbit-angle: -11deg; --orbit-start: 8%; --orbit-speed: 15s; }
-.bio-orbit-gold { --orbit-color: #a99a55; --orbit-angle: 72deg; --orbit-start: 42%; --orbit-speed: 19s; width: 82%; height: 56%; }
-.bio-orbit-violet { --orbit-color: #6f557c; --orbit-angle: 28deg; --orbit-start: 73%; --orbit-speed: 23s; width: 88%; height: 38%; }
+/* Orbit dots: <i> swings across the ring and <b> up and down, two eased sine motions a quarter turn apart, so the dot
+   traces the ellipse clockwise from 3 o'clock (starting --orbit-phase of the way round). Composited translate works in
+   every browser; offset-path: ellipse() only reached Safari in iOS 18 and hid the dots on older iPhones. */
+.bio-orbit i,.bio-orbit b { position: absolute; inset: 0; animation: orbit-x calc(var(--orbit-speed) / 2) cubic-bezier(.37,0,.63,1) calc(var(--orbit-speed) * var(--orbit-phase) * -1) infinite alternate paused; }
+.bio-orbit b { animation-name: orbit-y; animation-delay: calc(var(--orbit-speed) * (var(--orbit-phase) + .75) * -1); }
+.bio-orbit b::after { content: ""; position: absolute; top: 50%; left: 50%; width: 10px; height: 10px; margin: -5px; border: 2px solid #fff; border-radius: 50%; background: var(--orbit-color); box-shadow: 0 3px 12px color-mix(in srgb,var(--orbit-color) 48%,transparent); will-change: transform; }
+.restored-hero-orbit.is-orbiting .bio-orbit i,.restored-hero-orbit.is-orbiting .bio-orbit b { animation-play-state: running; }
+@keyframes orbit-x { from { translate: 49% 0; } to { translate: -49% 0; } }
+@keyframes orbit-y { from { translate: 0 46%; } to { translate: 0 -46%; } }
+.bio-orbit-teal { --orbit-color: #3fa596; --orbit-angle: -11deg; --orbit-phase: .08; --orbit-speed: 15s; }
+.bio-orbit-gold { --orbit-color: #a99a55; --orbit-angle: 72deg; --orbit-phase: .42; --orbit-speed: 19s; width: 82%; height: 56%; }
+.bio-orbit-violet { --orbit-color: #6f557c; --orbit-angle: 28deg; --orbit-phase: .73; --orbit-speed: 23s; width: 88%; height: 38%; }
 
 /* Desktop: size the whole orbital system from the orb's diameter (--orb), not the wide art column.
    Percentages of the column made the near-vertical gold orbit taller than the hero (it crossed the
@@ -113,14 +120,6 @@
 /* Hero text sits on the same 36px inset as the product-card text below it. */
 @media (min-width: 901px) {
   .restored-hero-copy { padding-left: 36px; }
-}
-
-@supports not (offset-path: ellipse(49% 46% at 50% 50%)) {
-  .bio-orbit i { display: none; }
-}
-
-@keyframes hero-orbit {
-  to { offset-distance: calc(var(--orbit-start) + 100%); }
 }
 
 
@@ -278,7 +277,12 @@
 
 @media (prefers-reduced-motion: reduce) {
   .restored-try,.restored-try-icon,.restored-try-icon svg,.bio-redesign .home-landing.home-restored .service-card { transition: none; }
-  .bio-orbit i { animation: none; }
+  /* The hero still fades in, without the rise. */
+  .hero-line > span,.restored-hero-subtitle,.restored-try,.home-values-item,.restored-hero-orbit .bio-orbit,.restored-hero-orbit .bio-orbit-field,.restored-hero-orbit .bio-signal-pattern,.restored-hero-orbit .bio-grid-field { animation-name: hero-fade-in !important; animation-duration: .6s !important; }
+  /* Dots rest on their rings at their starting point. */
+  .bio-orbit i,.bio-orbit b { animation: none; }
+  .bio-orbit i { translate: calc(cos(var(--orbit-phase) * 1turn) * 49%) 0; }
+  .bio-orbit b { translate: 0 calc(sin(var(--orbit-phase) * 1turn) * 46%); }
 }
 
 /* Homepage footer and shared section rhythm. */
