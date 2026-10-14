@@ -6,12 +6,79 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ArrowLeft, ArrowRight, Check, ClipboardCheck, RotateCcw } from "lucide-react";
 import CustomSlider from "@/components/ui/CustomSlider";
-import { useHealth } from "@/contexts/healthContext";
 import { useUser } from "@/contexts/userContext";
+
+// Wellbeing check-in questions (previously served through a context with no other consumer).
+const questions = [
+  {
+    question: "Mental Health",
+    input: ["Depression", "Anxiety", "Neither"],
+  },
+  {
+    question: "Gender",
+    skippable: true,
+    input: ["Male", "Female"],
+  },
+  {
+    question: "Age Group",
+    skippable: true,
+    input: ["15-25", "26-35", "36-45", "46+"],
+  },
+  
+  {
+    question: "Sleep",
+    input: ["Poor", "Average", "Good", "Excellent"],
+  },
+  {
+    question: "Exercise",
+    input: ["Never", "Rarely", "Always"],
+    followup: {
+      question: "Contact with sunlight",
+      input: 3,
+      skippable: true,
+    },
+  },
+  {
+    question: "Nutritional quality",
+    input: ["Poor", "Average", "Good", "Excellent"],
+  },
+  {
+    question: "Stress",
+    input: ["Most of the time", "Sometimes", "Rarely"],
+    followup: {
+      question: "Job satisfaction",
+      input: ["Dissatisfied", "Neutral", "Satisfied"],
+      skippable: true,
+    },
+  },
+  {
+    question: "Social wellbeing",
+    input: ["Low", "Moderate", "Strong"],
+  },
+  {
+    question: "Fatigue",
+    skippable: true,
+    input: ["Always", "Sometimes", "No"],
+  },
+  {
+    question: "Financial stability",
+    skippable: true,
+    input: ["Low", "Moderate", "Stable"],
+  },
+  {
+    question: "Relationship status",
+    skippable: true,
+    input: ["Yes", "No"],
+    followup: {
+      question: "Relationship satisfaction",
+      skippable: true,
+      input: [ "Average", "Good", "Excellent"],
+    },
+  },
+];
 
 export default function HealthPage() {
   const { userData } = useUser();
-  const questions = useHealth();
   const [inputData, setInputData] = useState({});
   const [index, setIndex] = useState(0);
   const [isFollowup, setIsFollowup] = useState(false);

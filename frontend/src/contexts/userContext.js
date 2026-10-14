@@ -1,9 +1,8 @@
 "use client";
-import React, { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { processBiometricData } from "@/utils/biometrics-worker";
 import { cacheManager } from "@/utils/cache-wroker";
 import { processDummyUserData } from "@/utils/dummy-data-worker";
-import { useIsClient } from "@/hooks/useIsClient";
 
 const UserContext = createContext();
 
@@ -11,7 +10,6 @@ const UserContext = createContext();
 const USER_CACHE_KEYS = ["userData", "healthScore", "biometrics", "latestBiometrics", "hyperBiochemicals", "hypoBiochemicals", "biometricsEntries", "foodsScore", "records"];
 
 export const UserProvider = ({ children }) => {
-  const isClient = useIsClient();
   const [isLogined, setIsLogined] = useState(false);
   const [isSample, setIsSample] = useState(false);
   const [userData, setUserData] = useState(null);
@@ -37,18 +35,7 @@ export const UserProvider = ({ children }) => {
   };
 
   const restoreFromCache = () => {
-    const cachedData = cacheManager.multiGet([
-      "token",
-      "userData",
-      "latestBiometrics",
-      "healthScore",
-      "biometrics",
-      "biometricsEntries",
-      "hyperBiochemicals",
-      "hypoBiochemicals",
-
-      "foodsScore",
-    ]);
+    const cachedData = cacheManager.multiGet(["token", "userData", "latestBiometrics", "healthScore", "biometrics", "biometricsEntries", "hyperBiochemicals", "hypoBiochemicals", "foodsScore"]);
 
     if (cachedData.token && cachedData.userData) {
       setIsLogined(true);
@@ -66,14 +53,11 @@ export const UserProvider = ({ children }) => {
     return false;
   };
 
+  // Runs once on mount: restore the cached session, then stop loading.
   useEffect(() => {
-    if (!isClient) return;
-    setUserDataLoading(true);
     restoreFromCache();
     setUserDataLoading(false);
-    // restoreFromCache only reads storage and calls state setters.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isClient]);
+  }, []);
 
   const handleAuthResponse = async (data) => {
     setUserDataLoading(true);
@@ -97,7 +81,6 @@ export const UserProvider = ({ children }) => {
     ) {
       setBiometricsEntries(data.biometrics_entries);
 
-      // The processBiometricData now handles API calls internally and returns processed data
       const {
         healthScore,
         biometrics,
@@ -124,9 +107,7 @@ export const UserProvider = ({ children }) => {
 
     if (data.foods_score?.foods_score) {
       setFoodsScore(data.foods_score.foods_score);
-      cacheManager.multiSet({
-        foodsScore: data.foods_score.foods_score,
-      });
+      cacheManager.set("foodsScore", data.foods_score.foods_score);
     }
 
     setUserDataLoading(false);
@@ -162,17 +143,9 @@ export const UserProvider = ({ children }) => {
   const loadDummyUserData = async () => {
     // Loaded on demand so the sample dataset is not shipped with every page.
     const { default: dummyUserData } = await import("@/jsons/dummy-user-data.json");
-    if (!dummyUserData) return false;
+    if (!dummyUserData?.user || !dummyUserData.foods_score?.foods_score || !dummyUserData.biometrics_entries) return false;
 
-    if (!dummyUserData.user) return false;
-
-    if (!dummyUserData.foods_score?.foods_score) return false;
-
-    if (!dummyUserData.biometrics_entries) return false;
-
-    const processedDummyData = processDummyUserData(
-      dummyUserData.biometrics_entries
-    );
+    const processedDummyData = processDummyUserData(dummyUserData.biometrics_entries);
     if (!processedDummyData) return false;
 
     const {

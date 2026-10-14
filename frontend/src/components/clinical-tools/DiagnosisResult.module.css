@@ -1,44 +1,93 @@
-.result { min-width: 0; outline-offset: 4px; }
-.heading { padding: 4px 0 24px; border-bottom: 1px solid #dce3d8; }
-.heading > p:first-child { margin: 0 0 10px; color: #6a7964; font: 500 12px/1.4 var(--font-plex),sans-serif; }
-.heading h2 { max-width: 26ch; margin: 0; color: #17372a; font: 550 clamp(25px,2.8vw,32px)/1.2 var(--font-manrope),sans-serif; letter-spacing: -.035em; overflow-wrap: anywhere; }
-.heading .description { max-width: 66ch; margin: 14px 0 0; color: #3e5143; font: 400 15px/1.65 var(--font-plex),sans-serif; }
-.layout { display: grid; grid-template-columns: minmax(0,1.35fr) minmax(0,1fr); gap: 28px; align-items: start; padding-top: 24px; }
-.report,.scores { min-width: 0; }
-.result h3 { margin: 0 0 16px; color: #203d2c; font: 600 16px/1.4 var(--font-manrope),sans-serif; letter-spacing: -.015em; }
-.reportSection { padding-bottom: 22px; margin-bottom: 22px; border-bottom: 1px solid #e0e6dc; }
-.report ul { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px 22px; margin: 0; padding: 0; list-style: none; }
-.report li { position: relative; padding-left: 12px; color: #344b3c; font-size: 14px; line-height: 1.6; overflow-wrap: anywhere; }
-.report li::before { content: ''; position: absolute; top: .7em; left: 0; width: 3px; height: 3px; border-radius: 50%; background: #819275; }
-.scores { position: sticky; top: 0; padding: 18px; background: #f5f7f2; border-radius: 10px; }
-.scores dl { margin: 0; }
-.score { padding: 12px 0; border-bottom: 1px solid #e0e6db; }
-.score:first-child { padding-top: 0; }
-.score:last-child { border-bottom: 0; padding-bottom: 0; }
-.score dt { margin-bottom: 9px; color: #3e5143; font: 500 14px/1.45 var(--font-plex),sans-serif; overflow-wrap: anywhere; }
-.score dd { display: flex; align-items: center; gap: 12px; margin: 0; }
-.track { display: block; flex: 1; height: 5px; overflow: hidden; background: #e0e6db; border-radius: 3px; }
-.track > span { display: block; height: 100%; background: #93a18c; border-radius: inherit; }
-.percent { min-width: 45px; color: #3e5143; text-align: right; font: 500 14px/1 var(--font-plex),sans-serif; font-variant-numeric: tabular-nums; }
-.score[data-predicted] dt { color: #1c4930; font-weight: 600; }
-.score[data-predicted] .track > span { background: #2d704b; }
-.score[data-predicted] .percent { color: #1c4930; font-weight: 600; }
-.reviewed summary,.allScores summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; list-style: none; cursor: pointer; color: #385637; font: 500 14px/1.4 var(--font-plex),sans-serif; }
+/* Diagnosis result: one screen on desktop. Prediction band on top, the three reference lists side by
+   side (precautions in two inner columns), model scores in a fixed column on the right. */
+.result { min-width: 0; }
+.result:focus { outline: none; } /* focus is moved here for screen readers only */
+
+.heading { padding: 0 0 clamp(18px,2.6vh,26px); border-bottom: 1px solid #e1e6dc; }
+.heading > p:first-child { margin: 0 0 6px; color: #56685b; font: 500 12px/1.4 var(--font-plex),sans-serif; }
+.heading h2 { max-width: 26ch; margin: 0; color: #10241b; font: 500 clamp(28px,min(4.2vh,2.8vw),40px)/1.1 var(--font-manrope),sans-serif; letter-spacing: -.03em; overflow-wrap: anywhere; }
+.heading .description { max-width: 72ch; margin: 10px 0 0; color: #3a4d40; font: 400 clamp(15px,min(1.9vh,1.2vw),17px)/1.55 var(--font-plex),sans-serif; }
+
+.layout { display: grid; grid-template-columns: minmax(0,1fr) 340px; gap: 36px; align-items: start; padding-top: clamp(20px,3vh,30px); }
+.report { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.9fr) minmax(0,1fr); grid-template-areas: "medications precautions diets" "reviewed reviewed reviewed"; gap: 0 28px; min-width: 0; }
+.reportSection { min-width: 0; }
+.reportSection[data-section="medications"] { grid-area: medications; }
+.reportSection[data-section="precautions"] { grid-area: precautions; }
+.reportSection[data-section="diets"] { grid-area: diets; }
+
+.result h3 { display: flex; align-items: baseline; gap: 8px; margin: 0 0 clamp(12px,1.7vh,16px); color: #17372a; font: 600 clamp(15px,min(1.9vh,1.2vw),17px)/1.3 var(--font-manrope),sans-serif; letter-spacing: -.01em; }
+.result h3 small { color: #7a8a74; font: 500 12px/1 var(--font-plex),sans-serif; font-variant-numeric: tabular-nums; }
+.report ul { display: grid; gap: clamp(8px,min(1.2vh,.78vw),11px); margin: 0; padding: 0; list-style: none; }
+.reportSection[data-section="precautions"] ul { display: block; columns: 2; column-gap: 28px; }
+.reportSection[data-section="precautions"] li { break-inside: avoid; margin-bottom: clamp(8px,min(1.2vh,.78vw),11px); }
+.report li { position: relative; padding-left: 14px; color: #24382c; font: 400 clamp(14.5px,min(1.8vh,1.12vw),16px)/1.45 var(--font-plex),sans-serif; overflow-wrap: anywhere; }
+.report li::before { content: ""; position: absolute; top: .62em; left: 0; width: 4px; height: 4px; border-radius: 50%; background: #8a9c84; }
+
+.reviewed { grid-area: reviewed; margin-top: clamp(14px,2.2vh,22px); border-top: 1px solid #e1e6dc; }
+.reviewed summary,.allScores summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; list-style: none; cursor: pointer; color: #2b4a35; font: 500 14px/1.4 var(--font-plex),sans-serif; }
 .reviewed summary::-webkit-details-marker,.allScores summary::-webkit-details-marker { display: none; }
-.reviewed summary small { margin-left: 8px; color: #52644d; font-size: 13px; font-weight: 400; }
+.reviewed summary small { margin-left: 8px; color: #6a7964; font-size: 13px; font-weight: 400; }
+.reviewed summary svg,.allScores summary svg { flex-shrink: 0; transition: transform .3s cubic-bezier(.16,1,.3,1); }
 .reviewed[open] summary svg,.allScores[open] summary svg { transform: rotate(180deg); }
-.reviewed ul { padding-top: 10px; }
-.allScores { border-top: 1px solid #dce3d5; margin-top: 16px; }
-.allScores dl { padding-top: 12px; }
-.unavailable { margin: 0; font-size: 12px; color: #6a7863; }
-@media(max-width:700px) { .layout { gap: 20px; grid-template-columns: minmax(0,1.1fr) minmax(0,1fr); } .report ul { grid-template-columns: 1fr; } .scores { padding: 14px; } }
-@media(max-width:600px) {
- .heading { padding-bottom: 20px; }
- .heading h2 { font-size: 26px; }
- .layout { display: flex; flex-direction: column; gap: 24px; padding-top: 20px; }
- .scores { position: static; order: -1; width: 100%; }
- .report { width: 100%; }
- .report ul { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px 16px; }
- .scores h3 { margin-bottom: 14px; }
- .score { padding: 10px 0; }
+.reviewed ul { grid-template-columns: repeat(4,minmax(0,1fr)); padding: 4px 0 6px; }
+
+.scores { position: sticky; top: 0; min-width: 0; padding: 18px 20px 6px; background: #f4f6f0; border-radius: 12px; }
+.scores h3 { margin-bottom: 6px; }
+.scores dl { margin: 0; }
+.score { padding: clamp(10px,min(1.4vh,.9vw),13px) 0; border-bottom: 1px solid #e3e8de; }
+.score:last-child { border-bottom: 0; }
+.score dt { display: flex; justify-content: space-between; gap: 12px; color: #33473a; font: 500 clamp(14px,min(1.7vh,1.08vw),15.5px)/1.35 var(--font-plex),sans-serif; overflow-wrap: anywhere; }
+.score dd { margin: 7px 0 0; }
+.track { display: block; height: 5px; overflow: hidden; background: #dfe5da; border-radius: 2px; }
+.track > span { display: block; height: 100%; background: #9aab95; border-radius: inherit; }
+.percent { flex-shrink: 0; color: #33473a; font: 500 clamp(14px,min(1.7vh,1.08vw),15.5px)/1.35 var(--font-plex),sans-serif; font-variant-numeric: tabular-nums; }
+.score[data-predicted] dt,.score[data-predicted] .percent { color: #10241b; font-weight: 600; }
+.score[data-predicted] .track > span { background: #203c30; }
+.allScores { border-top: 1px solid #dce3d5; }
+.allScores dl { padding-bottom: 8px; }
+.unavailable { margin: 0 0 12px; font-size: 13px; color: #5d6c58; }
+
+@media (prefers-reduced-motion: reduce) { .reviewed summary svg,.allScores summary svg { transition: none; } }
+
+/* Narrow desktop / tablet: medications and diet share a column beside precautions. */
+@media (max-width: 1180px) {
+  .layout { grid-template-columns: minmax(0,1fr) 290px; gap: 24px; }
+  .report { grid-template-columns: minmax(0,1fr) minmax(0,1.6fr); grid-template-areas: "medications precautions" "diets precautions" "reviewed reviewed"; }
+  .reportSection[data-section="diets"] { margin-top: 22px; }
+  .reviewed ul { grid-template-columns: repeat(3,minmax(0,1fr)); }
 }
+/* Tablet portrait: scores on top in two columns, then medications | diet, then precautions. */
+@media (max-width: 860px) {
+  .layout { grid-template-columns: 1fr; gap: 20px; }
+  .scores { position: static; order: -1; }
+  .scores > dl,.allScores dl { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); column-gap: 28px; }
+  .score:last-child { border-bottom: 1px solid #e3e8de; }
+  .report { grid-template-columns: repeat(2,minmax(0,1fr)); grid-template-areas: "medications diets" "precautions precautions" "reviewed reviewed"; gap: 0 28px; }
+  .reportSection[data-section="diets"] { margin-top: 0; }
+  .reportSection[data-section="precautions"] { margin-top: 22px; }
+}
+@media (max-width: 600px) {
+  .heading { padding-bottom: 16px; }
+  .heading h2 { font-size: 26px; }
+  .heading .description { font-size: 14px; }
+  .layout { gap: 20px; padding-top: 18px; }
+  .report { grid-template-columns: 1fr; grid-template-areas: "medications" "precautions" "diets" "reviewed"; gap: 22px; }
+  .reportSection[data-section="diets"],.reportSection[data-section="precautions"] { margin-top: 0; }
+  .scores > dl,.allScores dl { display: block; }
+  .score:last-child { border-bottom: 0; }
+  .report ul { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px 16px; }
+  .reportSection[data-section="precautions"] ul { column-gap: 16px; }
+  .reportSection[data-section="precautions"] li { margin-bottom: 8px; }
+  .report li { font-size: 14px; }
+  .reviewed { margin-top: 0; }
+  .reviewed ul { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .scores { padding: 14px 14px 4px; }
+}
+
+/* Result arrival: the three regions settle in, then the score bars draw from zero (data, not decoration). */
+@keyframes resultIn { from { opacity: 0; translate: 0 10px; } }
+@keyframes barGrow { from { scale: 0 1; } }
+.heading { animation: resultIn .5s var(--motion-ease) backwards; }
+.report { animation: resultIn .55s var(--motion-ease) .08s backwards; }
+.scores { animation: resultIn .55s var(--motion-ease) .14s backwards; }
+.track > span { transform-origin: left center; animation: barGrow .9s var(--motion-ease) backwards; animation-delay: calc(.25s + var(--bar, 0) * 70ms); }

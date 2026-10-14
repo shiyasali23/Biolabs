@@ -1,6 +1,8 @@
 import { headingCase } from "@/lib/heading-case";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import BiochemicalLineGraph from "./BiochemicalLineGraph";
+import dynamic from "next/dynamic";
+// Charts mount only inside an opened category, so chart.js loads on first open.
+const BiochemicalLineGraph = dynamic(() => import("./BiochemicalLineGraph"), { ssr: false, loading: () => <div className="bio-card min-h-64" aria-hidden="true" /> });
 
 export default function BiometricsAccordion({ biometrics }) {
   const categories = biometrics ? Object.keys(biometrics) : [];

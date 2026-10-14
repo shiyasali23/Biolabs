@@ -1,18 +1,10 @@
-// src/utils/vault-utils.js
-
+// OCR is loaded only when an image is attached; the worker is always released.
 export const extractTextFromImage = async (imageFile) => {
-  // OCR is loaded only when an image is attached.
   const { createWorker } = await import("tesseract.js");
   const worker = await createWorker("eng");
   try {
-    const {
-      data: { text },
-    } = await worker.recognize(imageFile);
+    return (await worker.recognize(imageFile)).data.text;
+  } finally {
     await worker.terminate();
-    return text;
-  } catch (error) {
-    await worker.terminate();
-    console.error("OCR Error:", error);
-    throw error;
   }
 };

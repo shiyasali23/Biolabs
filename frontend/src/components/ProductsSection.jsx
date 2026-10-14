@@ -3,10 +3,14 @@ import WorkspaceEntry from "./WorkspaceEntry";
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 import styles from "./ProductsSection.module.css";
+// Static imports: hashed URLs are served with immutable cache headers, so repeat visits never refetch.
+import foldMolecule from "../../public/images/biolabs/fold-molecular-dark.webp";
+import eplimoClosed from "../../public/images/biolabs/eplimo-kit-closed.webp";
+import eplimoOpen from "../../public/images/biolabs/eplimo-kit-open.webp";
 
-function ProductCard({ id, tone, audience, title, description, action, destination }) {
+function ProductCard({ id, tone, audience, title, description, action, destination, index = 0 }) {
   return (
-    <article className={`${styles.card} ${tone}`} aria-labelledby={id}>
+    <article className={`${styles.card} ${tone}`} aria-labelledby={id} data-reveal style={{ "--reveal-index": index }}>
       <p className={styles.audience}>{audience}</p>
       <div className={styles.cardBody}>
         <div>
@@ -28,15 +32,15 @@ export default function ProductsSection() {
   return (
     <section className={styles.section} id="products" aria-labelledby="products-title">
       <div className="bio-container">
-        <header className={styles.heading}>
+        <header className={styles.heading} data-reveal>
           <h2 id="products-title">Our Products</h2>
         </header>
 
         <div className={styles.collection}>
-          <article className={styles.fold} aria-labelledby="fold-product-title">
+          <article className={styles.fold} aria-labelledby="fold-product-title" data-reveal>
             <div className={styles.bannerImage}>
               <div className={styles.bannerFrame}>
-                <Image src="/images/biolabs/fold-molecular-dark-v3.jpg" alt="" fill
+                <Image src={foldMolecule} alt="" fill
                   quality={75} sizes="(max-width: 700px) 210px, 400px" />
               </div>
             </div>
@@ -45,7 +49,7 @@ export default function ProductsSection() {
                 <div className={styles.foldText}>
                   <p className={styles.audience}>Our New Biotech Branch For Bioscientists And Life Science Teams</p>
                   <h3 id="fold-product-title">Fold</h3>
-                  <p className={styles.description}>Computational research for biology-specific medicines.</p>
+                  <p className={styles.description}>Computational research for <span className="whitespace-nowrap">biology-specific</span> medicines.</p>
                 </div>
                 <Link className={styles.cardAction} href={process.env.NEXT_PUBLIC_BIOFOLD_URL || "https://biofold.biolabsltd.com"} target="_blank" rel="noopener noreferrer">
                   <span>Start experiment</span>
@@ -59,20 +63,20 @@ export default function ProductsSection() {
           <div className={styles.productRow}>
             <ProductCard id="clinical-product-title" tone={styles.clinical} audience="AI-Integrated CRM For Clinics & Laboratories"
               title="Clinical Workspace" description="Millions of data points, connected. Analytics built on your clinical data."
-              action="Create a workspace" destination="/workspace/analytics" />
+              action="Create a workspace" destination="/workspace/analytics" index={0} />
             <ProductCard id="health-product-title" tone={styles.health} audience="For Individuals"
               title="Personalized Health" description="Your measurements and health trends, in focus."
-              action="Your Health" />
+              action="Your Health" index={1} />
           </div>
 
-          <article className={styles.eplimo} aria-labelledby="eplimo-product-title">
+          <article className={styles.eplimo} aria-labelledby="eplimo-product-title" data-reveal>
             <div className={styles.eplimoGallery}>
               <figure className={styles.eplimoShot}>
-                <Image src="/images/biolabs/eplimo-kit-closed.png" alt="The EPLIMO kit box, closed, with its embossed wordmark."
+                <Image src={eplimoClosed} alt="The EPLIMO kit box, closed, with its embossed wordmark."
                   fill quality={75} sizes="(max-width: 1023px) 22vw, 280px" />
               </figure>
               <figure className={styles.eplimoShot}>
-                <Image src="/images/biolabs/eplimo-kit-open.png" alt="The EPLIMO kit opened, showing the saliva collection tube and sealed envelope."
+                <Image src={eplimoOpen} alt="The EPLIMO kit opened, showing the saliva collection tube and sealed envelope."
                   fill quality={75} sizes="(max-width: 1023px) 22vw, 280px" />
               </figure>
             </div>

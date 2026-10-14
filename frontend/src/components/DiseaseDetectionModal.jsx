@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Activity, AlertTriangle, Beaker, CheckCircle2, Clock3, Droplets, Loader2, ShieldAlert, Sparkles, X } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { useData } from "@/contexts/dataContext";
 import { useUser } from "@/contexts/userContext";
 import { getDiseasePredictions, getModels } from "@/lib/diagnosis-api";
 import sampleDetectionData from "@/jsons/dummy-disease-detection-data.json";
@@ -11,10 +10,13 @@ import ErrorComponent from "./ErrorComponent";
 import LoadingComponent from "./LoadingComponent";
 
 const UPCOMING_MODELS = ["Alzheimer’s detection", "Kidney function", "Cancer prediction"];
+// Models fetched once are reused by every mount (dashboard, analytics) without a global provider.
+let cachedDetectionModels = [];
 const parseJson = (value, fallback) => { try { return value ? JSON.parse(value) : fallback; } catch { return fallback; } };
 
 export default function DiseaseDetectionModal({ isOpen, onClose, embedded = false, customerView = false }) {
-  const { diseaseDetectionModals, setDiseaseDetectionModals, diagnosisModelTypes } = useData();
+  const [diseaseDetectionModals, setModels] = useState(cachedDetectionModels);
+  const setDiseaseDetectionModals = useCallback((models) => { cachedDetectionModels = models; setModels(models); }, []);
   const { userData, latestBiometrics, isSample } = useUser();
   const [loading, setLoading] = useState(false);
   const [predictionLoading, setPredictionLoading] = useState(null);
@@ -26,7 +28,7 @@ export default function DiseaseDetectionModal({ isOpen, onClose, embedded = fals
   const [liveResults, setLiveResults] = useState({});
   const autoLoadAttemptedRef = useRef(false);
   const requestInFlightRef = useRef(false);
-  const modelType = diagnosisModelTypes[1];
+  const modelType = "disease_detections";
 
   const initializeModels = useCallback((models) => {
     const userValues = new Map(Object.entries(userData ?? {}).map(([key, value]) => [key.toLowerCase(), value]));

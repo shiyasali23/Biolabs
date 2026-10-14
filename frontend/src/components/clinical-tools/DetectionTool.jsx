@@ -27,7 +27,7 @@ function OutcomeRings({ model, result }) {
         <defs><linearGradient id={`${gradientId}-${label}-track`} x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="var(--outcome-track)"/><stop offset=".5" stopColor="var(--outcome-sheen)"/><stop offset="1" stopColor="var(--outcome-track)"/></linearGradient>
         <linearGradient id={`${gradientId}-${label}-value`} x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="var(--outcome-light)"/><stop offset=".5" stopColor="var(--outcome-color)"/><stop offset="1" stopColor="var(--outcome-color)"/></linearGradient></defs>
         <circle className={styles.ringTrack} stroke={`url(#${gradientId}-${label}-track)`} cx="50" cy="50" r="40" pathLength="100" strokeDasharray="94 100" transform="rotate(-79.2 50 50)"/>
-        {score > 0 && <circle className={styles.ringValue} stroke={`url(#${gradientId}-${label}-value)`} cx="50" cy="50" r="40" pathLength="100" strokeDasharray={`${score * .94} 100`} transform="rotate(-79.2 50 50)"/>}
+        {score > 0 && <circle className={styles.ringValue} stroke={`url(#${gradientId}-${label}-value)`} cx="50" cy="50" r="40" pathLength="100" strokeDasharray={`${score * .94} 100`} style={{ "--dash": score * .94 }} transform="rotate(-79.2 50 50)"/>}
       </svg>{available && <span className={styles.ringScore}>{scoreText(raw)}</span>}{!available && <span className="sr-only">{result ? 'Score unavailable' : 'Awaiting prediction'}</span>}</dd>
     </div>;
   })}</dl>;
@@ -131,6 +131,9 @@ export default function DetectionTool({ renderHeader }) {
     return <article className={styles.modelRow} key={model.id} aria-labelledby={`${id}-${model.id}-title`}>
       <div className={styles.modelIdentity}>
         <h2 id={`${id}-${model.id}-title`}>{headingCase(model.name)}</h2>
+        {result?.prediction
+          ? <p className={styles.verdict} data-tone={outcomeTone(result.prediction)}><strong>{result.prediction}</strong><span>{scoreText(result.probabilities?.[result.prediction])}</span></p>
+          : <p className={styles.pending}>{running.includes(model.id) ? 'Analyzing…' : 'Not run yet'}</p>}
       </div>
       <div className={styles.modelOutputs}>
         <OutcomeRings model={model} result={result}/>

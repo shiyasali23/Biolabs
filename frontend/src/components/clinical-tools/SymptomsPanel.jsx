@@ -1,13 +1,21 @@
 "use client";
 import { headingCase } from "@/lib/heading-case";
+import { useMemo } from 'react';
 import { ChevronDown, X } from 'lucide-react';
 import styles from './SymptomsPanel.module.css';
 
-export default function SymptomsPanel({ id, names, maps, categories, values, selected, busy, onChange, onClear, contextFields }) {
+function groupSymptoms(names, maps, categories) {
   const symptoms = names.filter(name => !maps[name]);
-  const groups = Object.entries(categories).map(([label, items]) => [label, items.filter(name => symptoms.includes(name))]).filter(([,items]) => items.length);
-  const remaining = symptoms.filter(name => !groups.some(([,items]) => items.includes(name)));
+  const available = new Set(symptoms);
+  const groups = Object.entries(categories).map(([label, items]) => [label, items.filter(name => available.has(name))]).filter(([,items]) => items.length);
+  const grouped = new Set(groups.flatMap(([,items]) => items));
+  const remaining = symptoms.filter(name => !grouped.has(name));
   if (remaining.length) groups.push(['Other symptoms', remaining]);
+  return groups;
+}
+
+export default function SymptomsPanel({ id, names, maps, categories, values, selected, busy, onChange, onClear, contextFields }) {
+  const groups = useMemo(() => groupSymptoms(names, maps, categories), [names, maps, categories]);
   const option = name => <label className={styles.option} key={name}><input type="checkbox" disabled={busy} checked={Number(values[name]) === 1} onChange={event => onChange(name, event.target.checked ? 1 : 0)}/><span>{name}</span></label>;
   const group = ([label,items]) => <details className={styles.group} key={label}>
           <summary data-clinical-initial-focus={label === groups[0]?.[0] ? '' : undefined}><span>{headingCase(label.replace(/ Symptoms$/,''))}</span><span className={styles.groupCount}>{items.filter(name => Number(values[name]) === 1).length || ''}</span><ChevronDown size={16} aria-hidden="true"/></summary>

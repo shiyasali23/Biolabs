@@ -1,157 +1,61 @@
-import React from "react";
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-} from "chart.js";
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from "chart.js";
 import { Bar } from "react-chartjs-2";
 import { CHART_COLORS } from "@/lib/chart-theme";
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend
-);
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
-const BiochemicalsBarGraph = ({ biochemicalsArray, isHyper, isHealthy }) => {
-  if (!biochemicalsArray || biochemicalsArray.length === 0) {
-    return null;
-  }
-
-  // Set the appropriate title based on the parameters
-  let graphTitle = "Measurements within reference range";
-  if (!isHealthy) {
-    graphTitle = isHyper ? "Measurements above range" : "Measurements below range";
-  }
-
-  // Determine if we should use horizontal bars:
-  // For healthy or when isHyper is null, we use horizontal bars.
+// Healthy values render as horizontal bars; above-range bars rise and below-range bars hang from the top axis.
+export default function BiochemicalsBarGraph({ biochemicalsArray, isHyper, isHealthy }) {
+  if (!biochemicalsArray?.length) return null;
   const isHorizontal = isHealthy || isHyper === null;
-
-  // Prepare data for the chart
-  const labels = biochemicalsArray.map((item) => item.name);
-  const values = biochemicalsArray.map((item) => {
-    // For hypo values, make them negative to face downward if they aren't already
-    if (!isHealthy && !isHyper && item.scaled_value > 0) {
-      return -item.scaled_value;
-    }
-    return item.scaled_value;
-  });
-
-  // Determine bar color based on status
-  const barColor = isHealthy
-    ? CHART_COLORS.successFill
-    : isHyper ? CHART_COLORS.dangerFill : CHART_COLORS.warningFill;
+  const isHypo = !isHealthy && !isHyper;
+  const tone = isHealthy ? "success" : isHyper ? "danger" : "warning";
+  const font = { size: 7 };
 
   const data = {
-    labels: labels,
-    datasets: [
-      {
-        data: values,
-        backgroundColor: barColor,
-        borderColor: isHealthy ? CHART_COLORS.success : isHyper ? CHART_COLORS.danger : CHART_COLORS.warning,
-        borderWidth: 1,
-        barPercentage: isHorizontal ? 0.5 : 0.3,
-        categoryPercentage: isHorizontal ? 0.7 : 0.6,
-        barThickness: isHorizontal ? 5 : undefined,
-      },
-    ],
+    labels: biochemicalsArray.map((item) => item.name),
+    datasets: [{
+      data: biochemicalsArray.map((item) => (isHypo && item.scaled_value > 0 ? -item.scaled_value : item.scaled_value)),
+      backgroundColor: CHART_COLORS[`${tone}Fill`],
+      borderColor: CHART_COLORS[tone],
+      borderWidth: 1,
+      barPercentage: isHorizontal ? 0.5 : 0.3,
+      categoryPercentage: isHorizontal ? 0.7 : 0.6,
+      barThickness: isHorizontal ? 5 : undefined,
+    }],
   };
 
-  // Configuration options with:
-  // - Hidden numeric (scaled) tick labels on the appropriate axis.
-  // - All vertical grid lines removed (x-axis grid disabled).
   const options = {
-    indexAxis: isHorizontal ? 'y' : 'x',
+    indexAxis: isHorizontal ? "y" : "x",
     responsive: true,
     maintainAspectRatio: false,
     scales: {
-      x: {
-        position: !isHealthy && !isHyper ? 'top' : 'bottom',
-        beginAtZero: true,
-        display: true,
-        grid: {
-          display: false, // Hides all vertical grid lines
-        },
-        ticks: {
-          // For horizontal charts, the x-axis is numeric so hide its ticks.
-          // For vertical charts, the x-axis shows categories so display them.
-          display: isHorizontal ? false : true,
-          autoSkip: false,
-          maxRotation: 45,
-          minRotation: 45,
-          font: {
-            size: 7,
-          },
-        },
-        border: {
-          display: true,
-        },
-      },
+      // The value axis is unlabeled; only the category axis shows names.
+      x: { position: isHypo ? "top" : "bottom", beginAtZero: true, grid: { display: false }, ticks: { display: !isHorizontal, autoSkip: false, maxRotation: 45, minRotation: 45, font } },
       y: {
         beginAtZero: true,
-        display: true,
-        grid: {
-          // For horizontal charts, the y-axis grid lines (horizontal lines) remain.
-          // For vertical charts, they are horizontal grid lines.
-          display: true,
-          color: CHART_COLORS.cloud,
-          drawBorder: false,
-        },
+        grid: { color: CHART_COLORS.cloud },
         ticks: {
-          // For vertical charts, the y-axis is numeric so hide its ticks.
-          // For horizontal charts, the y-axis shows categories so display them.
-          display: isHorizontal ? true : false,
-          autoSkip: false,
-          color: CHART_COLORS.slate,
-          font: {
-            size: 7,
-          },
-          callback: function(value, index) {
-            const label = this.getLabelForValue(value);
-            return label.length > 15 ? label.substr(0, 15) + '...' : label;
-          }
-        },
-        border: {
-          display: true,
+          display: isHorizontal, autoSkip: false, color: CHART_COLORS.slate, font,
+          callback(value) { const label = this.getLabelForValue(value); return label.length > 15 ? `${label.slice(0, 15)}...` : label; },
         },
       },
     },
     plugins: {
-      legend: {
-        display: false,
-      },
+      legend: { display: false },
       tooltip: {
         callbacks: {
-          label: function (context) {
-            const index = context.dataIndex;
-            const biochemical = biochemicalsArray[index];
-            let label = ` ${biochemical.value} ${biochemical.unit}`;
-            if (!isHealthy) {
-              if (isHyper) {
-                label += ` (Max Healthy: ${biochemical.healthy_max})`;
-              } else {
-                label += ` (Min Healthy: ${biochemical.healthy_min})`;
-              }
-            }
-            return label;
+          label: ({ dataIndex }) => {
+            const item = biochemicalsArray[dataIndex];
+            const limit = isHealthy ? "" : isHyper ? ` (Max Healthy: ${item.healthy_max})` : ` (Min Healthy: ${item.healthy_min})`;
+            return ` ${item.value} ${item.unit}${limit}`;
           },
         },
       },
       title: {
         display: true,
-        text: graphTitle,
-        font: {
-          size: 12,
-          weight: "bold",
-        },
+        text: isHealthy ? "Measurements within reference range" : isHyper ? "Measurements above range" : "Measurements below range",
+        font: { size: 12, weight: "bold" },
       },
     },
   };
@@ -161,6 +65,4 @@ const BiochemicalsBarGraph = ({ biochemicalsArray, isHyper, isHealthy }) => {
       <Bar data={data} options={options} />
     </div>
   );
-};
-
-export default BiochemicalsBarGraph;
+}

@@ -1,6 +1,15 @@
+// Model definitions arrive as JSON strings and are read on every render; parse each distinct string once.
+const parsed = new Map();
 export function decode(value, fallback) {
   if (typeof value === 'object' && value !== null) return value;
-  try { return JSON.parse(value) ?? fallback; } catch { return fallback; }
+  if (typeof value !== 'string') return fallback;
+  if (!parsed.has(value)) {
+    let result = null;
+    try { result = JSON.parse(value); } catch {}
+    if (parsed.size > 50) parsed.clear();
+    parsed.set(value, result);
+  }
+  return parsed.get(value) ?? fallback;
 }
 export const featuresOf = model => decode(model?.feature_names, []);
 export const mapsOf = model => decode(model?.feature_maps, {});
@@ -19,5 +28,6 @@ export function selectedSymptoms(model, values) {
   return featuresOf(model).filter(name => !maps[name] && Number(values[name]) === 1);
 }
 export function readyToRun(model, values, diagnosis) {
-  return featuresOf(model).length > 0 && featuresOf(model).every(name => !fieldError(values[name], mapsOf(model)[name])) && (!diagnosis || selectedSymptoms(model, values).length >= 5);
+  const names = featuresOf(model), maps = mapsOf(model);
+  return names.length > 0 && names.every(name => !fieldError(values[name], maps[name])) && (!diagnosis || selectedSymptoms(model, values).length >= 5);
 }

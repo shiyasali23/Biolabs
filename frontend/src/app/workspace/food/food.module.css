@@ -10,7 +10,10 @@
 .library>div { min-width:0; }
 .photoResult { margin-top:24px; }
 .error { margin-top:12px; color:#b33348; font-size:13px; }
-.detail { scroll-margin-top:88px; margin-top:32px; padding:28px 0; border-top:1px solid #dfe6df; }
+.detail { scroll-margin-top:88px; margin-top:32px; padding:28px 0; border-top:1px solid #dfe6df; outline:none; }
+.detailEmpty { display:grid; place-items:center; min-height:220px; }
+.detailHint { color:#56685b; font-size:15px; text-align:center; }
+@media(max-width:1023px) { .detailEmpty { display:none; } }
 .recommendations { margin-top:32px; padding:28px 0 0; border-top:1px solid #dfe6df; }
 @media(max-width:850px) { .explorer { gap:24px; grid-template-columns:minmax(0,1fr); } .library { gap:16px; } }
 @media(max-width:600px) { .heading { padding:22px 0 18px; } .heading h1 { font-size:27px; } .searchRow { margin-bottom:24px; gap:8px; } .explorer { grid-template-columns:1fr; gap:28px; }  .library { gap:20px; } .detail { margin-top:24px; padding-top:24px; } }
@@ -27,3 +30,20 @@
 .photoBody { padding:20px 24px 24px; overflow-y:auto; min-height:0; }
 @media(max-width:600px) { .photoButton { width:48px; padding:0; } .photoButton>span { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0); } .photoHeader { padding:16px 20px; } .photoBody { padding:16px 20px 20px; } .camera { height:300px; } }
 @media(prefers-reduced-motion:reduce) { .photoButton { transition:none; } }
+
+/* Desktop: lists on the left, the composition beside them (sticky), so choosing a food never jumps the page. */
+@media(min-width:1024px) {
+  .explorer { grid-template-columns:minmax(0,1fr) minmax(0,1.05fr); gap:36px; }
+  .detail { position:sticky; top:84px; max-height:calc(100dvh - 104px); overflow-y:auto; margin-top:0; padding:24px; border:1px solid #e2e9e2; border-radius:14px; background:#fbfcfa; }
+  .detail :global(.bio-caption) { margin-top:8px; }
+}
+
+/* Dialog motion: overlay fades, panel settles in (scale/translate properties, so the centring transform is untouched). */
+@keyframes overlayIn { from { opacity: 0; } }
+@keyframes overlayOut { to { opacity: 0; } }
+@keyframes dialogIn { from { opacity: 0; scale: .97; translate: 0 10px; } }
+@keyframes dialogOut { to { opacity: 0; scale: .98; } }
+.photoOverlay[data-state="open"] { animation: overlayIn var(--motion-base) ease-out; }
+.photoDialog[data-state="open"] { animation: dialogIn .38s var(--motion-ease); }
+.photoOverlay[data-state="closed"] { animation: overlayOut var(--motion-fast) ease-in forwards; }
+.photoDialog[data-state="closed"] { animation: dialogOut var(--motion-fast) ease-in forwards; }

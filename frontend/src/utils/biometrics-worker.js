@@ -1,218 +1,65 @@
 // utils/biometrics-worker.js
 import { getConditions } from "@/lib/biochemicals-api";
 
+// Shapes raw biometric entries for the dashboards: the health-score series, every measurement grouped by category
+// with its history, the latest value of each measurement, and the latest above/below-range values (with any linked
+// conditions from the API). Above/below lists share objects with latestBiometrics, so conditions show in both.
 export const processBiometricData = async (rawEntries) => {
   // Ignore malformed entries so one bad record cannot break the whole page.
-  const biometricsEntries = (Array.isArray(rawEntries) ? rawEntries : []).filter((entry) => entry && Array.isArray(entry.biometrics));
-  // Process health score entries.
-  const healthScore = biometricsEntries
-    .map((entry) => ({
-      created_at: entry.created_at,
-      health_score: entry.health_score,
-      _ts: new Date(entry.created_at),
-    }))
-    .sort((a, b) => a._ts - b._ts)
-    .map(({ _ts, ...rest }) => rest);
+  const entries = (Array.isArray(rawEntries) ? rawEntries : []).filter((entry) => entry && Array.isArray(entry.biometrics));
+  const healthScore = entries
+    .map(({ created_at, health_score }) => ({ created_at, health_score }))
+    .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
 
-  // Prepare mappings for biometrics and their latest entries.
-  const bioMap = Object.create(null);
-  const latestMap = Object.create(null);
+  const byName = new Map(); // measurement name -> { category, history, latest, latestTS, latestExpiry }
+  for (const entry of entries) {
+    const ts = new Date(entry.created_at).getTime();
+    for (const bio of entry.biometrics) {
+      let record = byName.get(bio.name);
+      if (!record) byName.set(bio.name, (record = { category: bio.category, history: [], latest: null, latestTS: 0, latestExpiry: "" }));
+      record.history.push({ ts, bio });
+      if (ts > record.latestTS) Object.assign(record, { latest: bio, latestTS: ts, latestExpiry: bio.expiry_date });
+    }
+  }
+
+  const biometrics = Object.create(null);
+  const latestBiometrics = [];
   const hyper = [];
   const hypo = [];
-
-  biometricsEntries.forEach((entry) => {
-    const entryTS = new Date(entry.created_at).getTime();
-    entry.biometrics.forEach((bio) => {
-      const bioName = bio.name;
-      let bioRecord = bioMap[bioName];
-      if (!bioRecord) {
-        bioRecord = {
-          category: bio.category,
-          entries: [],
-          latestTS: 0,
-          latestExpiry: "",
-        };
-        bioMap[bioName] = bioRecord;
-      }
-
-      const recordEntry = [
-        entryTS,
-        bio.value,
-        bio.scaled_value,
-        bio.expiry_date,
-        bio.id,
-        bio.is_hyper,
-        bio.unit,
-        bio.healthy_min,
-        bio.healthy_max,
-      ];
-      bioRecord.entries.push(recordEntry);
-
-      // Update latest biometric if current entry is newer.
-      if (entryTS > bioRecord.latestTS) {
-        bioRecord.latestTS = entryTS;
-        bioRecord.latestExpiry = bio.expiry_date;
-        latestMap[bioName] = {
-          id: bio.id,
-          name: bio.name,
-          category: bio.category,
-          unit: bio.unit,
-          healthy_min: bio.healthy_min,
-          healthy_max: bio.healthy_max,
-          value: bio.value,
-          scaledValue: bio.scaled_value,
-          expiryDate: bio.expiry_date,
-          isHyper: bio.is_hyper,
-        };
-      }
-    });
-  });
-
-  // Build a flat mapping for biometrics.
-  const flatBiometrics = Object.create(null);
-  const latestBiometrics = [];
-
-  for (const bioName in bioMap) {
-    if (Object.hasOwnProperty.call(bioMap, bioName)) {
-      const record = bioMap[bioName];
-      record.entries.sort((a, b) => a[0] - b[0]);
-      const entriesObj = record.entries.map((e) => ({
-        createdAt: new Date(e[0]).toISOString(),
-        value: e[1],
-        scaledValue: e[2],
-        expiryDate: e[3],
-        isHyper: e[5],
-      }));
-
-      flatBiometrics[bioName] = {
-        id: latestMap[bioName] ? latestMap[bioName].id : record.entries[0][4],
-        category: record.category,
-        lastUpdated: new Date(record.latestTS).toISOString(),
-        expiryOn: record.latestExpiry,
-        unit: latestMap[bioName]
-          ? latestMap[bioName].unit
-          : record.entries[0][6],
-        healthy_min: latestMap[bioName]
-          ? latestMap[bioName].healthy_min
-          : record.entries[0][7],
-        healthy_max: latestMap[bioName]
-          ? latestMap[bioName].healthy_max
-          : record.entries[0][8],
-        entries: entriesObj,
-      };
-
-      // Classify the latest biometric.
-      const latest = latestMap[bioName];
-      if (latest) {
-        const latestBiochemical = {
-          id: latest.id,
-          name: latest.name,
-          category: latest.category,
-          unit: latest.unit,
-          healthy_min: latest.healthy_min,
-          healthy_max: latest.healthy_max,
-          value: latest.value,
-          scaledValue: latest.scaledValue,
-          expiryDate: latest.expiryDate,
-          isHyper: latest.isHyper,
-        };
-        latestBiometrics.push(latestBiochemical);
-
-        if (latest.isHyper === true) {
-          hyper.push(latestBiochemical);
-        } else if (latest.isHyper === false) {
-          hypo.push(latestBiochemical);
-        }
-      }
-    }
+  for (const [name, record] of byName) {
+    record.history.sort((a, b) => a.ts - b.ts);
+    const ref = record.latest ?? record.history[0].bio;
+    (biometrics[record.category] ??= Object.create(null))[name] = {
+      id: ref.id,
+      lastUpdated: new Date(record.latestTS).toISOString(),
+      expiryOn: record.latestExpiry,
+      unit: ref.unit,
+      healthy_min: ref.healthy_min,
+      healthy_max: ref.healthy_max,
+      entries: record.history.map(({ ts, bio }) => ({ createdAt: new Date(ts).toISOString(), value: bio.value, scaledValue: bio.scaled_value, expiryDate: bio.expiry_date, isHyper: bio.is_hyper })),
+    };
+    if (!record.latest) continue;
+    const bio = record.latest;
+    const latest = { id: bio.id, name: bio.name, category: bio.category, unit: bio.unit, healthy_min: bio.healthy_min, healthy_max: bio.healthy_max, value: bio.value, scaledValue: bio.scaled_value, expiryDate: bio.expiry_date, isHyper: bio.is_hyper };
+    latestBiometrics.push(latest);
+    if (latest.isHyper === true) hyper.push(latest);
+    else if (latest.isHyper === false) hypo.push(latest);
   }
 
-  // Group flat biometrics by category.
-  const biometrics = Object.create(null);
-  for (const bioName in flatBiometrics) {
-    if (Object.hasOwnProperty.call(flatBiometrics, bioName)) {
-      const record = flatBiometrics[bioName];
-      const category = record.category;
-      if (!biometrics[category]) {
-        biometrics[category] = Object.create(null);
-      }
-      const { category: _, ...rest } = record;
-      biometrics[category][bioName] = rest;
-    }
+  const flagged = latestBiometrics.filter(({ isHyper }) => isHyper !== null).map(({ id, isHyper }) => ({ id, is_hyper: isHyper }));
+  if (flagged.length) {
+    try { attachConditions(await getConditions(flagged), hyper, hypo); }
+    catch (error) { console.error("Error fetching conditions:", error); }
   }
-
-  // Create a list of biochemical IDs with defined isHyper values.
-  const hyperHypoBiochemicalsIds = latestBiometrics
-    .filter(({ isHyper }) => isHyper !== null)
-    .map(({ id, isHyper }) => ({ id, is_hyper: isHyper }));
-
-  // Set default values for processed data (the original extracted data)
-  let processedHyperBiochemicals = hyper.length ? hyper : [];
-  let processedHypoBiochemicals = hypo.length ? hypo : [];
-
-  // Make API call directly if there are hyperHypoBiochemicalsIds
-  if (hyperHypoBiochemicalsIds?.length) {
-    try {
-      const conditions = await getConditions(hyperHypoBiochemicalsIds);
-      if (conditions) {
-        const processed = processConditions(
-          conditions,
-          // Create copies of the arrays to avoid mutation issues
-          [...processedHyperBiochemicals],
-          [...processedHypoBiochemicals]
-        );
-        // Only update if processing was successful
-        processedHyperBiochemicals = processed.processedHyperBiochemicals;
-        processedHypoBiochemicals = processed.processedHypoBiochemicals;
-      }
-    } catch (error) {
-      console.error("Error fetching conditions:", error);
-      // On error, we keep the original hyper/hypo arrays (already set above)
-    }
-  }
-
-  return {
-    healthScore,
-    biometrics,
-    latestBiometrics,
-    hyperBiochemicals: processedHyperBiochemicals,
-    hypoBiochemicals: processedHypoBiochemicals,
-  };
+  return { healthScore, biometrics, latestBiometrics, hyperBiochemicals: hyper, hypoBiochemicals: hypo };
 };
 
-export const processConditions = (
-  conditions,
-  hyperBiochemicals,
-  hypoBiochemicals
-) => {
-  if (!conditions?.length) {
-    return {
-      processedHyperBiochemicals: hyperBiochemicals || [],
-      processedHypoBiochemicals: hypoBiochemicals || [],
-    };
+const attachConditions = (conditions, hyper, hypo) => {
+  if (!conditions?.length) return;
+  const hyperById = new Map(hyper.map((bio) => [bio.id, bio]));
+  const hypoById = new Map(hypo.map((bio) => [bio.id, bio]));
+  for (const { id, is_hyper, conditions: linked } of conditions) {
+    const bio = (is_hyper ? hyperById : hypoById).get(id);
+    if (bio) bio.conditions = linked;
   }
-
-  const hyperMap = new Map();
-  const hypoMap = new Map();
-
-  if (Array.isArray(hyperBiochemicals)) {
-    hyperBiochemicals.forEach((bio) => hyperMap.set(bio.id, bio));
-  }
-
-  if (Array.isArray(hypoBiochemicals)) {
-    hypoBiochemicals.forEach((bio) => hypoMap.set(bio.id, bio));
-  }
-
-  conditions.forEach((condition) => {
-    const { id, is_hyper, conditions: conds } = condition;
-    const targetBio = is_hyper ? hyperMap.get(id) : hypoMap.get(id);
-    if (targetBio) {
-      targetBio.conditions = conds;
-    }
-  });
-
-  return {
-    processedHyperBiochemicals: hyperBiochemicals || [],
-    processedHypoBiochemicals: hypoBiochemicals || [],
-  };
 };

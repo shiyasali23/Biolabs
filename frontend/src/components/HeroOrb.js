@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
+import cellOrb from "../../public/images/biolabs/biolabs-cell-orb.webp";
 
 export default function HeroOrb() {
   const artworkRef = useRef(null);
@@ -85,11 +86,10 @@ export default function HeroOrb() {
 
       <div className="restored-cell-frame">
         <Image
-          src="/images/biolabs/biolabs-cell-orb-web.png"
+          src={cellOrb}
           alt="A microscopy-inspired biological cell with membranes, vesicles, and connected internal structures."
-          width="1600"
-          height="1600"
           priority
+          fetchPriority="high"
           sizes="(max-width: 560px) 52vw, (max-width: 820px) 56vw, 500px"
         />
       </div>

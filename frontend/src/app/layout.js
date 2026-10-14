@@ -1,12 +1,10 @@
 import { BiochemicalProvider } from "@/contexts/biochemicalContext";
 import "./globals.css";
 import "./homepage.css";
-import { DataProvider } from "@/contexts/dataContext";
 import { UserProvider } from "@/contexts/userContext";
 import { FoodProvider } from "@/contexts/foodContext";
 import { RecordProvider } from "@/contexts/recordContext";
 import { IntelligenceProvider } from "@/contexts/intelligenceContext";
-import { HealthProvider } from "@/contexts/healthContext";
 import AppShell from "@/components/AppShell";
 import { IBM_Plex_Sans, Inter, Manrope } from "next/font/google";
 const inter = Inter({ subsets: ["latin"], display: "swap", variable: "--font-inter" });
@@ -65,17 +63,13 @@ export default function RootLayout({ children, tools }) {
       <body>
         <BiochemicalProvider>
           <FoodProvider>
-            <HealthProvider>
-              <DataProvider>
-                <RecordProvider>
-                  <IntelligenceProvider>
-                    <UserProvider>
-                      <AppShell modal={tools} fontClass={`${inter.variable} ${plex.variable} ${manrope.variable}`}>{children}</AppShell>
-                    </UserProvider>
-                  </IntelligenceProvider>
-                </RecordProvider>
-              </DataProvider>
-            </HealthProvider>
+            <RecordProvider>
+              <IntelligenceProvider>
+                <UserProvider>
+                  <AppShell modal={tools} fontClass={`${inter.variable} ${plex.variable} ${manrope.variable}`}>{children}</AppShell>
+                </UserProvider>
+              </IntelligenceProvider>
+            </RecordProvider>
           </FoodProvider>
         </BiochemicalProvider>
       </body>

@@ -1,39 +1,9 @@
-import { readJson } from "./http.js";
-// utils/DiagnosisDetectionUtils.js
-const BACKEND_API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL || '/backend';
+import { BACKEND_API_URL, request } from "./http.js";
 
-
+// type: "authenticate" (sign in) or "signup".
 export const authenticate = async (inputFields, type) => {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
-  
-    try {
-      const response = await fetch(`${BACKEND_API_URL}/${type}`, {
-        method: "POST",
-        signal: controller.signal,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ data: inputFields }),
-      });
-  
-      const result = await readJson(response);
-  
-      if (!response.ok) {
-        const errorMessage =
-          response.status === 401
-            ? "Invalid credentials"
-            : response.status === 500
-            ? "Something went wrong"
-            : "Something went wrong";
-        return { data: null, message: errorMessage };
-      }
-  
-      return { data: result?.response || null, message: null };
-    } catch (error) {
-      console.error("Authentication error:", error);
-      return { data: null, message: "Something went wrong" };
-    } finally {
-      clearTimeout(timeoutId);
-    }
-  };
-  
-
+  const result = await request(`${BACKEND_API_URL}/${type}`, { method: "POST", json: { data: inputFields } });
+  if (result.error) { console.error("Authentication error:", result.error); return { data: null, message: "Something went wrong" }; }
+  if (!result.ok) return { data: null, message: result.status === 401 ? "Invalid credentials" : "Something went wrong" };
+  return { data: result.body?.response || null, message: null };
+};

@@ -2,8 +2,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import BiometricsAccordion from "@/components/BiometricsAccordion";
-import BiometricsEntryModal from "@/components/BiometricsEntryModal";
-import HealthScoreGraph from "@/components/HealthScoreGraph";
 import LoadingComponent from "@/components/LoadingComponent";
 import LatestBiometricsTable from "@/components/LatestBiometricsTable";
 import NoDataFound from "@/components/NoDataFound";
@@ -16,6 +14,9 @@ import dynamic from "next/dynamic";
 
 // Model cards load after the patient record is on screen.
 const DiseaseDetectionModal = dynamic(() => import("@/components/DiseaseDetectionModal"), { ssr: false });
+// chart.js loads with the charts (fixed-height containers, so no layout shift); the entry modal only on click.
+const HealthScoreGraph = dynamic(() => import("@/components/HealthScoreGraph"), { ssr: false });
+const BiometricsEntryModal = dynamic(() => import("@/components/BiometricsEntryModal"), { ssr: false });
 
 function SummaryArrow({ direction }) {
   const path = direction === "up" ? "M5 11 11 5m0 0v5m0-5H6" : "M5 5l6 6m0 0V6m0 5H6";

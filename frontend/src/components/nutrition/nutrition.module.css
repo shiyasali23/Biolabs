@@ -15,20 +15,20 @@
 .groups>div { min-width:0; }
 .groups>div:only-child { grid-column:1/-1; }
 .unit { color:#677569; font-size:12px; margin-bottom:8px; }
-.bars { min-width:0; }
-.bars>div { position:relative; min-width:0; width:100%; }
-.bars canvas { max-width:100%; }
-.comparison { display:grid; gap:18px; padding:22px 24px; border:1px solid #e2e9e2; border-radius:16px; background:linear-gradient(145deg,#f8faf7,#fff); box-shadow:0 3px 12px rgb(32 60 48 / 3%); }
+
+
+
+.comparison { display:grid; gap:18px; padding:22px 24px; border:1px solid #e2e9e2; border-radius:14px; background:#fff; }
 .measure { display:block; min-width:0; width:100%; text-align:left; }
 button.measure { cursor:pointer; border-radius:6px; }
 button.measure:hover .measureName { color:#28765b; }
-button.measure:hover .measureFill { filter:brightness(1.12); }
-.measureHeading { display:flex; align-items:baseline; justify-content:space-between; gap:16px; margin-bottom:10px; }
-.measureName { color:#203c30; font-size:14px; line-height:1.5; }
+button.measure:hover .measureFill { opacity:.85; }
+.measureHeading { display:flex; align-items:baseline; justify-content:space-between; gap:16px; margin-bottom:8px; }
+.measureName { color:#203c30; font-size:15px; line-height:1.45; }
 .measureValue { flex-shrink:0; color:#203c30; font-size:16px; font-weight:600; font-variant-numeric:tabular-nums; letter-spacing:-.025em; }
 .measureUnit { font-size:12px; font-weight:400; color:#677569; }
-.measureTrack { position:relative; display:block; height:8px; border-radius:10px; background:#e8eee7; }
-.measureFill { position:absolute; top:0; height:100%; border-radius:10px; background:linear-gradient(90deg,color-mix(in srgb,var(--measure-color),white 20%),var(--measure-color)); box-shadow:0 2px 5px color-mix(in srgb,var(--measure-color),transparent 85%); }
+.measureTrack { position:relative; display:block; height:6px; border-radius:6px; background:#e8eee7; }
+.measureFill { position:absolute; top:0; height:100%; border-radius:10px; background:var(--measure-color); }
 .zeroLine { position:absolute; top:-3px; height:14px; width:1px; background:#85998b; z-index:1; }
 .compactComparison { grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:0; padding:0; overflow:hidden; }
 .compactComparison .measure { padding:24px; }
@@ -39,15 +39,26 @@ button.measure:hover .measureFill { filter:brightness(1.12); }
 .compactComparison .measureValue { font-size:34px; line-height:1; letter-spacing:-.045em; }
 .compactComparison .measureUnit { font-size:14px; }
 @media(max-width:600px) { .comparison { padding:18px; } .compactComparison { grid-template-columns:1fr; padding:0; } .compactComparison .measure { padding:18px; } .compactComparison .measure + .measure { border-left:0; border-top:1px solid #e2e9e2; } .compactComparison .measureHeading { flex-direction:row; gap:12px; margin-bottom:14px; } .compactComparison .measureValue { font-size:26px; } }
-.values { margin-top:12px; color:#677569; font-size:12px; }
-.values summary { cursor:pointer; padding:10px 0; width:fit-content; }
-.values table { width:100%; border-collapse:collapse; margin-top:8px; }
-.values th,.values td { text-align:left; padding:10px 0; border-bottom:1px solid #e7ece6; font-weight:400; }
-.values td,.values thead th:last-child { text-align:right; font-variant-numeric:tabular-nums; }
-.values button { color:#203c30; text-align:left; min-height:32px; text-decoration:underline; text-underline-offset:3px; }
+
+
+
+
+
+
 .more { margin-top:16px; min-height:44px; color:#203c30; font-size:13px; border-bottom:1px solid #a4b6a6; }
 .notice { padding:20px 0; display:flex; align-items:center; justify-content:space-between; gap:24px; }
 .notice h2 { color:#203c30; font-size:22px; font-weight:500; letter-spacing:-.03em; }
 .actions { display:flex; gap:12px; flex-wrap:wrap; flex-shrink:0; }
 .warning { color:#8d631f; font-size:13px; margin-bottom:20px; }
 @media(max-width:600px) { .header { gap:12px; } .header h2,.header h3 { font-size:22px; } .header select { max-width:50%; padding:8px; font-size:12px; } .groups { grid-template-columns:minmax(0,1fr); } .notice { display:block; padding:0; } .actions { margin-top:16px; } }
+
+/* Recommendations: two columns of bars on wide screens (half the height of one long list). */
+@media(min-width:900px) {
+  .rankColumns { grid-template-columns:repeat(2,minmax(0,1fr)); column-gap:48px; }
+}
+/* Inside the narrow sticky composition panel, amount groups stack. */
+@media(min-width:1024px) { .panelGroups { grid-template-columns:minmax(0,1fr); } }
+
+/* Bars grow from the zero line when a food or nutrient is chosen (data arrival, capped stagger). */
+@keyframes fillGrow { from { scale: 0 1; } }
+.measureFill { animation: fillGrow .8s var(--motion-ease) backwards; animation-delay: calc(var(--bar, 0) * 45ms); }

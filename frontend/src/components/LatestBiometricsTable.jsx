@@ -1,7 +1,9 @@
 "use client";
 import { useMemo, useState } from "react";
 import { ChevronDown, Loader2 } from "lucide-react";
-import BiochemicalLineGraphModal from "./BiochemicalLineGraphModal";
+import dynamic from "next/dynamic";
+// The trend chart (chart.js) loads only when a result is opened.
+const BiochemicalLineGraphModal = dynamic(() => import("./BiochemicalLineGraphModal"), { ssr: false });
 import { useUser } from "@/contexts/userContext";
 import { updateBiometrics } from "@/lib/user-api";
 import { rangeStatus, statusLabels, statusClasses, formatNumber } from "@/lib/clinical-display";

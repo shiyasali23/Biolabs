@@ -1,14 +1,12 @@
 "use client";
-import React, { createContext, useCallback, useContext, useState, useEffect } from "react";
+import React, { createContext, useCallback, useContext, useRef, useState } from "react";
 import { getFoodNutrients } from "@/lib/foods-api";
 import { cacheManager } from "@/utils/cache-wroker";
 import { processFoodNutrients } from "@/utils/food-woker";
-import { useIsClient } from "@/hooks/useIsClient";
 
 const FoodContext = createContext();
 
 export const FoodProvider = ({ children }) => {
-  const isClient = useIsClient();
   const [foodNutrients, setFoodNutrients] = useState(null);
   const [nutrientsFoods, setNutrientsFoods] = useState(null);
   const [foodsData, setFoodsData] = useState(null);
@@ -17,28 +15,26 @@ export const FoodProvider = ({ children }) => {
   const [foodNutrientsDataLoading, setFoodNutrientsDataLoading] =
     useState(true);
 
-  useEffect(() => {
-    if (!isClient) return;
 
-    setFoodNutrientsDataLoading(true);
-    const cached = cacheManager.multiGet([
-      "foodNutrients",
-      "nutrientsFoods",
-      "foodsData",
-      "nutrientsData",
-      "foodNutriscoreData",
-    ]);
-    if (cached.foodNutrients) setFoodNutrients(cached.foodNutrients);
-    if (cached.nutrientsFoods) setNutrientsFoods(cached.nutrientsFoods);
-    if (cached.foodsData) setFoodsData(cached.foodsData);
-    if (cached.nutrientsData) setNutrientsData(cached.nutrientsData);
-    if (cached.foodNutriscoreData)
-      setFoodNutriscoreData(cached.foodNutriscoreData);
-    setFoodNutrientsDataLoading(false);
-  }, [isClient]);
-
+  const restored = useRef(false);
+  // Called by the pages that need food data. The first call shows any cached copy immediately (no loading
+  // state), then refreshes from the API; other pages never parse this cache.
   const fetchFoodNutrients = useCallback(async () => {
-    setFoodNutrientsDataLoading(true);
+    let hasCache = false;
+    if (!restored.current) {
+      restored.current = true;
+      const cached = cacheManager.multiGet(["foodNutrients", "nutrientsFoods", "foodsData", "nutrientsData", "foodNutriscoreData"]);
+      hasCache = !!(cached.foodsData && cached.nutrientsData && cached.foodNutriscoreData);
+      if (hasCache) {
+        setFoodNutrients(cached.foodNutrients);
+        setNutrientsFoods(cached.nutrientsFoods);
+        setFoodsData(cached.foodsData);
+        setNutrientsData(cached.nutrientsData);
+        setFoodNutriscoreData(cached.foodNutriscoreData);
+        setFoodNutrientsDataLoading(false);
+      }
+    }
+    if (!hasCache) setFoodNutrientsDataLoading(true);
     const foodNutrientsData = await getFoodNutrients();
     if (foodNutrientsData) {
       const {

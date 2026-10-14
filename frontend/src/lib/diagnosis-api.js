@@ -1,163 +1,37 @@
-import { readJson } from "./http.js";
+import { BACKEND_API_URL, failure, request } from "./http.js";
 import { cacheManager } from "@/utils/cache-wroker";
 
-// utils/DiagnosisDetectionUtils.js
-const DIAGNOSIS_API_URL =
-  process.env.NEXT_PUBLIC_DIAGNOSIS_API_URL || "/diagnosis";
+const DIAGNOSIS_API_URL = process.env.NEXT_PUBLIC_DIAGNOSIS_API_URL || "/diagnosis";
+const isObject = (value) => !!value && typeof value === "object";
 
+// type: "diagnosis_model" (symptoms) or "disease_detections" (biochemical models).
 export const getModels = async (type) => {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 10000);
-
-  try {
-    const response = await fetch(`${DIAGNOSIS_API_URL}/get_features/${type}`, {
-      method: "GET",
-      signal: controller.signal,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await readJson(response);
-
-    if (!Array.isArray(data?.response)) {
-      throw new Error("Invalid API response structure");
-    }
-
-    return data.response;
-  } catch (error) {
-    console.error("Failed to fetch Diagnosis models:");
-    return [];
-  } finally {
-    clearTimeout(timeoutId);
-  }
+  const result = await request(`${DIAGNOSIS_API_URL}/get_features/${type}`);
+  if (result.ok && Array.isArray(result.body?.response)) return result.body.response;
+  console.error("Failed to fetch Diagnosis models:", failure(result));
+  return [];
 };
 
+// Sample runs never send the signed-in user's token, so they are not stored against the account.
 export const getDiseasePredictions = async (modelId, inputValues, { sample = false } = {}) => {
   const token = sample ? null : cacheManager.get("token");
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 10000);
-
-  try {
-    const requestBody = { data: inputValues };
-    if (token) {
-      requestBody.token = token;
-    }
-    const response = await fetch(`${DIAGNOSIS_API_URL}/predict/${modelId}`, {
-      method: "POST",
-      signal: controller.signal,
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(requestBody),
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await readJson(response);
-
-    if (!data?.response || typeof data.response !== "object") {
-      throw new Error("Invalid API response structure");
-    }
-
-    return data.response;
-  } catch (error) {
-    console.error("Failed to fetch Diagnosis predictions:");
-    return null;
-  } finally {
-    clearTimeout(timeoutId);
-  }
+  const result = await request(`${DIAGNOSIS_API_URL}/predict/${modelId}`, { method: "POST", json: { data: inputValues, ...(token && { token }) } });
+  if (result.ok && isObject(result.body?.response)) return result.body.response;
+  console.error("Failed to fetch Diagnosis predictions:", failure(result));
+  return null;
 };
 
-export const getDiagnosisPrediction = async (modelId, inputValues, { sample = false } = {}) => {
-  const token = sample ? null : cacheManager.get("token");
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 10000);
-
-  try {
-    const requestBody = { data: inputValues };
-    if (token) {
-      requestBody.token = token;
-    }
-
-    const response = await fetch(`${DIAGNOSIS_API_URL}/predict/${modelId}`, {
-      method: "POST",
-      signal: controller.signal,
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(requestBody),
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await readJson(response);
-
-    if (!data?.response || typeof data.response !== "object") {
-      throw new Error("Invalid API response structure");
-    }
-
-    try {
-      const diagnosisReport = await getDiagnosisReport(
-        data.response.prediction
-      );
-      if (diagnosisReport && typeof diagnosisReport === "object") {
-        return { ...data.response, ...diagnosisReport }; // Merge objects
-      }
-    } catch (error) {
-      console.error("Failed to fetch Diagnosis report:", error);
-    }
-
-    return data.response; // Return original data if diagnosisReport fails
-  } catch (error) {
-    console.error("Failed to fetch Diagnosis predictions:", error);
-    return null;
-  } finally {
-    clearTimeout(timeoutId);
-  }
+// Symptom diagnosis: the model prediction, merged with the backend's report (description, medications, ...).
+export const getDiagnosisPrediction = async (modelId, inputValues, options) => {
+  const prediction = await getDiseasePredictions(modelId, inputValues, options);
+  if (!prediction) return null;
+  const report = await getDiagnosisReport(prediction.prediction);
+  return isObject(report) ? { ...prediction, ...report } : prediction;
 };
 
-//--------------------Diagnosis Report-----------------------
-
-const BACKEND_API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL || "/backend";
-
-export const getDiagnosisReport = async (disease) => {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 10000);
-
-  try {
-    const response = await fetch(`${BACKEND_API_URL}/diseases`, {
-      method: "POST",
-      signal: controller.signal,
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ data: disease }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await readJson(response);
-
-    if (!data?.response || typeof data.response !== "object") {
-      throw new Error("Invalid API response structure");
-    }
-
-    return data.response;
-  } catch (error) {
-    console.error("Failed to fetch Diagnosis predictions:", error);
-    return null;
-  } finally {
-    clearTimeout(timeoutId);
-  }
+const getDiagnosisReport = async (disease) => {
+  const result = await request(`${BACKEND_API_URL}/diseases`, { method: "POST", json: { data: disease } });
+  if (result.ok && isObject(result.body?.response)) return result.body.response;
+  console.error("Failed to fetch Diagnosis report:", failure(result));
+  return null;
 };

@@ -1,38 +1,17 @@
-// utils/food-utils.js
-
-/**
- * Maps detected foods (all lowercase) to the original values from foodNutriscoreData.
- * If a match is found, the original value (with its case) is returned.
- */
+// Maps detected food names (lowercase from the model) to dataset entries, keeping the dataset's casing,
+// and returns the best-scoring match.
 export const mapDetectedFoods = (detectedFoods, dataset, scoreKey) => {
   if (!Array.isArray(detectedFoods) || !Array.isArray(dataset)) return { mappedPredictedFoods: null, maxFood: null };
-  const mappedPredictedFoods = detectedFoods
-    .map((detected) => {
-      if (typeof detected !== "string") return null;
-      const food = dataset.find((item) => item?.name?.toLowerCase() === detected.toLowerCase());
-      return food ? { name: food.name, score: food[scoreKey] } : null;
-    })
-    .filter(Boolean); // Remove null values
-
-  if (mappedPredictedFoods.length === 0) {
-    return { mappedPredictedFoods: null, maxFood: null };
+  const byName = new Map();
+  for (const item of dataset) {
+    const key = item?.name?.toLowerCase();
+    if (key && !byName.has(key)) byName.set(key, item);
   }
-
-  // Find the food with the highest score based on scoreKey
-  const maxFood = mappedPredictedFoods.reduce((max, food) =>
-    food.score > max.score ? food : max
-  ).name;
-
+  const mappedPredictedFoods = detectedFoods
+    .map((detected) => (typeof detected === "string" ? byName.get(detected.toLowerCase()) : null))
+    .filter(Boolean)
+    .map((food) => ({ name: food.name, score: food[scoreKey] }));
+  if (!mappedPredictedFoods.length) return { mappedPredictedFoods: null, maxFood: null };
+  const maxFood = mappedPredictedFoods.reduce((max, food) => (food.score > max.score ? food : max)).name;
   return { mappedPredictedFoods, maxFood };
-}
-
-  /**
-   * Scrolls smoothly to the element with the given id.
-   */
-  export const scrollToElementById = (id) => {
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth", block: "end" });
-    }
-  };
-  
+};

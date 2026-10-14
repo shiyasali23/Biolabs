@@ -13,7 +13,7 @@ export default function ToolSurface({ kind, modal = false, dismissHref }) {
   const diagnosis = kind === 'diagnosis';
   const title = diagnosis ? 'Diagnostics Center' : 'Disease Detection';
   const header = (sampleAction, onBack) => <header className={styles.header}>
-    <div className={styles.headerTitle}>{onBack && <button type="button" className={styles.back} aria-label="Back to symptoms" onClick={onBack}><ArrowLeft size={18} aria-hidden="true"/></button>}{modal ? <Dialog.Title className={diagnosis ? styles.title : 'sr-only'}>{title}</Dialog.Title> : <h1 className={diagnosis ? styles.title : 'sr-only'}>{title}</h1>}
+    <div className={styles.headerTitle}>{onBack && <button type="button" className={styles.back} aria-label="Back to symptoms" onClick={onBack}><ArrowLeft size={18} aria-hidden="true"/></button>}{modal ? <Dialog.Title className={styles.title}>{title}</Dialog.Title> : <h1 className={styles.title}>{title}</h1>}
     </div>
     <div className={styles.headerActions}>{sampleAction}{modal ? <Dialog.Close className={styles.close} aria-label={`Close ${title}`}><X size={21} /></Dialog.Close> : <Link className={styles.close} href="/" aria-label={`Close ${title} and return home`}><X size={21}/></Link>}</div>
   </header>;

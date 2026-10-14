@@ -41,7 +41,7 @@ const FoodNutrientList = ({ itemsArray, selectedItem, handleSelectedItem, isFood
       >
         {Object.entries(categorizedItems).map(([category, items]) => (
           <AccordionItem key={category} value={category}>
-            <AccordionTrigger className="w-full px-0 py-3 text-left text-sm font-medium hover:no-underline">
+            <AccordionTrigger className="w-full px-0 py-3 text-left text-[15px] font-medium hover:no-underline">
               {headingCase(category)}
             </AccordionTrigger>
             <AccordionContent className={isFood ? "grid grid-cols-1 gap-1 px-0 sm:grid-cols-2" : "flex flex-col gap-1 px-0"}>
@@ -50,7 +50,7 @@ const FoodNutrientList = ({ itemsArray, selectedItem, handleSelectedItem, isFood
                   type="button"
                   onClick={() => handleSelectedItem(item, isFood)}
                   key={item}
-                  className={`w-full rounded-md border px-3 py-2 text-left text-xs font-medium transition ${
+                  className={`w-full rounded-md border px-3 py-2 text-left text-sm font-medium transition ${
                     item === selectedItem ? "border-[var(--biolabs-teal)] bg-[var(--biolabs-aqua)] text-[var(--biolabs-teal-dark)]" : "border-transparent hover:bg-[var(--biolabs-porcelain)]"
                   }`}
                 >

@@ -2,12 +2,12 @@
 import { useState } from "react";
 import { Loader2, MapPin, UserRound, Ruler } from "lucide-react";
 import { useUser } from "@/contexts/userContext";
-import { updateUser, updateDetails, updateAdress } from "@/lib/user-api";
+import { updateUser } from "@/lib/user-api";
 
 const sections=[
   {id:"profile",title:"Identity",icon:UserRound,fields:[["First name","first_name","text","string"],["Last name","last_name","text","string"],["Email","email","email","email"],["Sex","gender",["male","female"],"string"]],required:["first_name","last_name","email","gender"],request:updateUser},
-  {id:"details",title:"Health Details",icon:Ruler,fields:[["Height (cm)","height","number","int"],["Weight (kg)","weight","number","int"],["Date of birth","date_of_birth","date","date"],["Occupation","job","text","string"]],required:[],request:updateDetails},
-  {id:"address",title:"Address",icon:MapPin,fields:[["Street","address","text","string"],["City","city","text","string"],["State","state","text","string"],["Postal code","zip_code","text","string"]],required:[],request:updateAdress},
+  {id:"details",title:"Health Details",icon:Ruler,fields:[["Height (cm)","height","number","int"],["Weight (kg)","weight","number","int"],["Date of birth","date_of_birth","date","date"],["Occupation","job","text","string"]],required:[],request:updateUser},
+  {id:"address",title:"Address",icon:MapPin,fields:[["Street","address","text","string"],["City","city","text","string"],["State","state","text","string"],["Postal code","zip_code","text","string"]],required:[],request:updateUser},
 ];
 const format=(value,type)=>{if(value===""||value===null||value===undefined)return null;if(type==="int")return Number.parseInt(value,10)||null;if(type==="email"||type==="string")return String(value).trim()||null;return value;};
 

@@ -2,13 +2,10 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { getRecords, registerRecords } from "@/lib/vault-api";
 import { cacheManager } from "@/utils/cache-wroker";
-import dummyRecordsData from "@/jsons/dummy-records-data.json";
-import { useIsClient } from "@/hooks/useIsClient";
 
 const RecordContext = createContext();
 
 export const RecordProvider = ({ children }) => {
-  const isClient = useIsClient();
   const [recordsArray, setrecordsArray] = useState(null);
   const [recordsLoading, setRecordsLoading] = useState(false);
 
@@ -23,7 +20,6 @@ export const RecordProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    if (!isClient) return;
 
     setRecordsLoading(true);
     const cachedRecords = cacheManager.get("records");
@@ -32,7 +28,7 @@ export const RecordProvider = ({ children }) => {
       setrecordsArray(cachedRecords);
     }
     setRecordsLoading(false);
-  }, [isClient]);
+  }, []);
 
   const updateRecord = async (reportData) => {
     try {
@@ -61,6 +57,8 @@ export const RecordProvider = ({ children }) => {
   const resetRecords = useCallback(() => setrecordsArray(null), []);
 
   const loadDummyRecords = async () => {
+    // Loaded on demand so the sample records are not shipped with every page.
+    const { default: dummyRecordsData } = await import("@/jsons/dummy-records-data.json");
     if (!dummyRecordsData) return false;
     setrecordsArray([dummyRecordsData]);
     return true;

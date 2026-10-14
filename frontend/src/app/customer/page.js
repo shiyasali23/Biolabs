@@ -1,21 +1,21 @@
 "use client";
 import { headingCase } from "@/lib/heading-case";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight, ArrowDownRight, Apple, Check, FolderHeart, Sparkles, Microscope, Minus, Play, Loader2, ChevronDown } from "lucide-react";
 import { useUser } from "@/contexts/userContext";
-import HealthScoreGraph from "@/components/HealthScoreGraph";
 import BrandLogo from "@/components/BrandLogo";
-import BiometricsEntryModal from "@/components/BiometricsEntryModal";
 import DiseaseDetectionModal from "@/components/DiseaseDetectionModal";
 import dynamic from "next/dynamic";
 import { getBiometricEntry } from "@/utils/analytics-utils";
 import { rangeStatus, statusLabels, formatNumber } from "@/lib/clinical-display";
 import styles from "./page.module.css";
 
-// Camera, upload and chart code load after the dashboard renders.
+// Camera, upload and chart code (chart.js) load only when a member view needs them; guests never download them.
 const FoodPhotoSection = dynamic(() => import("@/components/FoodPhotoSection"), { ssr: false });
+const HealthScoreGraph = dynamic(() => import("@/components/HealthScoreGraph"), { ssr: false });
+const BiometricsEntryModal = dynamic(() => import("@/components/BiometricsEntryModal"), { ssr: false });
 
 const FOOD_GROUPS = [
   ["Fruit", ["Strawberry", "Blueberry", "Raspberry", "Orange", "Lime", "Mandarin", "Banana", "Mango", "Pineapple", "Guava", "Kiwi", "Peach", "Plum", "Apricot", "Cherry", "Watermelon", "Muskmelon", "Apple", "Pear"]],
@@ -36,6 +36,11 @@ export default function Customer() {
   const [showAllNormal, setShowAllNormal] = useState(false);
   const [showAllFoods, setShowAllFoods] = useState(false);
   const busy = useRef(false);
+  // The context restores from storage right after hydration, so "loading" is true on the server and for the
+  // first client frame. Only show the loading notice for loads that start after that restore (sample, sign-in);
+  // otherwise it renders in the server HTML and vanishes at once, shifting everything below it.
+  const [restored, setRestored] = useState(false);
+  useEffect(() => { if (!userDataLoading) setRestored(true); }, [userDataLoading]);
   const ready = isLogined || isSample;
   const rows = ready ? latestBiometrics || [] : [];
   const recommendedFoods = useMemo(() => {
@@ -81,12 +86,15 @@ export default function Customer() {
       <Link className={styles.account} href={isLogined ? "/profile" : "/sign-in?next=/customer"}>{isLogined ? "Your profile" : "Sign in"}<ArrowUpRight size={16}/></Link>
     </header>
     <main id="customer-content" className={styles.main}>
+      {/* Guest and member views are separate subtrees: a cached session swaps one for the other right after
+          hydration, and replacing nodes (rather than pushing the same nodes down) causes no layout shift. */}
+      <Fragment key={ready ? "member" : "guest"}>
       {!isLogined && !isSample && <section id="get-started" className={styles.welcome} aria-label="Get started">
         <div><h2>{isSample ? "Sample Results" : "Explore With Sample Data"}</h2><p>{isSample ? "Demo data · not your medical records" : "No account needed."}</p></div>
         <div className={styles.actions}>{!isSample && <button className={`${styles.primary} ${styles.sampleButton}`} disabled={loading || userDataLoading} aria-busy={loading} onClick={() => startSample()}><span className={styles.launchIcon} aria-hidden="true">{loading ? <Loader2 size={18}/> : <Play size={16} fill="currentColor"/>}</span><span>{loading ? "Loading sample…" : "Try sample data"}</span><ArrowRight size={18} aria-hidden="true"/></button>}<Link className={isSample ? styles.primary : styles.secondary} href="/sign-up?next=/customer">Create account<ArrowUpRight size={18}/></Link></div>
         {error && <p role="alert">{error}</p>}
       </section>}
-      <div aria-live="polite">{userDataLoading && <p className={styles.notice}>Loading your health information…</p>}</div>
+      <div aria-live="polite">{restored && userDataLoading && <p className={styles.notice}>Loading your health information…</p>}</div>
       {ready && !userDataLoading && <div className={styles.loadedContent}>
         <section className={styles.score} aria-label="Health Score">
           <div className={styles.sectionHeading}><Link className={`${styles.textLink} ${styles.iconLink}`} href="/profile?tab=measurements" aria-label={isSample ? "Measurements" : "Add results"}><ArrowUpRight size={18} aria-hidden="true"/></Link></div>
@@ -137,6 +145,7 @@ export default function Customer() {
       </div>}
       <nav className={styles.tools} aria-label="Health tools"><div className={styles.toolLinks}>{[[ready ? "#disease-detection" : "#get-started","Disease detection",Microscope],[ready && recommendedFoods.length ? "#food-recommendations" : "/workspace/food","Food & nutrition",Apple],["/workspace/vault","Records",FolderHeart],["/workspace/vault?intelligence=true","Intelligence",Sparkles]].map(([href,title,Icon]) => <Link key={title} href={href}><Icon size={22}/><div>{title}</div><ArrowUpRight size={18}/></Link>)}</div></nav>
       {ready && <p className={styles.footer}>Reference-range flags are not diagnoses.</p>}
+      </Fragment>
     </main>
     {entry && <BiometricsEntryModal isOpen onClose={() => setEntry(null)} selectedBiometricEntry={entry}/>}
   </div>;

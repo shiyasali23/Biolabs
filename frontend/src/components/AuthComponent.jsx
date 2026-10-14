@@ -5,14 +5,12 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { CheckCircle2, Loader2, LockKeyhole } from "lucide-react";
 import { authenticate } from "@/lib/auth-api";
-import { useData } from "@/contexts/dataContext";
 import { useUser } from "@/contexts/userContext";
 import { useRecord } from "@/contexts/recordContext";
 
 export default function AuthComponent({ signUp = false }) {
   const router = useRouter();
   const [showPassword,setShowPassword] = useState(false);
-  const { authApiOptions } = useData();
   const { handleAuthResponse } = useUser();
   const { resetRecords } = useRecord();
   const [isSignUp, setIsSignUp] = useState(signUp);
@@ -27,7 +25,7 @@ export default function AuthComponent({ signUp = false }) {
     const required = isSignUp ? Object.values(inputFields) : [inputFields.email, inputFields.password];
     if (required.some((value) => !String(value).trim())) { setMessage(isSignUp ? "Complete every field to create your account." : "Enter your email and password."); return; }
     setLoading(true);
-    const { data, message: responseMessage } = await authenticate(inputFields, authApiOptions[isSignUp ? 1 : 0]);
+    const { data, message: responseMessage } = await authenticate(inputFields, isSignUp ? "signup" : "authenticate");
     if (responseMessage) setMessage(responseMessage); else if (data) { resetRecords(); await handleAuthResponse(data); const next = new URLSearchParams(window.location.search).get("next"); router.push(next && next.startsWith("/") && !next.startsWith("//") && !next.includes("\\") ? next : "/workspace/analytics"); }
     setLoading(false);
   };

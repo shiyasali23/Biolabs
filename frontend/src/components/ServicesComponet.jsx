@@ -47,7 +47,7 @@ export default function ServicesComponent() {
   return (
     <section className="home-services restored-services" id="solutions" aria-label="Biolabs services">
       <div className="bio-container">
-        <header className="services-heading">
+        <header className="services-heading" data-reveal>
           <div><p className="services-eyebrow">Inside The Platform</p><h2>From Records<br />To Understanding.</h2></div>
         </header>
         <div className="service-grid">
@@ -58,6 +58,8 @@ export default function ServicesComponent() {
                 type="button"
                 onClick={event => onServiceClick(index, event)}
                 className={`service-card service-card-${index}`}
+                data-reveal
+                style={{ "--reveal-index": index % 2 + Math.floor(index / 2) }}
                 aria-label={`Open ${title}`}
                 key={title}
               >

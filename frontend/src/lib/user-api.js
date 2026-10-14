@@ -1,151 +1,25 @@
-import { readJson } from "./http.js";
+import { BACKEND_API_URL, failure, request } from "./http.js";
 import { cacheManager } from "@/utils/cache-wroker";
 
-//utils/DiagnosisDetectionUtils.js
-const BACKEND_API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL || "/backend";
+const requireToken = (message = "Something went wrong,") => {
+  const token = cacheManager.get("token");
+  if (!token) throw new Error(message);
+  return token;
+};
 
-//---------------------User Data-----------------------------
+// Profile, health details and address all post partial updates to the same endpoint.
 export const updateUser = async (inputValues) => {
-  const token = cacheManager.get("token");
-  if (!token) {
-    throw new Error("Something went wrong,");
-  }
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 10000);
-
-  try {
-    const response = await fetch(`${BACKEND_API_URL}/user/update`, {
-      method: "POST",
-      signal: controller.signal,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Token ${token}`,
-      },
-      body: JSON.stringify({ data: inputValues }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-
-    const result = await readJson(response);
-    return result?.response || null;
-  } catch (error) {
-    console.error("Error updating user:", error.message);
-    return null;
-  } finally {
-    clearTimeout(timeoutId);
-  }
+  const result = await request(`${BACKEND_API_URL}/user/update`, { method: "POST", token: requireToken(), json: { data: inputValues } });
+  if (!result.ok) { console.error("Error updating user:", failure(result)); return null; }
+  return result.body?.response || null;
 };
 
-//---------------------Additional details-----------------------------
-
-export const updateDetails = async (inputValues) => {
-  const token = cacheManager.get("token");
-  if (!token) {
-    throw new Error("Something went wrong,");
-  }
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 10000);
-
-  try {
-    const response = await fetch(`${BACKEND_API_URL}/user/update`, {
-      method: "POST",
-      signal: controller.signal,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Token ${token}`,
-      },
-      body: JSON.stringify({ data: inputValues }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-
-    const result = await readJson(response);
-    return result?.response || null;
-  } catch (error) {
-    console.error("Error updating user:", error.message);
-    return null;
-  } finally {
-    clearTimeout(timeoutId);
-  }
-};
-
-//---------------------Address-----------------------------
-export const updateAdress = async (inputValues) => {
-  const token = cacheManager.get("token");
-  if (!token) {
-    throw new Error("Something went wrong,");
-  }
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 10000);
-
-  try {
-    const response = await fetch(`${BACKEND_API_URL}/user/update`, {
-      method: "POST",
-      signal: controller.signal,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Token ${token}`,
-      },
-      body: JSON.stringify({ data: inputValues }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-
-    const result = await readJson(response);
-    return result?.response || null;
-  } catch (error) {
-    console.error("Error updating user:", error.message);
-    return null;
-  } finally {
-    clearTimeout(timeoutId);
-  }
-};
-//---------------------Biometrics-----------------------------
-
-export const updateBiometrics = async (
-  updatedBiochemicalsData,
-  unExpiredBiometricsData
-) => {
-  const token = cacheManager.get("token");
-  if (!token) {
-    throw new Error("Something went wrong, token is missing");
-  }
-
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 10000);
-
-  try {
-    const response = await fetch(`${BACKEND_API_URL}/biometrics`, {
-      method: "POST",
-      signal: controller.signal,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Token ${token}`,
-      },
-      body: JSON.stringify({
-        data: {
-          updatedBiochemicalsData: updatedBiochemicalsData,
-          unExpiredBiometricsData: unExpiredBiometricsData,
-        },
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-
-    const result = await readJson(response);
-    return result?.response || null;
-  } catch (error) {
-    console.error("Error updating biometrics:", error.message);
-    return null;
-  } finally {
-    clearTimeout(timeoutId);
-  }
+export const updateBiometrics = async (updatedBiochemicalsData, unExpiredBiometricsData) => {
+  const result = await request(`${BACKEND_API_URL}/biometrics`, {
+    method: "POST",
+    token: requireToken("Something went wrong, token is missing"),
+    json: { data: { updatedBiochemicalsData, unExpiredBiometricsData } },
+  });
+  if (!result.ok) { console.error("Error updating biometrics:", failure(result)); return null; }
+  return result.body?.response || null;
 };

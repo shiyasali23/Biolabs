@@ -28,3 +28,13 @@
 @keyframes spin { to { transform:rotate(360deg); } }
 @media(max-width:420px) { .panel { padding:30px 20px 24px; } .title { font-size:23px; } .upload { padding:16px; gap:12px; } }
 @media(prefers-reduced-motion:reduce) { .upload { transition:none; } .spinner { animation:none; } }
+
+/* Dialog motion: overlay fades, panel settles in (scale/translate properties, so the centring transform is untouched). */
+@keyframes overlayIn { from { opacity: 0; } }
+@keyframes overlayOut { to { opacity: 0; } }
+@keyframes dialogIn { from { opacity: 0; scale: .97; translate: 0 10px; } }
+@keyframes dialogOut { to { opacity: 0; scale: .98; } }
+.overlay[data-state="open"] { animation: overlayIn var(--motion-base) ease-out; }
+.dialog[data-state="open"] { animation: dialogIn .38s var(--motion-ease); }
+.overlay[data-state="closed"] { animation: overlayOut var(--motion-fast) ease-in forwards; }
+.dialog[data-state="closed"] { animation: dialogOut var(--motion-fast) ease-in forwards; }

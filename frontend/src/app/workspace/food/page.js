@@ -7,7 +7,6 @@ import { mapDetectedFoods } from "@/utils/food-utils";
 import { processFoodsScore } from "@/utils/food-woker";
 import { useFood } from "@/contexts/foodContext";
 import { useUser } from "@/contexts/userContext";
-import CameraModule from "@/components/CameraModule";
 import LoadingComponent from "@/components/LoadingComponent";
 import FoodSearch from "@/components/FoodSearch";
 import FoodNutrientList from "@/components/FoodNutrientList";
@@ -15,7 +14,11 @@ import FoodNutrientBarGraph from "@/components/FoodNutrientBarGraph";
 import FoodsScores from "@/components/FoodsScores";
 import FoodPredictionsBarGraph from "@/components/FoodPredictionsBarGraph";
 import ErrorComponent from "@/components/ErrorComponent";
+import dynamic from "next/dynamic";
 import styles from "./food.module.css";
+
+// Webcam + upload libraries load only when the Food Photo dialog opens (its frame has a fixed height).
+const CameraModule = dynamic(() => import("@/components/CameraModule"), { ssr: false });
 
 export default function Food() {
   const { nutrientsData, foodsData, foodNutrients, nutrientsFoods, foodNutrientsDataLoading, fetchFoodNutrients, foodNutriscoreData } = useFood();
@@ -30,7 +33,11 @@ export default function Food() {
     if (!reveal) return;
     const detail = document.getElementById("nutrition-detail");
     detail?.focus({ preventScroll: true });
-    detail?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth", block: "start" });
+    if (window.matchMedia("(min-width: 1024px)").matches) return;
+    // Wait until the new composition has painted, otherwise the smooth scroll is cancelled mid-way.
+    let inner = 0;
+    const outer = requestAnimationFrame(() => { inner = requestAnimationFrame(() => detail?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth", block: "start" })); });
+    return () => { cancelAnimationFrame(outer); cancelAnimationFrame(inner); };
   }, [reveal]);
   const processedFoodsScore = useMemo(() => foodsScore && foodsData ? processFoodsScore(foodsScore, foodsData) : null, [foodsScore, foodsData]);
   useEffect(() => { if (!foodNutriscoreData) fetchFoodNutrients(); }, [foodNutriscoreData, fetchFoodNutrients]);
@@ -75,8 +82,8 @@ export default function Food() {
       </div>
       <div className={styles.explorer}>
         <section className={styles.library} aria-label="Foods and nutrients"><div><h2>Foods</h2><FoodNutrientList itemsArray={foodsData} selectedItem={selection?.name} handleSelectedItem={selectAndReveal} isFood groupByCategory/></div><div><h2>Nutrients</h2><FoodNutrientList itemsArray={nutrientsData} selectedItem={selection?.name} handleSelectedItem={selectAndReveal} isFood={false} groupByCategory/></div></section>
+        <section tabIndex={-1} id="nutrition-detail" className={`${styles.detail}${selection ? "" : ` ${styles.detailEmpty}`}`} aria-label="Nutrition composition" aria-live="polite">{selection ? <FoodNutrientBarGraph key={selection.name} selectedData={selection.data} isItemFood={selection.isFood}/> : <p className={styles.detailHint}>Choose a food or nutrient to see its composition.</p>}</section>
       </div>
-      {selection && <section tabIndex={-1} id="nutrition-detail" className={styles.detail} aria-label="Nutrition composition"><FoodNutrientBarGraph key={selection.name} selectedData={selection.data} isItemFood={selection.isFood}/></section>}
       <section className={styles.recommendations} aria-label="Food recommendations"><FoodsScores processedFoodsScore={processedFoodsScore} handleSelectedItem={selectAndReveal}/></section>
     </>}
   </div></main>;
