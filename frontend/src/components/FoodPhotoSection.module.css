@@ -13,3 +13,17 @@
 @media(max-width:860px) { .grid { grid-template-columns:1fr; } }
 @media(max-width:700px) { .section { margin-top:20px; padding:22px; } .heading { margin-bottom:20px; } .camera { height:300px; } .detail { padding:20px; } }
 @media(max-width:420px) { .section { padding:18px; } .camera,.results { padding:14px; } .camera { height:280px; } .detail { padding:16px; } }
+/* The live camera view fills the box instead of spilling past it (its own 288px minimum exceeded small boxes). */
+.camera > div { min-height:0; }
+/* Phones: heading and the whole camera, including its buttons, fit one screen; the box grows on taller screens. */
+@media(max-width:700px) {
+  .section { margin-top:12px; padding:14px; scroll-margin-top:8px; }
+  .heading { margin-bottom:10px; }
+  .heading h2 { font-size:20px; }
+  .heading p { margin-top:2px; }
+  .grid { gap:10px; }
+  .camera,.results,.detail { padding:12px; }
+  .camera,.single .camera { height:280px; height:clamp(240px,calc(100svh - 150px),320px); }
+  .results,.detail { scroll-margin-top:8px; }
+  .detail { margin-top:10px; }
+}

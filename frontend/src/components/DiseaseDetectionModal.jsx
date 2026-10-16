@@ -26,6 +26,13 @@ export default function DiseaseDetectionModal({ isOpen, onClose, embedded = fals
   const [predictionsDict, setPredictionsDict] = useState({});
   const [editedModels, setEditedModels] = useState({});
   const [liveResults, setLiveResults] = useState({});
+  // In the customer view a new result renders at the top of its card, above the inputs the user just edited.
+  const [revealModel, setRevealModel] = useState(null);
+  useEffect(() => {
+    if (revealModel == null) return;
+    document.getElementById(`detection-model-${revealModel}`)?.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+    setRevealModel(null);
+  }, [revealModel]);
   const autoLoadAttemptedRef = useRef(false);
   const requestInFlightRef = useRef(false);
   const modelType = "disease_detections";
@@ -120,6 +127,7 @@ export default function DiseaseDetectionModal({ isOpen, onClose, embedded = fals
       if (prediction) {
         setPredictionsDict((current) => ({ ...current, [modelId]: prediction }));
         setLiveResults((current) => ({ ...current, [modelId]: true }));
+        if (customerView) setRevealModel(modelId);
       }
       else setErrorsDict((current) => ({ ...current, [modelId]: "A result could not be generated. Please try again." }));
     } catch {
@@ -146,7 +154,7 @@ export default function DiseaseDetectionModal({ isOpen, onClose, embedded = fals
 
         <div className="p-5 sm:p-7">
           {loading ? <LoadingComponent text="Loading detection models" /> : !diseaseDetectionModals.length ? <ErrorComponent heading="Detection Models Are Unavailable" buttonText="Try again" handleTryAgain={loadModels} /> : (
-            <Accordion type="single" value={openAcc} collapsible onValueChange={setOpenAcc} className={customerView ? "grid grid-cols-1 items-start gap-4 sm:grid-cols-2" : "space-y-4"}>
+            <Accordion type="single" value={openAcc} collapsible onValueChange={setOpenAcc} className={customerView ? "grid grid-cols-1 items-start gap-3 sm:grid-cols-2 sm:gap-4" : "space-y-4"}>
               {diseaseDetectionModals.map((model) => {
                 const features = parseJson(model.feature_names, []);
                 const featureMaps = parseJson(model.feature_maps, {});
@@ -154,12 +162,12 @@ export default function DiseaseDetectionModal({ isOpen, onClose, embedded = fals
                 const prediction = predictionsDict[model.id];
                 const ModelIcon = model.name === "Diabetes" ? Droplets : Activity;
                 return (
-                  <AccordionItem key={model.id} value={String(model.id)} className={`min-w-0 overflow-hidden rounded-xl px-0 ${customerView ? "border-0 bg-white shadow-[0_10px_30px_rgba(11,23,57,0.09)] transition-shadow hover:shadow-[0_14px_36px_rgba(11,23,57,0.13)] motion-reduce:transition-none data-[state=open]:sm:col-span-2" : "border"}`}>
-                    <AccordionTrigger className={`${customerView ? "items-start px-4 py-5 sm:px-5" : "px-5 py-5 sm:px-6"} text-left hover:no-underline`}>
+                  <AccordionItem key={model.id} id={customerView ? `detection-model-${model.id}` : undefined} value={String(model.id)} className={`min-w-0 overflow-hidden rounded-xl px-0 ${customerView ? "scroll-mt-2 border-0 bg-white shadow-[0_10px_30px_rgba(11,23,57,0.09)] transition-shadow hover:shadow-[0_14px_36px_rgba(11,23,57,0.13)] motion-reduce:transition-none data-[state=open]:sm:col-span-2" : "border"}`}>
+                    <AccordionTrigger className={`${customerView ? "items-start px-4 py-3.5 sm:px-5 sm:py-5" : "px-5 py-5 sm:px-6"} text-left hover:no-underline`}>
                       {customerView ? <span className="flex min-w-0 flex-1 flex-col pr-2">
                         <span className="flex items-center gap-3"><span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[var(--biolabs-aqua)] text-[var(--biolabs-teal)]"><ModelIcon aria-hidden="true" size={18} /></span><span className="text-lg font-semibold leading-6">{model.name}</span></span>
-                        {prediction ? <span className="mt-5 grid grid-cols-2 gap-2.5">{outputLabels.map((label) => { const active = prediction.prediction === label; const probability = Number(prediction.probabilities?.[label]); return <span key={label} className={`min-w-0 rounded-xl px-3 py-3 ${active ? "bg-[var(--biolabs-teal)] text-white shadow-[0_6px_16px_rgba(8,127,122,0.22)]" : "bg-[var(--biolabs-porcelain)] text-[var(--biolabs-ink)]"}`}><span className={`block truncate text-[11px] font-semibold leading-4 ${active ? "text-white" : "text-[var(--biolabs-slate)]"}`}>{label}</span><span className="mt-1 block text-lg font-medium tabular-nums">{probability.toFixed(1)}%</span><span className={`mt-2 block h-1 overflow-hidden rounded-full ${active ? "bg-white/30" : "bg-[var(--biolabs-cloud)]"}`}><span className={`block h-full rounded-full ${active ? "bg-white" : "bg-[var(--biolabs-teal)]"}`} style={{ width: `${probability}%` }} /></span></span>; })}</span> : <span className="mt-5 text-sm text-[var(--biolabs-slate)]">Awaiting calculation</span>}
-                        <span className="mt-5 text-xs font-semibold text-[var(--biolabs-teal)]">View inputs</span>
+                        {prediction ? <span className="mt-3 grid grid-cols-2 gap-2 sm:mt-5 sm:gap-2.5">{outputLabels.map((label) => { const active = prediction.prediction === label; const probability = Number(prediction.probabilities?.[label]); return <span key={label} className={`min-w-0 rounded-xl px-3 py-2.5 sm:py-3 ${active ? "bg-[var(--biolabs-teal)] text-white shadow-[0_6px_16px_rgba(8,127,122,0.22)]" : "bg-[var(--biolabs-porcelain)] text-[var(--biolabs-ink)]"}`}><span className={`block truncate text-[11px] font-semibold leading-4 ${active ? "text-white" : "text-[var(--biolabs-slate)]"}`}>{label}</span><span className="mt-1 block text-lg font-medium tabular-nums">{probability.toFixed(1)}%</span><span className={`mt-2 block h-1 overflow-hidden rounded-full ${active ? "bg-white/30" : "bg-[var(--biolabs-cloud)]"}`}><span className={`block h-full rounded-full ${active ? "bg-white" : "bg-[var(--biolabs-teal)]"}`} style={{ width: `${probability}%` }} /></span></span>; })}</span> : <span className="mt-5 text-sm text-[var(--biolabs-slate)]">Awaiting calculation</span>}
+                        <span className="mt-3 text-xs font-semibold text-[var(--biolabs-teal)] sm:mt-5">View inputs</span>
                       </span> : <span className="flex w-full flex-col justify-between gap-2 pr-3 sm:flex-row sm:items-center">
                         <span className="block text-lg font-semibold">{model.name}</span>
                         <span className="flex flex-wrap items-center gap-2">{isSample && editedModels[model.id] && !liveResults[model.id] && <span className="rounded-md bg-[var(--biolabs-warning-bg)] px-3 py-2 text-xs font-semibold text-[var(--biolabs-warning)]">Edited · live calculation required</span>}{isSample && liveResults[model.id] && <span className="bio-status-normal"><CheckCircle2 aria-hidden="true" size={12} />Live result</span>}{model.accuracy != null && <span className="bio-status-normal"><CheckCircle2 aria-hidden="true" size={12} />Reported model accuracy {(Number(model.accuracy) * 100).toFixed(1)}%</span>}</span>

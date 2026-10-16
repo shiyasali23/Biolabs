@@ -24,3 +24,43 @@
 
 /* "Sign in" and "Your profile" share one right-anchored box, so the label swap after hydration never moves it. */
 .header .account{min-width:118px;justify-content:flex-end}
+
+/* Phones: every section fits one screen. Sized against the smallest common visible viewport (iPhone SE with Safari's
+   bars, 375x553): one 12px rhythm between sections, about 14px inside them. Out-of-range cards drop the status line;
+   the group heading above already says it. */
+@media(max-width:700px){
+.header{padding:10px 16px}
+.main{padding:0 16px 24px}
+.welcome{margin:4px auto 0}
+.score{padding:6px 14px 12px;margin-bottom:12px;border-radius:16px}
+.chart{height:180px;margin:0}
+.detection{margin:0 0 12px;scroll-margin-top:8px}
+.detection :global(.clinical-tool-content)>div{padding:0}
+.group{margin-top:16px;scroll-margin-top:8px}
+.group:first-child{margin-top:0}
+.groupHeading{margin-bottom:8px}
+.cards,.normalCards{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.result{padding:12px;border-radius:14px}
+.result h4{font-size:14px;line-height:1.3}
+.value{font-size:22px;margin:8px 0 2px}
+.value span{font-size:12px}
+.range{font-size:12px;line-height:1.4}
+.result .status{display:none}
+.resultRevealCollapsed{max-height:210px}
+.resultRevealCollapsed .disclosure{min-height:96px}
+.disclosure{padding-top:10px}
+.foodRecommendations{margin-top:12px;padding:14px;scroll-margin-top:8px}
+.foodHeading{flex-direction:row;align-items:center;margin-bottom:10px}
+.foodHeading h2{font-size:20px}
+.foodHeading .textLink{margin-top:0}
+.foodLink{min-width:44px;justify-content:flex-end}
+.foodLinkText{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.foodList li{min-height:52px;padding:10px 12px}
+.foodLead{min-height:64px!important}
+.foodRevealCollapsed{max-height:282px}
+.foodRevealCollapsed .foodDisclosure{min-height:96px}
+.foodDisclosure{padding-top:10px}
+.foodContext{margin-top:8px}
+.tools{margin-top:12px}
+.footer{margin-top:12px}
+}

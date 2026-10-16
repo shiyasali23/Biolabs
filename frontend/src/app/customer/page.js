@@ -33,7 +33,7 @@ export default function Customer() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [entry, setEntry] = useState(null);
-  const [showAllNormal, setShowAllNormal] = useState(false);
+  const [expandedGroups, setExpandedGroups] = useState({});
   const [showAllFoods, setShowAllFoods] = useState(false);
   const busy = useRef(false);
   // The context restores from storage right after hydration, so "loading" is true on the server and for the
@@ -105,15 +105,20 @@ export default function Customer() {
           {!rows.length && <div className={styles.empty}><h3>No Results Yet</h3><p>Add your first measurements to see them here.</p><Link className={styles.primary} href="/profile?tab=measurements">Add measurements<ArrowRight size={18}/></Link></div>}
           {groups.map(([status, title]) => {
             const items = rows.filter(item => rangeStatus(item) === status);
-            const collapsible = status === "normal" && items.length > 2;
+            // Long groups stay one screen tall: "within range" previews two rows under a fade; out-of-range groups show
+            // their first six (three rows on phones) and list the rest on request.
+            const open = !!expandedGroups[status];
+            const faded = status === "normal";
+            const limit = faded ? 4 : 6;
+            const collapsible = items.length > (faded ? 2 : limit);
             const StatusIcon = status === "high" ? ArrowUpRight : status === "low" ? ArrowDownRight : status === "normal" ? Check : Minus;
             return items.length > 0 && <section key={status} className={styles.group}>
               <h3 className={styles.groupHeading} data-status={status}><span className={styles.groupIcon}><StatusIcon size={16} aria-hidden="true" /></span><span>{title}</span><span className={styles.groupRule} aria-hidden="true" /></h3>
-              <div className={`${collapsible ? styles.resultReveal : ""} ${collapsible && !showAllNormal ? styles.resultRevealCollapsed : ""}`}>
+              <div className={`${collapsible && faded ? styles.resultReveal : ""} ${collapsible && faded && !open ? styles.resultRevealCollapsed : ""}`}>
                 <div id={`customer-results-${status}`} className={`${styles.cards} ${status === "normal" ? styles.normalCards : ""}`}>
-                  {items.map((item,index) => <article hidden={collapsible && !showAllNormal && index >= 4} key={`${item.name}-${index}`} className={`${styles.result} ${styles[status]}`}><div className={styles.resultTop}><h4>{headingCase(item.name)}</h4>{status === "high" ? <ArrowUpRight size={20} aria-hidden="true"/> : status === "low" ? <ArrowDownRight size={20} aria-hidden="true"/> : null}</div><p className={styles.value}>{formatNumber(item.value)} <span>{item.unit}</span></p><p className={styles.range}>Reference: {status === "unknown" ? "unavailable" : `${formatNumber(item.healthy_min)}–${formatNumber(item.healthy_max)} ${item.unit || ""}`}</p><span className={styles.status}>{statusLabels[status]}</span></article>)}
+                  {items.map((item,index) => <article hidden={collapsible && !open && index >= limit} key={`${item.name}-${index}`} className={`${styles.result} ${styles[status]}`}><div className={styles.resultTop}><h4>{headingCase(item.name)}</h4>{status === "high" ? <ArrowUpRight size={20} aria-hidden="true"/> : status === "low" ? <ArrowDownRight size={20} aria-hidden="true"/> : null}</div><p className={styles.value}>{formatNumber(item.value)} <span>{item.unit}</span></p><p className={styles.range}>Reference: {status === "unknown" ? "unavailable" : `${formatNumber(item.healthy_min)}–${formatNumber(item.healthy_max)} ${item.unit || ""}`}</p><span className={styles.status}>{statusLabels[status]}</span></article>)}
                 </div>
-                {collapsible && <div className={`${styles.disclosure} ${!showAllNormal ? styles.faded : ""}`}><button aria-expanded={showAllNormal} aria-controls="customer-results-normal" onClick={event => { if (showAllNormal) event.currentTarget.closest("section").scrollIntoView({behavior:"smooth",block:"start"}); setShowAllNormal(value => !value); }}>{showAllNormal ? "Show less" : `Show ${items.length - 2} more`}<ChevronDown size={18} aria-hidden="true" className={showAllNormal ? styles.chevronUp : ""}/></button></div>}
+                {collapsible && <div className={styles.disclosure}><button aria-expanded={open} aria-controls={`customer-results-${status}`} onClick={event => { if (open) event.currentTarget.closest("section").scrollIntoView({behavior:"smooth",block:"start"}); setExpandedGroups(current => ({ ...current, [status]: !open })); }}>{open ? "Show less" : `Show ${items.length - (faded ? 2 : limit)} more`}<ChevronDown size={18} aria-hidden="true" className={open ? styles.chevronUp : ""}/></button></div>}
               </div>
             </section>;
           })}
@@ -121,7 +126,7 @@ export default function Customer() {
         {recommendedFoods.length > 0 && <section id="food-recommendations" className={styles.foodRecommendations} aria-labelledby="food-recommendations-title">
           <div className={styles.foodHeading}>
             <h2 id="food-recommendations-title">Food Recommendations</h2>
-            <Link className={styles.textLink} href="/workspace/food">Explore nutrition<ArrowUpRight size={16}/></Link>
+            <Link className={`${styles.textLink} ${styles.foodLink}`} href="/workspace/food"><span className={styles.foodLinkText}>Explore nutrition</span><ArrowUpRight size={16} aria-hidden="true"/></Link>
           </div>
           {!showAllFoods ? <div className={`${styles.foodReveal} ${styles.foodRevealCollapsed}`}>
           <ol id="customer-food-recommendations" className={styles.foodList}>

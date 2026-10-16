@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { detectFood } from "@/lib/foods-api";
 import { mapDetectedFoods } from "@/utils/food-utils";
 import { processFoodsScore } from "@/utils/food-woker";
@@ -10,6 +10,9 @@ import FoodPredictionsBarGraph from "./FoodPredictionsBarGraph";
 import FoodNutrientBarGraph from "./FoodNutrientBarGraph";
 import styles from "./FoodPhotoSection.module.css";
 
+// Brings a block into view after an action changes it (instant under reduced motion).
+const reveal = (element, block = "start") => element?.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block });
+
 export default function FoodPhotoSection() {
   const { foodsData, foodNutrients, foodNutriscoreData, fetchFoodNutrients } = useFood();
   const { foodsScore } = useUser();
@@ -17,8 +20,13 @@ export default function FoodPhotoSection() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
   const [selection, setSelection] = useState(null);
+  const sectionRef = useRef(null);
+  const resultsRef = useRef(null);
+  const detailRef = useRef(null);
 
   useEffect(() => { if (!foodNutriscoreData) fetchFoodNutrients(); }, [foodNutriscoreData, fetchFoodNutrients]);
+  // When an analysis finishes, scroll to its result.
+  useEffect(() => { if (predictions || message) reveal(resultsRef.current); }, [predictions, message]);
   const processedFoodsScore = useMemo(() => foodsScore && foodsData ? processFoodsScore(foodsScore, foodsData) : null, [foodsScore, foodsData]);
 
   const selectFood = useCallback(name => {
@@ -40,18 +48,18 @@ export default function FoodPhotoSection() {
     finally { setLoading(false); }
   };
 
-  return <section id="food-photo" className={styles.section} aria-labelledby="food-photo-title">
+  return <section ref={sectionRef} id="food-photo" className={styles.section} aria-labelledby="food-photo-title">
     <header className={styles.heading}>
       <h2 id="food-photo-title">Food Photo</h2>
       <p>See how a meal fits your profile.</p>
     </header>
     <div className={`${styles.grid} ${predictions || message ? "" : styles.single}`}>
-      <div className={styles.camera}><CameraModule handleImage={handleImage} predictionLoading={loading}/></div>
-      {(predictions || message) && <div className={styles.results} aria-live="polite">
+      <div className={styles.camera}><CameraModule handleImage={handleImage} predictionLoading={loading} onCameraOpen={() => reveal(sectionRef.current, "nearest")}/></div>
+      {(predictions || message) && <div ref={resultsRef} className={styles.results} aria-live="polite">
         {message && <p role="alert" className={styles.error}>{message}</p>}
-        {predictions && <FoodPredictionsBarGraph predictedFoodsData={predictions} handleSelectedItem={name => selectFood(name)} isNutriScore={!processedFoodsScore}/>}
+        {predictions && <FoodPredictionsBarGraph predictedFoodsData={predictions} handleSelectedItem={name => { selectFood(name); requestAnimationFrame(() => reveal(detailRef.current, "nearest")); }} isNutriScore={!processedFoodsScore}/>}
       </div>}
     </div>
-    {selection && <div className={styles.detail}><FoodNutrientBarGraph key={selection.name} selectedData={selection.data} isItemFood/></div>}
+    {selection && <div ref={detailRef} className={styles.detail}><FoodNutrientBarGraph key={selection.name} selectedData={selection.data} isItemFood/></div>}
   </section>;
 }
